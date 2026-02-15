@@ -1,0 +1,39 @@
+name: Daily Cosmos Monitor
+
+on:
+  schedule:
+    - cron: "15 6 * * *"   # tous les jours à 06:15 UTC
+  workflow_dispatch:       # permet de lancer à la main
+
+permissions:
+  contents: write
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+
+      - name: Run Criterion 1 pipeline
+        run: |
+          python run_criteria1_pipeline.py
+
+      - name: Generate HTML dashboard
+        run: |
+          python generate_dashboard_html.py
+
+      - name: Deploy to GitHub Pages (gh-pages branch)
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
