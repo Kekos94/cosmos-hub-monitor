@@ -1,0 +1,2 @@
+date,tx_total,tx_ibc,tx_ibc_ratio_pct,total_fee_uatom,ibc_fee_uatom,ibc_fee_share_pct,lcd_errors,atom_price_usd_used,total_fee_atom,ibc_fee_atom,total_fee_usd,ibc_fee_usd
+2026-02-15,128,22,17.1875,359195,55156,15.35544759810131,0,2.12,0.359195,0.055156,0.7614934,0.11693072
