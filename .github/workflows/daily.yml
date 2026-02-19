@@ -2,8 +2,8 @@ name: Daily Cosmos Monitor
 
 on:
   schedule:
-    - cron: "15 6 * * *"   # tous les jours à 06:15 UTC
-  workflow_dispatch:       # permet de lancer à la main
+    - cron: "15 6 * * *"   # Tous les jours à 06:15 UTC
+  workflow_dispatch:       # Permet de lancer à la main
 
 permissions:
   contents: write
@@ -12,8 +12,10 @@ jobs:
   run:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repo
+      - name: Checkout repo (full history)
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -24,16 +26,37 @@ jobs:
         run: |
           pip install -r requirements.txt
 
+      # 1) Run Criterion 1 pipeline (writes/updates CSVs in repo working dir)
       - name: Run Criterion 1 pipeline
         run: |
           python run_criteria1_pipeline.py
 
+      # 2) Generate HTML dashboard into ./site
       - name: Generate HTML dashboard
         run: |
           python generate_dashboard_html.py
 
+      # 3) Commit updated CSVs back to main so history accumulates in-file
+      - name: Commit updated CSVs to main
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Add the CSVs you want to persist
+          git add hub_revenue_daily.csv hub_revenue_with_inflation.csv || true
+          # (Optionnel) si tu veux aussi persister un fichier state :
+          # git add state_fee_v41.json || true
+
+          # If nothing changed, stop here cleanly
+          git diff --cached --quiet && echo "No CSV changes to commit" && exit 0
+
+          git commit -m "Daily update: hub revenue CSVs"
+          git push
+
+      # 4) Deploy the ./site folder to gh-pages (public dashboard)
       - name: Deploy to GitHub Pages (gh-pages branch)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+
