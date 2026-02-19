@@ -3,7 +3,7 @@ name: Daily Cosmos Monitor
 on:
   schedule:
     - cron: "15 6 * * *"   # Tous les jours à 06:15 UTC
-  workflow_dispatch:       # Permet de lancer à la main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -26,37 +26,47 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      # 1) Run Criterion 1 pipeline (writes/updates CSVs in repo working dir)
       - name: Run Criterion 1 pipeline
         run: |
           python run_criteria1_pipeline.py
 
-      # 2) Generate HTML dashboard into ./site
       - name: Generate HTML dashboard
         run: |
           python generate_dashboard_html.py
 
-      # 3) Commit updated CSVs back to main so history accumulates in-file
+      - name: Show generated files (debug)
+        run: |
+          echo "=== Repo root ==="
+          ls -la
+          echo "=== site/ (if exists) ==="
+          ls -la site || true
+
       - name: Commit updated CSVs to main
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # Add the CSVs you want to persist
+          # Add CSVs whether they are in root and/or in site/
           git add hub_revenue_daily.csv hub_revenue_with_inflation.csv || true
-          # (Optionnel) si tu veux aussi persister un fichier state :
-          # git add state_fee_v41.json || true
+          git add ecosystem_out_usd_daily.csv || true
 
-          # If nothing changed, stop here cleanly
-          git diff --cached --quiet && echo "No CSV changes to commit" && exit 0
+          git add site/hub_revenue_daily.csv site/hub_revenue_with_inflation.csv || true
+          git add site/ecosystem_out_usd_daily.csv || true
 
-          git commit -m "Daily update: hub revenue CSVs"
+          # Optional: keep the published HTML versioned too
+          git add site/index.html || true
+
+          echo "=== git status (before commit) ==="
+          git status
+
+          # If nothing changed, exit cleanly
+          git diff --cached --quiet && echo "No changes to commit" && exit 0
+
+          git commit -m "Daily update: data + dashboard"
           git push
 
-      # 4) Deploy the ./site folder to gh-pages (public dashboard)
-      - name: Deploy to GitHub Pages (gh-pages branch)
+      - name: Deploy to GitHub Pages (gh-pages)
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
-
