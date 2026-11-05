@@ -160,3 +160,13 @@ Références techniques :
 [prélèvement et événement de frais SDK](https://github.com/cosmos/cosmos-sdk/blob/main/x/auth/ante/fee.go),
 [événements fee market](https://github.com/skip-mev/feemarket/blob/main/docs/SPEC.md),
 [en-têtes des réponses historiques SDK](https://github.com/cosmos/cosmos-sdk/issues/24049).
+
+## Mise à jour distante reçue pendant la correction
+
+Le commit automatique `85e1f18` a ajouté une observation du 5 novembre 2026
+et revalorisé les lignes historiques avec un nouveau spot. Ses deux CSV
+complets (254 observations chacun) sont conservés sans modification dans
+`archives/legacy_remote/85e1f18/`, avec leurs empreintes dans les tests.
+Les 253 observations originales restent inchangées à la racine. La nouvelle
+observation distante reste un échantillon de couverture inconnue ; elle
+n'est pas ajoutée aux journées complètes ou aux ratios corrigés.
