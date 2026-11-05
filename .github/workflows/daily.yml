@@ -5,6 +5,11 @@ on:
     - cron: "15 * * * *"
   workflow_dispatch:
     inputs:
+      publish_only:
+        description: "Publier le tableau de bord depuis les données sauvegardées, sans relancer la collecte"
+        required: false
+        default: false
+        type: boolean
       start_date:
         description: "Première journée UTC (YYYY-MM-DD), seulement pour initialiser un historique vide"
         required: false
@@ -41,6 +46,7 @@ jobs:
 
       - name: Collect complete UTC days with checkpoints
         id: collect
+        if: inputs.publish_only != true
         continue-on-error: true
         env:
           COLLECT_BUDGET_SECONDS: "1200"
@@ -80,6 +86,34 @@ jobs:
           exit 1
 
       - name: Deploy to GitHub Pages
+        id: deploy_first
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+
+      - name: Wait before retrying GitHub Pages
+        if: steps.deploy_first.outcome == 'failure'
+        run: sleep 15
+
+      - name: Retry GitHub Pages publication
+        id: deploy_second
+        if: steps.deploy_first.outcome == 'failure'
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+
+      - name: Wait before final publication attempt
+        if: steps.deploy_second.outcome == 'failure'
+        run: sleep 30
+
+      # Re-run the action so each attempt fetches the latest gh-pages state.
+      # No force-push or permission changes; final failure remains visible.
+      - name: Final GitHub Pages publication attempt
+        if: steps.deploy_second.outcome == 'failure'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -208,3 +208,27 @@ par l'essai. Chaque ligne d'avancement indique désormais la durée du lot trait
 
 Schéma du décodage local :
 [Cosmos SDK TxRaw, TxBody, AuthInfo et Fee](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/tx/v1beta1/tx.proto).
+
+## Reprendre uniquement une publication GitHub Pages
+
+La collecte et la publication du site sont deux étapes distinctes. Une erreur
+`remote: Internal Server Error` pendant `git push origin gh-pages` indique
+un refus interne de GitHub lors de la publication ; elle n'annule pas le
+commit des checkpoints déjà réalisé sur `main`.
+
+La publication est maintenant tentée au maximum trois fois, avec des attentes
+de 15 puis 30 secondes. Chaque tentative relit l'état de `gh-pages` via
+l'action de publication ; aucun push forcé ni changement de permissions n'est
+ajouté. Si les trois tentatives échouent, le workflow reste en échec.
+
+Pour republier sans refaire la collecte :
+
+1. Envoyer ce correctif sur GitHub.
+2. Dans **Actions → Daily Cosmos Monitor → Run workflow**, choisir `main`.
+3. Cocher **publish_only**, laisser `start_date` vide et lancer le workflow.
+
+Les checkpoints existants sont validés puis le tableau de bord est régénéré
+et publié. Aucun bloc n'est collecté dans ce mode. Il faut lancer une nouvelle
+exécution pour utiliser ces options : relancer une ancienne exécution réutilise
+sa définition de workflow antérieure. Les exécutions horaires continuent de
+collecter normalement et reprennent les journées incomplètes.
