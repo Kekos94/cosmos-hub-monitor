@@ -41,7 +41,8 @@ La collecte réelle utilise les nœuds RPC/LCD publics et CoinGecko.
 - Chaque bloc est lu avec toutes ses transactions ; les transactions sont
   récupérées individuellement par hash et vérifiées contre leur hauteur.
   La lecture ne dépend d'aucune pagination pouvant tronquer un bloc chargé.
-  Quatre lectures de blocs sont traitées en parallèle par défaut.
+  Le script permet quatre lectures de blocs en parallèle par défaut ; le workflow
+  utilise deux lecteurs pour réduire la pression sur les fournisseurs publics.
 - Les checkpoints sont validés puis écrits par remplacement atomique. Une
   erreur de bloc ou de transaction ne conserve aucun cumul partiel du lot.
   Les lots déjà enregistrés, leurs prix et leurs snapshots restent inchangés.
@@ -63,7 +64,16 @@ Le workflow `.github/workflows/daily.yml` s'exécute **chaque heure**, avec un
 budget de collecte de 20 minutes vérifié entre les opérations et les lots.
 L'exécution suivante reprend automatiquement les mesures enregistrées.
 `COLLECT_BUDGET_SECONDS`, `CHUNK_BLOCKS` (1–1000) et `COLLECT_WORKERS` (1–8)
-permettent d'adapter les limites. Les requêtes déjà en vol et les snapshots
+permettent d'adapter les limites.
+Les appels RPC/LCD sont espacés d'au moins une seconde par hôte, tous lecteurs
+confondus (`HTTP_MIN_INTERVAL_SECONDS`). Les erreurs temporaires (notamment
+HTTP 429, 503 et délais réseau) font l'objet de quatre tentatives maximum,
+avec attente progressive et respect de `Retry-After` en secondes ou en date
+HTTP. Une pause demandée par un hôte s'applique aussi aux autres lecteurs.
+Un 404 du fournisseur de secours ne transforme jamais une transaction manquante
+en zéro : le fournisseur principal est réessayé s'il a signalé une erreur
+temporaire. Si l'attente dépasse le budget restant, le lot est abandonné sans
+avancer le checkpoint ; l'exécution suivante reprend au même endroit. Les requêtes déjà en vol et les snapshots
 peuvent finir après l'expiration du budget ; le job a une limite de 45 minutes.
 La fréquence GitHub Actions n'est pas une garantie d'heure exacte ou de débit.
 

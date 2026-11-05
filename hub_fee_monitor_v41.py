@@ -5,6 +5,11 @@ import json
 import os
 import re
 import time
+import math
+import threading
+from contextvars import ContextVar
+from email.utils import parsedate_to_datetime
+from urllib.parse import urlsplit
 from concurrent.futures import ThreadPoolExecutor
 from functools import partial
 from datetime import datetime, timezone
@@ -17,23 +22,100 @@ LCDS = ['https://cosmos-api.polkachu.com', 'https://rest.cosmos.directory/cosmos
 BLOCK_BATCH = int(os.environ.get('BLOCK_BATCH', '60'))
 
 
-def get_any(bases, path, *, height=None, params=None):
-    errors = []
-    for base in bases:
+# Shared by all workers: parallelism must not multiply the provider request rate.
+HTTP_MIN_INTERVAL = float(os.environ.get('HTTP_MIN_INTERVAL_SECONDS', '1.0'))
+HTTP_MAX_ATTEMPTS = 4
+RETRYABLE_STATUS = {408, 425, 429, 500, 502, 503, 504}
+REQUEST_DEADLINE = ContextVar('request_deadline', default=None)
+_rate_lock = threading.Lock()
+_next_request = {}
+
+
+def wait_for_provider(base):
+    host = urlsplit(base).netloc
+    if not math.isfinite(HTTP_MIN_INTERVAL) or HTTP_MIN_INTERVAL < 0:
+        raise ValueError('Invalid HTTP_MIN_INTERVAL_SECONDS')
+    while True:
+        with _rate_lock:
+            now = time.monotonic()
+            deadline = REQUEST_DEADLINE.get()
+            wait = max(0, _next_request.get(host, 0) - now)
+            if deadline is not None and (now >= deadline or now + wait >= deadline):
+                raise TimeoutError('Provider cooldown exceeds remaining collection budget')
+            if wait == 0:
+                _next_request[host] = now + HTTP_MIN_INTERVAL
+                return
+        # Recheck after waiting: another worker may have extended the 429 cooldown.
+        time.sleep(wait)
+
+
+def retry_delay(response, attempt, *, now=None):
+    fallback = float(2 ** attempt)
+    if response is None:
+        return fallback
+    value = response.headers.get('Retry-After')
+    if not isinstance(value, str):
+        return fallback
+    try:
+        seconds = float(value)
+        if not math.isfinite(seconds) or seconds < 0:
+            return fallback
+    except ValueError:
         try:
-            response = requests.get(base + path, params=params, timeout=25,
-                                    headers={'x-cosmos-block-height': str(height)} if height is not None else {})
-            response.raise_for_status()
-            if height is not None:
-                actual = response.headers.get('x-cosmos-block-height') or response.headers.get('grpc-metadata-x-cosmos-block-height')
-                if actual != str(height):
-                    raise ValueError('Historical height not confirmed by response header')
-            data = response.json()
-            if data.get('error'):
-                raise ValueError(str(data['error']))
-            return data, base
-        except (requests.RequestException, ValueError) as exc:
-            errors.append(f'{base}: {exc}')
+            updated = parsedate_to_datetime(value)
+            if updated.tzinfo is None:
+                updated = updated.replace(tzinfo=timezone.utc)
+            seconds = max(0, (updated - (now or datetime.now(timezone.utc))).total_seconds())
+        except (TypeError, ValueError, OverflowError):
+            return fallback
+    return max(fallback, seconds)
+
+
+def defer_provider(base, delay):
+    host = urlsplit(base).netloc
+    with _rate_lock:
+        _next_request[host] = max(_next_request.get(host, 0), time.monotonic() + delay)
+
+
+def get_any(bases, path, *, height=None, params=None):
+    errors, terminal = [], set()
+    for attempt in range(HTTP_MAX_ATTEMPTS):
+        transient_failure = False
+        for base in bases:
+            if base in terminal:
+                continue
+            wait_for_provider(base)
+            deadline = REQUEST_DEADLINE.get()
+            timeout = min(25, deadline-time.monotonic()) if deadline is not None else 25
+            if timeout <= 0:
+                raise TimeoutError('Collection time budget reached')
+            response = None
+            try:
+                response = requests.get(base + path, params=params, timeout=timeout,
+                                        headers={'x-cosmos-block-height': str(height)} if height is not None else {})
+                response.raise_for_status()
+                if height is not None:
+                    actual = response.headers.get('x-cosmos-block-height') or response.headers.get('grpc-metadata-x-cosmos-block-height')
+                    if actual != str(height):
+                        raise ValueError('Historical height not confirmed by response header')
+                data = response.json()
+                if data.get('error'):
+                    raise ValueError(str(data['error']))
+                return data, base
+            except (requests.RequestException, ValueError) as exc:
+                errors.append(f'{base} (attempt {attempt+1}): {exc}')
+                retryable = (response is not None and response.status_code in RETRYABLE_STATUS) or (
+                    response is None and isinstance(exc, (requests.ConnectionError, requests.Timeout)))
+                if retryable:
+                    transient_failure = True
+                    delay = retry_delay(response, attempt)
+                    defer_provider(base, delay)
+                    print(f'Provider temporarily unavailable: {base}; retry after >= {delay:g}s', flush=True)
+                else:
+                    # A 404 or unconfirmed historical height is never converted to zero.
+                    terminal.add(base)
+        if not transient_failure:
+            break
     raise RuntimeError('; '.join(errors))
 
 
@@ -142,6 +224,14 @@ def price_snapshot():
 
 
 def block_payload(height, *, deadline=None):
+    token = REQUEST_DEADLINE.set(deadline)
+    try:
+        return _block_payload(height, deadline=deadline)
+    finally:
+        REQUEST_DEADLINE.reset(token)
+
+
+def _block_payload(height, *, deadline=None):
     def check_budget():
         if deadline is not None and time.monotonic() >= deadline:
             raise TimeoutError('Collection time budget reached')
@@ -160,6 +250,14 @@ def block_payload(height, *, deadline=None):
 
 
 def collect(start, end, *, deadline=None, workers=1):
+    token = REQUEST_DEADLINE.set(deadline)
+    try:
+        return _collect(start, end, deadline=deadline, workers=workers)
+    finally:
+        REQUEST_DEADLINE.reset(token)
+
+
+def _collect(start, end, *, deadline=None, workers=1):
     boundary, source = block(start - 1)
     start_time = boundary['header']['time']
     r = dict(chain_id=CHAIN, start_height=start, end_height=end, block_count=end-start+1,

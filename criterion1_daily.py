@@ -263,7 +263,14 @@ def collect_days(*, directory=DAY_DIR, now=None, budget_seconds=1200, chunk_bloc
             day = date.fromisoformat(states[-1]['date']) + timedelta(days=1) if states else start_date or yesterday
             if day > yesterday:
                 return
-            state = plan_day(day, now=now)
+            token = monitor.REQUEST_DEADLINE.set(deadline)
+            try:
+                state = plan_day(day, now=now)
+            except TimeoutError:
+                print('Planning time budget reached; no partial day plan saved.', flush=True)
+                return
+            finally:
+                monitor.REQUEST_DEADLINE.reset(token)
             save_day(state, directory)
             states.append(state)
         p = progress(state)

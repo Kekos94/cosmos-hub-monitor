@@ -23,13 +23,13 @@ jobs:
     timeout-minutes: 45
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
           ref: ${{ github.ref_name }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.11"
 
@@ -45,7 +45,8 @@ jobs:
         env:
           COLLECT_BUDGET_SECONDS: "1200"
           CHUNK_BLOCKS: "120"
-          COLLECT_WORKERS: "4"
+          COLLECT_WORKERS: "2"
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
           START_DATE: ${{ inputs.start_date }}
         run: python run_criteria1_pipeline.py
 
