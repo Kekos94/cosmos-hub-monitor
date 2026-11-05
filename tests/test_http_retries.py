@@ -111,6 +111,17 @@ class HttpRetryTests(unittest.TestCase):
         self.assertEqual(get.call_count, 1)
         self.assertEqual(self.clock.waits, [])
 
+    def test_rpc_post_batch_uses_the_same_retry_after_protection(self):
+        ok = response()
+        ok.json.return_value = [{'id': 'block:123', 'result': {}}]
+        calls = [{'jsonrpc': '2.0', 'id': 'block:123', 'method': 'block', 'params': {'height': '123'}}]
+        with patch.object(monitor.requests, 'post', side_effect=[response(429, {'Retry-After': '8'}), ok]) as post:
+            data, _ = monitor.get_any(['https://primary.test'], '/', rpc_calls=calls)
+        self.assertEqual(data[0]['id'], 'block:123')
+        self.assertEqual(self.clock.waits, [8.0])
+        for call in post.call_args_list:
+            self.assertEqual(call.kwargs['json'], calls)
+
     def test_retry_preserves_requested_historical_height(self):
         ok = response(headers={'x-cosmos-block-height': '123'})
         with patch.object(monitor.requests, 'get', side_effect=[response(429), ok]) as get:

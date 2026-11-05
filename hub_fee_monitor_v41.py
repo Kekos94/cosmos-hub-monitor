@@ -77,7 +77,7 @@ def defer_provider(base, delay):
         _next_request[host] = max(_next_request.get(host, 0), time.monotonic() + delay)
 
 
-def get_any(bases, path, *, height=None, params=None):
+def get_any(bases, path, *, height=None, params=None, rpc_calls=None):
     errors, terminal = [], set()
     for attempt in range(HTTP_MAX_ATTEMPTS):
         transient_failure = False
@@ -91,15 +91,21 @@ def get_any(bases, path, *, height=None, params=None):
                 raise TimeoutError('Collection time budget reached')
             response = None
             try:
-                response = requests.get(base + path, params=params, timeout=timeout,
-                                        headers={'x-cosmos-block-height': str(height)} if height is not None else {})
+                if rpc_calls is None:
+                    response = requests.get(base + path, params=params, timeout=timeout,
+                                            headers={'x-cosmos-block-height': str(height)} if height is not None else {})
+                else:
+                    response = requests.post(base + path, json=rpc_calls, timeout=timeout)
                 response.raise_for_status()
                 if height is not None:
                     actual = response.headers.get('x-cosmos-block-height') or response.headers.get('grpc-metadata-x-cosmos-block-height')
                     if actual != str(height):
                         raise ValueError('Historical height not confirmed by response header')
                 data = response.json()
-                if data.get('error'):
+                if rpc_calls is not None:
+                    if not isinstance(data, list):
+                        raise ValueError('JSON-RPC batching is not supported by this endpoint')
+                elif data.get('error'):
                     raise ValueError(str(data['error']))
                 return data, base
             except (requests.RequestException, ValueError) as exc:
@@ -249,15 +255,15 @@ def _block_payload(height, *, deadline=None):
     return height, b, source, transactions
 
 
-def collect(start, end, *, deadline=None, workers=1):
+def collect(start, end, *, deadline=None, workers=1, bulk=False):
     token = REQUEST_DEADLINE.set(deadline)
     try:
-        return _collect(start, end, deadline=deadline, workers=workers)
+        return _collect(start, end, deadline=deadline, workers=workers, bulk=bulk)
     finally:
         REQUEST_DEADLINE.reset(token)
 
 
-def _collect(start, end, *, deadline=None, workers=1):
+def _collect(start, end, *, deadline=None, workers=1, bulk=False):
     boundary, source = block(start - 1)
     start_time = boundary['header']['time']
     r = dict(chain_id=CHAIN, start_height=start, end_height=end, block_count=end-start+1,
@@ -271,13 +277,17 @@ def _collect(start, end, *, deadline=None, workers=1):
     rpc_sources, lcd_sources = {source}, set()
     previous_time = timestamp(start_time)
     fetch = partial(block_payload, deadline=deadline)
-    if workers > 1:
+    if bulk:
+        import sys
+        from criterion1_rpc_bulk import payloads as bulk_payloads
+        payloads = bulk_payloads(sys.modules[__name__], start, end, deadline=deadline)
+    elif workers > 1:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             payloads = list(pool.map(fetch, range(start, end + 1)))
     else:
         payloads = map(fetch, range(start, end + 1))
     for height, b, source, transactions in payloads:
-        rpc_sources.add(source)
+        rpc_sources.update(source.split(';'))
         current_time = timestamp(b['header']['time'])
         if current_time <= previous_time:
             raise ValueError('Non-increasing block times')
@@ -286,7 +296,8 @@ def _collect(start, end, *, deadline=None, workers=1):
             r['first_block_time'] = b['header']['time']
         r['end_time'] = b['header']['time']
         for tx, source in transactions:
-            lcd_sources.add(source)
+            if source:
+                lcd_sources.add(source)
             is_ibc = any(m.get('@type', '').startswith('/ibc.') for m in tx['tx']['body']['messages'])
             fee = coin_uatom(tx['tx']['auth_info']['fee']['amount'])
             if fee < 0:

@@ -278,8 +278,9 @@ def collect_days(*, directory=DAY_DIR, now=None, budget_seconds=1200, chunk_bloc
             continue
         start = p['next_height']
         end = min(state['end_height'], start + chunk_blocks - 1)
+        chunk_started = time.monotonic()
         try:
-            row = monitor.collect(start, end, deadline=deadline, workers=workers)
+            row = monitor.collect(start, end, deadline=deadline, workers=workers, bulk=True)
         except TimeoutError:
             print('Time budget reached; completed chunks retained for next execution.', flush=True)
             return
@@ -288,7 +289,9 @@ def collect_days(*, directory=DAY_DIR, now=None, budget_seconds=1200, chunk_bloc
         save_day(candidate, directory)
         states[-1] = candidate
         p = progress(candidate)
-        print(f'{p["date"]}: {p["scanned_blocks"]}/{p["expected_blocks"]} blocks ({p["status"]})', flush=True)
+        elapsed = time.monotonic() - chunk_started
+        print(f'{p["date"]}: {p["scanned_blocks"]}/{p["expected_blocks"]} blocks ({p["status"]}); '
+              f'chunk={end-start+1} blocks in {elapsed:.1f}s', flush=True)
 
 
 def main():

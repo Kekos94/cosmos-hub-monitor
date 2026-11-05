@@ -38,11 +38,23 @@ La collecte réelle utilise les nœuds RPC/LCD publics et CoinGecko.
 - La collecte reprend à la première hauteur manquante de la journée en cours.
   Elle termine cette journée avant de passer aux suivantes, sans sauter les
   jours de panne. `START_DATE` ne peut pas déplacer un historique déjà démarré.
-- Chaque bloc est lu avec toutes ses transactions ; les transactions sont
-  récupérées individuellement par hash et vérifiées contre leur hauteur.
-  La lecture ne dépend d'aucune pagination pouvant tronquer un bloc chargé.
-  Le script permet quatre lectures de blocs en parallèle par défaut ; le workflow
-  utilise deux lecteurs pour réduire la pression sur les fournisseurs publics.
+- Les métadonnées de **tous** les blocs sont récupérées par plages d'au plus
+  20 via `/blockchain`. Chaque hauteur attendue doit être présente une seule fois,
+  sur la bonne chaîne. Un bloc vide n'est reconnu qu'avec un compte de transactions
+  nul et un engagement de transactions vide.
+- Pour les blocs non vides, les données `/block` et les résultats `/block_results`
+  sont récupérés par requêtes JSON-RPC groupées d'au plus 10 appels. Les réponses
+  sont associées par identifiant, même si le serveur les renvoie dans le désordre.
+  Les hauteurs, en-têtes, hashes de blocs et comptes de transactions doivent
+  correspondre ; le nombre de résultats doit être égal au nombre de transactions.
+- Les types de messages et frais déclarés sont lus localement dans les octets
+  Protobuf `TxRaw`, suivant le schéma Cosmos SDK. Les événements exécutés restent
+  la source des frais collectés, y compris les transactions échouées. Les attributs
+  ABCI en texte ou en base64 sont reconnus. Aucun résultat n'est paginé ni tronqué.
+- Si la lecture groupée est indisponible, la lecture individuelle par hash LCD
+  reste un secours avec ses contrôles de hauteur/hash. Le paramètre de parallélisme
+  ne concerne que ce secours (deux lecteurs dans le workflow). Les réponses
+  groupées incohérentes ou tronquées ne sont pas acceptées comme données complètes.
 - Les checkpoints sont validés puis écrits par remplacement atomique. Une
   erreur de bloc ou de transaction ne conserve aucun cumul partiel du lot.
   Les lots déjà enregistrés, leurs prix et leurs snapshots restent inchangés.
@@ -180,3 +192,19 @@ complets (254 observations chacun) sont conservés sans modification dans
 Les 253 observations originales restent inchangées à la racine. La nouvelle
 observation distante reste un échantillon de couverture inconnue ; elle
 n'est pas ajoutée aux journées complètes ou aux ratios corrigés.
+
+## Mesure de l'optimisation
+
+Un essai réseau sur les mêmes blocs `33715279..33715298` (20 blocs, dont 8
+non vides, et 12 transactions) a comparé les deux méthodes avec les mêmes
+protections de débit : **33 requêtes et 23,50 s** pour la lecture individuelle,
+contre **4 requêtes et 3,37 s** pour la lecture groupée. Les comptes de
+transactions, la classification IBC, les frais déclarés, les frais collectés
+et les tips étaient identiques. Les requêtes de snapshots macro et de prix,
+communes aux deux méthodes, étaient exclues de cette comparaison. Ce gain
+d'environ 7 fois sur cet essai ne garantit pas le même facteur sur chaque
+journée ou chaque fournisseur. Aucun historique de production n'a été modifié
+par l'essai. Chaque ligne d'avancement indique désormais la durée du lot traité.
+
+Schéma du décodage local :
+[Cosmos SDK TxRaw, TxBody, AuthInfo et Fee](https://github.com/cosmos/cosmos-sdk/blob/main/proto/cosmos/tx/v1beta1/tx.proto).
