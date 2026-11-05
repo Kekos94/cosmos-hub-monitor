@@ -156,7 +156,7 @@ def event_coins(value):
     return coin_uatom(coins)
 
 
-def collected_fee_components(tx):
+def collected_fee_components(tx, *, collector=None):
     """Read SDK deduction or fee-market fee+tip events without double counting.
 
     A failed message can still pay fees. Missing/ambiguous events are unknown.
@@ -182,7 +182,22 @@ def collected_fee_components(tx):
         if tip > total:
             return None, None
         return total, tip
-    return None, None
+    from fee_evidence import failed_ante_fee
+    return failed_ante_fee(tx, collector)
+
+
+_collector_proofs = {}
+
+
+def collector_proof(height):
+    if height not in _collector_proofs:
+        name = 'feemarket-fee-collector'
+        result, source = get_any(LCDS, '/cosmos/auth/v1beta1/module_accounts/' + name, height=height)
+        account = result['account']
+        if account.get('name') != name or account.get('@type') != '/cosmos.auth.v1beta1.ModuleAccount':
+            raise ValueError('Wrong fee collector module account')
+        _collector_proofs[height] = dict(height=height, account=account, source=source, observed_at=utcnow())
+    return _collector_proofs[height]
 
 
 def collected_fee(tx):
@@ -272,9 +287,10 @@ def _collect(start, end, *, deadline=None, workers=1, bulk=False):
              coverage_kind='contiguous_window_not_daily_total', collected_at='',
              tx_total=0, tx_ibc=0, declared_fee_atom='', declared_ibc_fee_atom='',
              collected_fee_atom='', collected_ibc_fee_atom='', fee_collection_status='complete',
-             tx_without_fee_event=0, collected_tip_atom='', collected_ibc_tip_atom='', rpc_sources='', lcd_sources='')
+             tx_without_fee_event=0, fee_ante_transfer_count=0, collected_tip_atom='', collected_ibc_tip_atom='', rpc_sources='', lcd_sources='')
     declared = declared_ibc = collected = collected_ibc = tips = ibc_tips = 0
     rpc_sources, lcd_sources = {source}, set()
+    fee_proofs = {}
     previous_time = timestamp(start_time)
     fetch = partial(block_payload, deadline=deadline)
     if bulk:
@@ -303,6 +319,15 @@ def _collect(start, end, *, deadline=None, workers=1, bulk=False):
             if fee < 0:
                 raise ValueError('Negative fee')
             actual, tip = collected_fee_components(tx)
+            if actual is None and int(tx['tx_response'].get('code', 0)) != 0:
+                try:
+                    proof = collector_proof(height)
+                    actual, tip = collected_fee_components(tx, collector=proof)
+                except (RuntimeError, ValueError, KeyError):
+                    actual, tip = None, None
+                if actual is not None:
+                    r['fee_ante_transfer_count'] += 1
+                    fee_proofs[str(height)] = proof
             r['tx_total'] += 1
             r['tx_ibc'] += int(is_ibc)
             declared += fee
@@ -326,6 +351,7 @@ def _collect(start, end, *, deadline=None, workers=1, bulk=False):
     coverage = day_coverage(timestamp(start_time), timestamp(r['end_time']))
     r['utc_day_coverage_seconds'] = json.dumps(coverage, sort_keys=True)
     r['utc_day_coverage_pct'] = json.dumps({k: v / 86400 * 100 for k, v in coverage.items()}, sort_keys=True)
+    r['fee_ante_transfer_proofs'] = json.dumps(fee_proofs, sort_keys=True)
     r.update(macro(start - 1, start_time, 'start'))
     r.update(macro(end, r['end_time'], 'end'))
     r.update(price_snapshot())

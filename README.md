@@ -73,7 +73,7 @@ La collecte réelle utilise les nœuds RPC/LCD publics et CoinGecko.
   Aucune émission ni dilution n'est inventée pendant cet arrêt.
 
 Le workflow `.github/workflows/daily.yml` est programmé **toutes les 30 minutes**
-(aux minutes 15 et 45 de chaque heure UTC), avec un
+(aux minutes 17 et 47 de chaque heure UTC), avec un
 budget de collecte de 20 minutes vérifié entre les opérations et les lots.
 L'exécution suivante reprend automatiquement les mesures enregistrées.
 `COLLECT_BUDGET_SECONDS`, `CHUNK_BLOCKS` (1–1000) et `COLLECT_WORKERS` (1–8)
@@ -233,3 +233,64 @@ et publié. Aucun bloc n'est collecté dans ce mode. Il faut lancer une nouvelle
 exécution pour utiliser ces options : relancer une ancienne exécution réutilise
 sa définition de workflow antérieure. Les exécutions toutes les 30 minutes continuent de
 collecter normalement et reprennent les journées incomplètes.
+
+## Frais des transactions échouées et audit historique
+
+Certaines transactions dont le message échoue conservent les événements du
+prélèvement ante mais n'émettent pas le `fee_pay` du post-handler. Leur échec
+ne prouve donc pas une absence de frais. Le collecteur peut maintenant vérifier
+ce cas avec un ensemble strict de preuves :
+
+- compte `feemarket-fee-collector` interrogé à la hauteur historique exacte,
+  dont la hauteur de réponse est confirmée ;
+- transaction échouée, sans événement de message exécuté (`action` ou `msg_index`)
+  ni événement de frais contradictoire ;
+- un seul transfert au compte du module, concordant avec son crédit et le débit
+  du payeur, du payeur explicite ou du granter ;
+- montant effectivement transféré identique aux coins déclarés, sans transfert
+  de sortie du collecteur ou remboursement observé dans cette transaction.
+
+Sans ces preuves concordantes, les frais restent inconnus. La réception par
+le module ne constitue toujours aucune preuve de burn. Les tips indiquent
+les distributions de tips attestées dans les événements de la transaction.
+
+Pour les journées déjà collectées, `python criterion1_fee_audit.py 2026-11-04`
+réexamine uniquement les lots concernés et enregistre les reçus et preuves dans
+`data/criterion1_fee_audits/2026-11-04.json.gz`. La version finale est compressée sans perte, après vérification de son contenu.
+La version de travail JSON permet la reprise après interruption. Il est lié à l'empreinte du checkpoint original et vérifie les
+hauteurs, comptes de transactions et montants déclarés avant toute correction.
+Les checkpoints originaux et leurs prix/snapshots restent inchangés. Un audit
+entièrement terminé est appliqué en mémoire lors de l'export et de la génération
+du dashboard ; un audit partiel ne débloque aucun ratio journalier.
+
+## Déclenchement après une correction
+
+Un push sur `main` touchant le workflow, les scripts, les dépendances ou les
+tests déclenche désormais une nouvelle exécution. Les commits qui n'ajoutent
+que des données et le HTML ne créent pas de boucle. La programmation toutes
+les 30 minutes est décalée aux minutes 17 et 47, et reste soumise aux délais
+de GitHub. Un événement `push` réussi ne prouve pas encore que le déclenchement
+`schedule` fonctionne : cette vérification reste distincte dans les exécutions.
+Les permissions administratives du dépôt ne sont pas lisibles sans connexion
+GitHub ; les données publiques seules ne permettent pas d'exclure toutes les
+restrictions de compte ou de service.
+
+### Résultat de l'audit du 4 novembre 2026 UTC
+
+Les 51 transactions initialement sans preuve de frais reconnue sont des
+transactions échouées dont le transfert ante au module historique de frais
+est attesté. L'audit a résolu les 51 cas, sans frais inconnus restants et sans
+modifier le checkpoint original. Les 15 057 blocs et 11 663 transactions
+restent identiques aux mesures initiales.
+
+- Fees collectées, tips inclus : **75,928028 ATOM**, dont **8,548950 ATOM IBC**.
+- Tips attestés : **48,928178 ATOM**, déjà inclus dans le total, jamais ajoutés deux fois.
+- Fees / émission estimée sur les mêmes blocs : **0,0513269 %**.
+- Fees / hausse nette de supply sur les mêmes blocs : **0,0407189 %**.
+- Burn effectif : non mesuré ; aucun frais n'est soustrait de la dilution.
+- Prix historique journalier et valorisation USD journalière : indisponibles.
+
+Ces résultats sont exportés avec `fee_audit_status=verified` et
+`fee_evidence_recovered=51`. Ils ne prouvent pas encore que les déclenchements
+planifiés GitHub Actions ont repris : ce point doit être confirmé par un
+événement `schedule` après publication du correctif.

@@ -2,7 +2,14 @@ name: Daily Cosmos Monitor
 
 on:
   schedule:
-    - cron: "15,45 * * * *"
+    - cron: "17,47 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily.yml'
+      - '*.py'
+      - 'tests/**'
+      - 'requirements.txt'
   workflow_dispatch:
     inputs:
       publish_only:
@@ -68,6 +75,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hub_criterion1_daily_complete.csv site/hub_criterion1_daily_complete.csv
+          if test -d data/criterion1_fee_audits; then
+            git add data/criterion1_fee_audits
+          fi
           if test -d data/criterion1_days; then
             git add data/criterion1_days
           fi

@@ -78,4 +78,5 @@ def decode_tx(raw):
         if not denom or not amount.isascii() or not amount.isdigit():
             raise ValueError('Invalid protobuf coin')
         amounts.append({'denom': denom, 'amount': amount})
-    return {'body': {'messages': messages}, 'auth_info': {'fee': {'amount': amounts}}}
+    return {'body': {'messages': messages}, 'auth_info': {'fee': {'amount': amounts,
+            'payer': single(fee, 3).decode('utf-8'), 'granter': single(fee, 4).decode('utf-8')}}}

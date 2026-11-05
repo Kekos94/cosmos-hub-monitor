@@ -3,6 +3,7 @@ import csv
 import html
 import shutil
 from criterion1_data import ROOT, WINDOWS, read_rows, utcnow, validate
+from criterion1_fee_audit import load_fee_audit
 from criterion1_daily import DAILY_CSV, load_days, progress, daily_summary, export_daily
 
 
@@ -36,12 +37,13 @@ def main():
                      ('price_source_updated_at', 'Prix : timestamp source UTC')]
     states = load_days(ROOT / 'data' / 'criterion1_days')
     export_daily(ROOT / 'data' / 'criterion1_days', ROOT / DAILY_CSV.name)
-    complete_days = [daily_summary(state) for state in states if progress(state)['status'] == 'complete']
+    complete_days = [daily_summary(state, audit=load_fee_audit(state, ROOT / 'data' / 'criterion1_fee_audits')) for state in states if progress(state)['status'] == 'complete']
     day_progress = [progress(state) for state in states]
     daily_fields = [('date', 'Journée UTC'), ('block_count', 'Blocs analysés'),
                     ('block_coverage_pct', 'Couverture des blocs (%)'), ('tx_total', 'Transactions'),
                     ('collected_fee_atom', 'Fees collectées (ATOM, tips inclus)'),
                     ('collected_tip_atom', 'Dont tips (ATOM)'), ('fee_collection_status', 'Complétude des fees'),
+                    ('fee_evidence_recovered', 'Frais attestés par transfert ante'),
                     ('estimated_emission_atom', 'Émission estimée sur les mêmes blocs (ATOM)'),
                     ('fee_to_estimated_emission_pct', 'Fees / émission estimée (%)'),
                     ('net_supply_change_atom', 'Variation nette supply sur les mêmes blocs (ATOM)'),
@@ -72,7 +74,7 @@ Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisati
 <p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
 La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
 Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
-<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
+<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Pour certaines transactions échouées, un transfert ante au module historique de frais, corroboré par les événements de débit et de crédit, atteste le paiement. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
 L'émission estimée applique le taux et la supply observés au début de la fenêtre à sa durée, sur une base de 365 jours ; elle n'est pas une émission brute mesurée.
 La variation de supply est nette et ne permet pas d'isoler le burn. Les frais ne sont jamais soustraits de la dilution.</p>
 <p>Le prix affiché est le spot horodaté à la collecte. Sa valorisation éventuelle est une valorisation à la collecte, pas un prix historique de la fenêtre.

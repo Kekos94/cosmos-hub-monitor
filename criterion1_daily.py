@@ -180,7 +180,12 @@ def load_days(directory=DAY_DIR):
     return states
 
 
-def daily_summary(state):
+def daily_summary(state, audit=None):
+    from criterion1_fee_audit import apply_fee_audit
+    recovered = sum(int(c.get("fee_ante_transfer_count", 0)) for c in state["chunks"])
+    if audit is not None:
+        state, n = apply_fee_audit(state, audit)
+        recovered += n
     p = progress(state)
     if p['status'] != 'complete':
         raise ValueError('Partial collection cannot be exported as a daily total')
@@ -189,7 +194,12 @@ def daily_summary(state):
         if any(c.get(key, '') == '' for c in chunks):
             return ''
         return str(sum((number(c[key]) for c in chunks), Decimal(0)))
+    fee_status = 'complete' if all(c['fee_collection_status'] == 'complete' for c in chunks) else 'incomplete'
+    audit_status = 'not_applied'
+    if audit is not None:
+        audit_status = 'verified' if fee_status == 'complete' else 'needs_review'
     r = dict(date=state['date'], chain_id=CHAIN, coverage_status='complete_utc_day_blocks',
+             fee_evidence_recovered=recovered, fee_audit_status=audit_status,
              day_start_utc=state['day_start_utc'], day_end_utc=state['day_end_utc'], utc_day_seconds=86400,
              start_height=state['start_height'], end_height=state['end_height'],
              block_count=p['scanned_blocks'], block_coverage_pct='100',
@@ -199,7 +209,7 @@ def daily_summary(state):
              tx_total=total('tx_total'), tx_ibc=total('tx_ibc'),
              declared_fee_atom=total('declared_fee_atom'), declared_ibc_fee_atom=total('declared_ibc_fee_atom'),
              tx_without_fee_event=total('tx_without_fee_event'),
-             fee_collection_status='complete' if all(c['fee_collection_status']=='complete' for c in chunks) else 'incomplete',
+             fee_collection_status=fee_status,
              collected_fee_atom=total('collected_fee_atom'), collected_ibc_fee_atom=total('collected_ibc_fee_atom'),
              collected_tip_atom=total('collected_tip_atom'), collected_ibc_tip_atom=total('collected_ibc_tip_atom'),
              estimated_emission_atom=total('estimated_window_emission_atom') if chunks else '',
@@ -225,7 +235,7 @@ def daily_summary(state):
 
 
 # Stable empty-export schema without inventing a day or measurements.
-DAILY_FIELDS = ('date chain_id coverage_status day_start_utc day_end_utc utc_day_seconds start_height end_height '
+DAILY_FIELDS = ('date chain_id coverage_status fee_evidence_recovered fee_audit_status day_start_utc day_end_utc utc_day_seconds start_height end_height '
                 'block_count block_coverage_pct measurement_start_time measurement_end_time measured_block_interval_seconds '
                 'first_block_time tx_total tx_ibc declared_fee_atom declared_ibc_fee_atom tx_without_fee_event '
                 'fee_collection_status collected_fee_atom collected_ibc_fee_atom collected_tip_atom collected_ibc_tip_atom '
@@ -241,7 +251,9 @@ def export_daily(directory=DAY_DIR, path=DAILY_CSV):
     writer.writeheader()
     for state in states:
         if progress(state)['status'] == 'complete':
-            writer.writerow(daily_summary(state))
+            from criterion1_fee_audit import load_fee_audit
+            audit = load_fee_audit(state, Path(directory).parent / 'criterion1_fee_audits')
+            writer.writerow(daily_summary(state, audit=audit))
     atomic_text(path, output.getvalue())
 
 

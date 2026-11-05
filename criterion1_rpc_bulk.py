@@ -29,6 +29,10 @@ def metadata(api, start, end):
     return by_height, source
 
 
+ATTRIBUTE_KEYS = {'fee', 'tip', 'spender', 'receiver', 'amount', 'recipient', 'sender',
+                  'granter', 'grantee', 'fee_payer', 'tip_payer', 'tip_payee', 'acc_seq', 'action', 'msg_index'}
+
+
 def normalized_events(events):
     """Older Tendermint ABCI attributes are base64; REST uses plain strings."""
     normalized = []
@@ -36,12 +40,12 @@ def normalized_events(events):
         attrs = []
         for attr in event.get('attributes', []):
             key, value = attr['key'], attr['value']
-            if key not in ('fee', 'tip'):
+            if key not in ATTRIBUTE_KEYS:
                 try:
                     decoded = base64.b64decode(key, validate=True).decode('utf-8')
                 except (ValueError, UnicodeError):
                     decoded = None
-                if decoded in ('fee', 'tip'):
+                if decoded in ATTRIBUTE_KEYS:
                     key = decoded
                     value = base64.b64decode(value, validate=True).decode('utf-8')
             attrs.append({'key': key, 'value': value})
