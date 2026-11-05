@@ -1,301 +1,251 @@
-import requests
+"""Collect an exact, contiguous block window; never rewrite legacy daily data."""
+import base64
+import hashlib
 import json
 import os
-import time
-import pandas as pd
-from datetime import datetime, timezone
 import re
-import hashlib
-import base64
+import time
+from concurrent.futures import ThreadPoolExecutor
+from functools import partial
+from datetime import datetime, timezone
+from decimal import Decimal
+import requests
+from criterion1_data import CHAIN, WINDOWS, append_window, day_coverage, enrich, read_rows, timestamp, utcnow, validate, number
 
-# ------------------------------------------------------------
-# CONFIG
-# ------------------------------------------------------------
-
-RPCS = [
-    "https://cosmos-rpc.polkachu.com:443",
-    "https://rpc.cosmoshub.strange.love:443",
-    "https://rpc-cosmoshub.blockapsis.com:443",
-    "https://rpc.cosmos.network",
-]
-
-LCDS = [
-    "https://cosmos-api.polkachu.com",
-    "https://cosmoshub-lcd.publicnode.com",
-    "https://api.cosmos.network",
-]
-
-STATE_FILE = "state_fee_v41.json"
-OUTFILE = "hub_revenue_daily.csv"
-
-BLOCK_BATCH = 60  # moins, car tx-by-hash = beaucoup d'appels
-UAATOM_PER_ATOM = 1_000_000
-
-REQ_TIMEOUT = 25
-MAX_RETRIES = 3
-BACKOFF = 0.8
-
-SLEEP_BETWEEN_BLOCKS = 0.05
-SLEEP_BETWEEN_TXS = 0.02
+RPCS = ['https://cosmos-rpc.polkachu.com', 'https://rpc.cosmos.directory/cosmoshub']
+LCDS = ['https://cosmos-api.polkachu.com', 'https://rest.cosmos.directory/cosmoshub']
+BLOCK_BATCH = int(os.environ.get('BLOCK_BATCH', '60'))
 
 
-# ------------------------------------------------------------
-# HTTP helpers
-# ------------------------------------------------------------
-
-def request_with_retries(url, params=None, timeout=REQ_TIMEOUT):
-    last_err = None
-    for i in range(1, MAX_RETRIES + 1):
-        try:
-            r = requests.get(url, params=params, timeout=timeout)
-            r.raise_for_status()
-            return r
-        except Exception as e:
-            last_err = e
-            time.sleep(BACKOFF * i)
-    raise last_err
-
-def http_get_any(base_urls, path, params=None, timeout=REQ_TIMEOUT):
+def get_any(bases, path, *, height=None, params=None):
     errors = []
-    for base in base_urls:
-        url = base.rstrip("/") + path
+    for base in bases:
         try:
-            r = request_with_retries(url, params=params, timeout=timeout)
-            return r.json(), base
-        except Exception as e:
-            errors.append((base, str(e)))
-            continue
-    raise RuntimeError("Tous les endpoints ont échoué:\n" + "\n".join([f"- {b}: {err}" for b, err in errors]))
-
-def get_atom_price_usd():
-    url = "https://api.coingecko.com/api/v3/simple/price"
-    params = {"ids": "cosmos", "vs_currencies": "usd"}
-    r = requests.get(url, params=params, timeout=20)
-    r.raise_for_status()
-    return float(r.json()["cosmos"]["usd"])
-
-
-# ------------------------------------------------------------
-# State
-# ------------------------------------------------------------
-
-def load_state():
-    if not os.path.exists(STATE_FILE):
-        return None
-    try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception:
-        return None
-
-def save_state(height: int):
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump({"last_height": height}, f)
+            response = requests.get(base + path, params=params, timeout=25,
+                                    headers={'x-cosmos-block-height': str(height)} if height is not None else {})
+            response.raise_for_status()
+            if height is not None:
+                actual = response.headers.get('x-cosmos-block-height') or response.headers.get('grpc-metadata-x-cosmos-block-height')
+                if actual != str(height):
+                    raise ValueError('Historical height not confirmed by response header')
+            data = response.json()
+            if data.get('error'):
+                raise ValueError(str(data['error']))
+            return data, base
+        except (requests.RequestException, ValueError) as exc:
+            errors.append(f'{base}: {exc}')
+    raise RuntimeError('; '.join(errors))
 
 
-# ------------------------------------------------------------
-# Timestamp normalization
-# ------------------------------------------------------------
-
-def normalize_iso(ts: str) -> str:
-    if not isinstance(ts, str) or ts == "":
-        return ts
-    ts = ts.replace("Z", "+00:00")
-    m = re.match(r"^(.*\.(\d+))([+-]\d\d:\d\d)$", ts)
-    if not m:
-        return ts
-    frac = m.group(2)
-    tz = m.group(3)
-    frac6 = (frac + "000000")[:6]
-    base_no_frac = ts.split(".")[0]
-    return f"{base_no_frac}.{frac6}{tz}"
-
-def parse_date(block_time_iso: str) -> str:
-    ts = normalize_iso(block_time_iso)
-    dt = datetime.fromisoformat(ts).astimezone(timezone.utc)
-    return str(dt.date())
+def block(height):
+    data, source = get_any(RPCS, '/block', params={'height': height})
+    b = data['result']['block']
+    if b['header']['chain_id'] != CHAIN or int(b['header']['height']) != height:
+        raise ValueError('Wrong chain or block height')
+    timestamp(b['header']['time'])
+    return b, source
 
 
-# ------------------------------------------------------------
-# RPC calls
-# ------------------------------------------------------------
-
-def rpc_status():
-    j, base = http_get_any(RPCS, "/status")
-    return j, base
-
-def rpc_block(height: int):
-    j, base = http_get_any(RPCS, f"/block?height={height}")
-    return j, base
-
-
-# ------------------------------------------------------------
-# Hash computation
-# ------------------------------------------------------------
-
-def tm_tx_hash_from_b64(tx_b64: str) -> str:
-    """
-    Tendermint tx hash = SHA256(raw_tx_bytes), hex uppercase.
-    The /block endpoint provides base64 tx bytes in data.txs.
-    """
-    raw = base64.b64decode(tx_b64)
-    h = hashlib.sha256(raw).hexdigest().upper()
-    return h
-
-
-# ------------------------------------------------------------
-# LCD tx by hash
-# ------------------------------------------------------------
-
-def lcd_get_tx_by_hash(tx_hash: str):
-    data, lcd_used = http_get_any(LCDS, f"/cosmos/tx/v1beta1/txs/{tx_hash}", timeout=30)
-    return data, lcd_used
-
-
-# ------------------------------------------------------------
-# Extractors
-# ------------------------------------------------------------
-
-def is_ibc_tx(tx_body: dict) -> bool:
-    msgs = tx_body.get("messages", []) or []
-    for m in msgs:
-        t = m.get("@type", "")
-        if isinstance(t, str) and t.startswith("/ibc."):
-            return True
-    return False
-
-def fee_uatom_from_lcd_tx(lcd_tx: dict) -> int:
-    tx = lcd_tx.get("tx", {}) or {}
-    auth = tx.get("auth_info", {}) or {}
-    fee = auth.get("fee", {}) or {}
-    amounts = fee.get("amount", []) or []
+def coin_uatom(coins):
     total = 0
-    for a in amounts:
-        if a.get("denom") == "uatom":
-            try:
-                total += int(a.get("amount", "0"))
-            except Exception:
-                pass
+    for coin in coins or []:
+        if not re.fullmatch(r'\d+', str(coin['amount'])):
+            raise ValueError('Invalid coin amount')
+        if coin['denom'] == 'uatom':
+            total += int(coin['amount'])
     return total
 
-def body_from_lcd_tx(lcd_tx: dict) -> dict:
-    tx = lcd_tx.get("tx", {}) or {}
-    return tx.get("body", {}) or {}
+
+def event_coins(value):
+    if value == '':
+        return 0
+    coins = []
+    for part in value.split(','):
+        match = re.fullmatch(r'(\d+)([a-zA-Z][a-zA-Z0-9/:._-]*)', part)
+        if not match:
+            raise ValueError('Invalid fee event coin')
+        coins.append({'amount': match[1], 'denom': match[2]})
+    return coin_uatom(coins)
 
 
-# ------------------------------------------------------------
-# Main
-# ------------------------------------------------------------
+def collected_fee_components(tx):
+    """Read SDK deduction or fee-market fee+tip events without double counting.
+
+    A failed message can still pay fees. Missing/ambiguous events are unknown.
+    Neither event attests a burn or the final beneficiary of all fees.
+    """
+    events = tx['tx_response'].get('events', [])
+    def values(event_type, key):
+        return [a['value'] for e in events if e['type'] == event_type
+                for a in e.get('attributes', []) if a['key'] == key]
+    sdk = values('tx', 'fee')
+    market = values('fee_pay', 'fee')
+    tips = values('tip_pay', 'tip')
+    if len(sdk) > 1 or len(market) > 1 or len(tips) > 1:
+        return None, None
+    tip = event_coins(tips[0]) if tips else 0
+    if market:
+        total = event_coins(market[0]) + tip
+        if sdk and event_coins(sdk[0]) != total:
+            return None, None
+        return total, tip
+    if sdk:
+        total = event_coins(sdk[0])
+        if tip > total:
+            return None, None
+        return total, tip
+    return None, None
+
+
+def collected_fee(tx):
+    return collected_fee_components(tx)[0]
+
+
+def macro(height, block_time, side):
+    result = {f'supply_{side}_atom': '', f'inflation_{side}': '',
+              f'macro_{side}_height': '', f'macro_{side}_block_time': '',
+              f'macro_{side}_observed_at': '', f'macro_{side}_sources': '', f'macro_{side}_error': ''}
+    try:
+        supply, src = get_any(LCDS, '/cosmos/bank/v1beta1/supply/by_denom', height=height, params={'denom': 'uatom'})
+        inflation, inf_src = get_any(LCDS, '/cosmos/mint/v1beta1/inflation', height=height)
+        if supply['amount']['denom'] != 'uatom':
+            raise ValueError('Invalid supply denom')
+        supply_atom = number(supply['amount']['amount']) / 1000000
+        rate = number(inflation['inflation'])
+        if supply_atom <= 0 or rate < 0:
+            raise ValueError('Invalid macro snapshot')
+        result.update({f'supply_{side}_atom': str(supply_atom), f'inflation_{side}': str(rate),
+                       f'macro_{side}_height': height, f'macro_{side}_block_time': block_time,
+                       f'macro_{side}_observed_at': utcnow(), f'macro_{side}_sources': f'{src};{inf_src}'})
+    except (RuntimeError, ValueError, KeyError) as exc:
+        result[f'macro_{side}_error'] = str(exc)
+    return result
+
+
+def price_snapshot():
+    result = dict(atom_price_usd='', price_observed_at='', price_source_updated_at='',
+                  price_source='https://api.coingecko.com/api/v3/simple/price', price_error='')
+    try:
+        response = requests.get(result['price_source'], params={'ids': 'cosmos', 'vs_currencies': 'usd',
+                                                               'include_last_updated_at': 'true'}, timeout=20)
+        response.raise_for_status()
+        price = response.json()['cosmos']
+        observed = datetime.now(timezone.utc)
+        updated = datetime.fromtimestamp(price['last_updated_at'], timezone.utc)
+        if not 0 <= (observed - updated).total_seconds() <= 3600 or number(price['usd']) <= 0:
+            raise ValueError('Invalid or stale price')
+        result.update(atom_price_usd=str(price['usd']), price_observed_at=observed.isoformat(),
+                      price_source_updated_at=updated.isoformat())
+    except (requests.RequestException, ValueError, KeyError, TypeError) as exc:
+        result['price_error'] = str(exc)
+    return result
+
+
+def block_payload(height, *, deadline=None):
+    def check_budget():
+        if deadline is not None and time.monotonic() >= deadline:
+            raise TimeoutError('Collection time budget reached')
+    check_budget()
+    b, source = block(height)
+    transactions = []
+    for encoded in b['data'].get('txs') or []:
+        check_budget()
+        tx_hash = hashlib.sha256(base64.b64decode(encoded, validate=True)).hexdigest().upper()
+        tx, lcd_source = get_any(LCDS, '/cosmos/tx/v1beta1/txs/' + tx_hash)
+        response = tx['tx_response']
+        if int(response['height']) != height or response['txhash'].upper() != tx_hash:
+            raise ValueError('Transaction does not match requested block/hash')
+        transactions.append((tx, lcd_source))
+    return height, b, source, transactions
+
+
+def collect(start, end, *, deadline=None, workers=1):
+    boundary, source = block(start - 1)
+    start_time = boundary['header']['time']
+    r = dict(chain_id=CHAIN, start_height=start, end_height=end, block_count=end-start+1,
+             start_boundary_time=start_time, first_block_time='', end_time='', duration_seconds='',
+             utc_day_coverage_seconds='', utc_day_coverage_pct='',
+             coverage_kind='contiguous_window_not_daily_total', collected_at='',
+             tx_total=0, tx_ibc=0, declared_fee_atom='', declared_ibc_fee_atom='',
+             collected_fee_atom='', collected_ibc_fee_atom='', fee_collection_status='complete',
+             tx_without_fee_event=0, collected_tip_atom='', collected_ibc_tip_atom='', rpc_sources='', lcd_sources='')
+    declared = declared_ibc = collected = collected_ibc = tips = ibc_tips = 0
+    rpc_sources, lcd_sources = {source}, set()
+    previous_time = timestamp(start_time)
+    fetch = partial(block_payload, deadline=deadline)
+    if workers > 1:
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            payloads = list(pool.map(fetch, range(start, end + 1)))
+    else:
+        payloads = map(fetch, range(start, end + 1))
+    for height, b, source, transactions in payloads:
+        rpc_sources.add(source)
+        current_time = timestamp(b['header']['time'])
+        if current_time <= previous_time:
+            raise ValueError('Non-increasing block times')
+        previous_time = current_time
+        if height == start:
+            r['first_block_time'] = b['header']['time']
+        r['end_time'] = b['header']['time']
+        for tx, source in transactions:
+            lcd_sources.add(source)
+            is_ibc = any(m.get('@type', '').startswith('/ibc.') for m in tx['tx']['body']['messages'])
+            fee = coin_uatom(tx['tx']['auth_info']['fee']['amount'])
+            if fee < 0:
+                raise ValueError('Negative fee')
+            actual, tip = collected_fee_components(tx)
+            r['tx_total'] += 1
+            r['tx_ibc'] += int(is_ibc)
+            declared += fee
+            declared_ibc += fee if is_ibc else 0
+            if actual is None:
+                r['tx_without_fee_event'] += 1
+            else:
+                collected += actual
+                collected_ibc += actual if is_ibc else 0
+                tips += tip
+                ibc_tips += tip if is_ibc else 0
+    r.update(declared_fee_atom=str(Decimal(declared) / 1000000),
+             declared_ibc_fee_atom=str(Decimal(declared_ibc) / 1000000))
+    if r['tx_without_fee_event']:
+        r['fee_collection_status'] = 'incomplete'
+    else:
+        r.update(collected_fee_atom=str(Decimal(collected) / 1000000),
+                 collected_ibc_fee_atom=str(Decimal(collected_ibc) / 1000000),
+                 collected_tip_atom=str(Decimal(tips) / 1000000), collected_ibc_tip_atom=str(Decimal(ibc_tips) / 1000000))
+    r['duration_seconds'] = (timestamp(r['end_time']) - timestamp(start_time)).total_seconds()
+    coverage = day_coverage(timestamp(start_time), timestamp(r['end_time']))
+    r['utc_day_coverage_seconds'] = json.dumps(coverage, sort_keys=True)
+    r['utc_day_coverage_pct'] = json.dumps({k: v / 86400 * 100 for k, v in coverage.items()}, sort_keys=True)
+    r.update(macro(start - 1, start_time, 'start'))
+    r.update(macro(end, r['end_time'], 'end'))
+    r.update(price_snapshot())
+    r.update(collected_at=utcnow(), rpc_sources=';'.join(sorted(rpc_sources)), lcd_sources=';'.join(sorted(lcd_sources)))
+    return enrich(r)
+
 
 def main():
-    st, rpc_used = rpc_status()
-    latest = int(st["result"]["sync_info"]["latest_block_height"])
-
-    state = load_state()
-    if state and state.get("last_height") is not None:
-        start = int(state["last_height"]) + 1
-    else:
-        start = max(1, latest - BLOCK_BATCH)
-
-    end = min(latest, start + BLOCK_BATCH)
-
-    print(f"RPC utilisé (status): {rpc_used}")
-    print(f"Scan blocs: {start} -> {end} (latest={latest})")
-
-    atom_price = get_atom_price_usd()
-    print(f"ATOM price used (USD): {atom_price}")
-
-    by_date = {}
-    last_ok = None
-
-    for height in range(start, end + 1):
-        # get block (includes tx bytes)
-        try:
-            b, _ = rpc_block(height)
-            header = b["result"]["block"]["header"]
-            date = parse_date(header["time"])
-            txs_b64 = b["result"]["block"]["data"].get("txs", []) or []
-        except Exception as e:
-            print(f"[{height}] RPC /block error -> STOP: {e}")
-            break
-
-        if date not in by_date:
-            by_date[date] = {"tx_total": 0, "tx_ibc": 0, "total_fee_uatom": 0, "ibc_fee_uatom": 0, "lcd_errors": 0}
-
-        hashes = [tm_tx_hash_from_b64(x) for x in txs_b64]
-        by_date[date]["tx_total"] += len(hashes)
-
-        # per tx -> LCD by hash
-        for h in hashes:
-            try:
-                lcd_tx, _lcd = lcd_get_tx_by_hash(h)
-            except Exception as e:
-                by_date[date]["lcd_errors"] += 1
-                print(f"[{height}] LCD /txs/{{hash}} error -> STOP (sans trou): {e}")
-                # ne pas avancer state si bloc incomplet
-                hashes = None
-                break
-
-            fu = fee_uatom_from_lcd_tx(lcd_tx)
-            by_date[date]["total_fee_uatom"] += fu
-
-            body = body_from_lcd_tx(lcd_tx)
-            if is_ibc_tx(body):
-                by_date[date]["tx_ibc"] += 1
-                by_date[date]["ibc_fee_uatom"] += fu
-
-            time.sleep(SLEEP_BETWEEN_TXS)
-
-        if hashes is None:
-            break
-
-        save_state(height)
-        last_ok = height
-        time.sleep(SLEEP_BETWEEN_BLOCKS)
-
-    # Build df for this run
-    rows = []
-    for date, v in sorted(by_date.items()):
-        tx_total = v["tx_total"]
-        total_fee = v["total_fee_uatom"]
-        rows.append({
-            "date": date,
-            "tx_total": tx_total,
-            "tx_ibc": v["tx_ibc"],
-            "tx_ibc_ratio_pct": (v["tx_ibc"] / tx_total * 100.0) if tx_total else 0.0,
-            "total_fee_uatom": total_fee,
-            "ibc_fee_uatom": v["ibc_fee_uatom"],
-            "ibc_fee_share_pct": (v["ibc_fee_uatom"] / total_fee * 100.0) if total_fee else 0.0,
-            "lcd_errors": v["lcd_errors"],
-        })
-
-    df_new = pd.DataFrame(rows)
-
-    if os.path.exists(OUTFILE):
-        df_old = pd.read_csv(OUTFILE)
-        df = pd.concat([df_old, df_new], ignore_index=True)
-        num_cols = [c for c in df.columns if c != "date"]
-        df = df.groupby("date", as_index=False)[num_cols].sum()
-        df["tx_ibc_ratio_pct"] = df.apply(lambda r: (r["tx_ibc"] / r["tx_total"] * 100.0) if r["tx_total"] else 0.0, axis=1)
-        df["ibc_fee_share_pct"] = df.apply(lambda r: (r["ibc_fee_uatom"] / r["total_fee_uatom"] * 100.0) if r["total_fee_uatom"] else 0.0, axis=1)
-    else:
-        df = df_new
-
-    df["atom_price_usd_used"] = atom_price
-    df["total_fee_atom"] = df["total_fee_uatom"] / UAATOM_PER_ATOM
-    df["ibc_fee_atom"] = df["ibc_fee_uatom"] / UAATOM_PER_ATOM
-    df["total_fee_usd"] = df["total_fee_atom"] * atom_price
-    df["ibc_fee_usd"] = df["ibc_fee_atom"] * atom_price
-
-    df = df.sort_values("date")
-    df.to_csv(OUTFILE, index=False)
-
-    print("\nOK ->", OUTFILE)
-    if last_ok:
-        print("Dernier bloc traité :", last_ok)
-    print("\nDernières lignes :")
-    print(df.tail(10).to_string(index=False))
+    if not 1 <= BLOCK_BATCH <= 10000:
+        raise ValueError('BLOCK_BATCH must be between 1 and 10000')
+    rows = read_rows(WINDOWS)
+    validate(rows)
+    status, _ = get_any(RPCS, '/status')
+    info = status['result']
+    if info['node_info']['network'] != CHAIN or info['sync_info']['catching_up']:
+        raise ValueError('Endpoint is on wrong chain or catching up')
+    latest = int(info['sync_info']['latest_block_height'])
+    start = int(rows[-1]['end_height']) + 1 if rows else max(2, latest - BLOCK_BATCH + 1)
+    if start > latest:
+        print('No new blocks; ledger unchanged.')
+        return
+    end = min(latest, start + BLOCK_BATCH - 1)
+    # Any block/tx failure aborts before any write. Cursor and measurements are one file.
+    row = collect(start, end)
+    row.update(latest_height_seen=latest, unprocessed_blocks_seen=latest-end)
+    append_window(row, WINDOWS)
+    print(f'Committed window {start}..{end}: {row["duration_seconds"]} s, {row["block_count"]} blocks; latest={latest}')
+    print(f'Fee collection: {row["fee_collection_status"]}; burn: not measured')
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

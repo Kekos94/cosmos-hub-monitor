@@ -1,140 +1,98 @@
-import os
-import pandas as pd
-from datetime import datetime
+"""Publish measured windows; keep legacy records visibly unverified."""
+import csv
+import html
+import shutil
+from criterion1_data import ROOT, WINDOWS, read_rows, utcnow, validate
+from criterion1_daily import DAILY_CSV, load_days, progress, daily_summary, export_daily
 
-OUT_DIR = "site"
-HUB_FILE = "hub_revenue_with_inflation.csv"
-VOL_FILE = "ecosystem_out_usd_daily.csv"  # optionnel si tu ne l’as pas encore
-OUT_HTML = os.path.join(OUT_DIR, "index.html")
 
-def safe_read_csv(path):
-    if not os.path.exists(path):
-        return None
-    df = pd.read_csv(path)
-    if df.empty:
-        return None
-    return df
+def table(rows, fields):
+    if not rows:
+        return '<p>Aucune fenêtre mesurée disponible.</p>'
+    head = ''.join(f'<th>{html.escape(label)}</th>' for _, label in fields)
+    body = ''.join('<tr>' + ''.join(f'<td>{html.escape(str(r.get(k, ""))) or "indisponible"}</td>' for k, _ in fields) + '</tr>' for r in rows[-7:])
+    return f'<div class="scroll"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 
-def to_html_table(df, max_rows=7):
-    df2 = df.copy()
-    if "date" in df2.columns:
-        df2 = df2.sort_values("date")
-    df2 = df2.tail(max_rows)
-    return df2.to_html(index=False)
 
 def main():
-    os.makedirs(OUT_DIR, exist_ok=True)
+    out = ROOT / 'site'
+    out.mkdir(exist_ok=True)
+    windows = read_rows(WINDOWS)
+    validate(windows)
+    window_fields = [('start_height', 'Premier bloc'), ('end_height', 'Dernier bloc'),
+                     ('block_count', 'Blocs analysés'), ('start_boundary_time', 'Début UTC (exclu)'),
+                     ('end_time', 'Fin UTC (incluse)'), ('duration_seconds', 'Durée (s)'),
+                     ('utc_day_coverage_pct', '% du temps par journée UTC'),
+                     ('tx_total', 'Transactions observées'), ('tx_ibc', 'Transactions IBC'),
+                     ('collected_fee_atom', 'Fees collectées (ATOM)'),
+                     ('fee_collection_status', 'Complétude des fees'),
+                     ('collected_tip_atom', 'Tips inclus dans les fees (ATOM)'),
+                     ('unprocessed_blocks_seen', 'Blocs restant à analyser'),
+                     ('estimated_window_emission_atom', 'Émission estimée sur la fenêtre (ATOM)'),
+                     ('fee_to_estimated_emission_pct', 'Fees / émission estimée (%)'),
+                     ('net_supply_change_atom', 'Variation nette supply sur la fenêtre (ATOM)'),
+                     ('fee_to_net_supply_increase_pct', 'Fees / hausse nette supply (%)'),
+                     ('burn_status', 'Burn effectif'), ('atom_price_usd', 'Prix USD à la collecte'),
+                     ('price_source_updated_at', 'Prix : timestamp source UTC')]
+    states = load_days(ROOT / 'data' / 'criterion1_days')
+    export_daily(ROOT / 'data' / 'criterion1_days', ROOT / DAILY_CSV.name)
+    complete_days = [daily_summary(state) for state in states if progress(state)['status'] == 'complete']
+    day_progress = [progress(state) for state in states]
+    daily_fields = [('date', 'Journée UTC'), ('block_count', 'Blocs analysés'),
+                    ('block_coverage_pct', 'Couverture des blocs (%)'), ('tx_total', 'Transactions'),
+                    ('collected_fee_atom', 'Fees collectées (ATOM, tips inclus)'),
+                    ('collected_tip_atom', 'Dont tips (ATOM)'), ('fee_collection_status', 'Complétude des fees'),
+                    ('estimated_emission_atom', 'Émission estimée sur les mêmes blocs (ATOM)'),
+                    ('fee_to_estimated_emission_pct', 'Fees / émission estimée (%)'),
+                    ('net_supply_change_atom', 'Variation nette supply sur les mêmes blocs (ATOM)'),
+                    ('fee_to_net_supply_increase_pct', 'Fees / hausse nette supply (%)'),
+                    ('measured_block_interval_seconds', 'Durée entre états de blocs (s)'), ('burn_status', 'Burn effectif')]
+    legacy = read_rows(ROOT / 'hub_revenue_daily.csv')
+    published = []
+    for name in ('hub_revenue_daily.csv', 'hub_revenue_with_inflation.csv', WINDOWS.name, DAILY_CSV.name, 'ecosystem_out_usd_daily.csv'):
+        source = ROOT / name
+        if source.exists():
+            shutil.copy2(source, out / name)
+            published.append(f'<li><a href="{name}">{name}</a></li>')
+    document = f'''<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Cosmos Hub Monitor</title>
+<style>body{{font-family:Arial,sans-serif;margin:30px;line-height:1.5}}.scroll{{overflow-x:auto}}table{{border-collapse:collapse}}th,td{{border:1px solid #ddd;padding:8px;text-align:left}}.notice{{background:#fff5d6;padding:16px}}</style></head><body>
+<h1>Cosmos Hub Monitor</h1><p>Généré : {html.escape(utcnow())}</p>
+<h2>Critère 1 — journées UTC complètes</h2>
+<p>Une journée comprend tous les blocs horodatés entre 00:00 UTC inclus et le minuit suivant exclu.
+Les blocs précédant et suivant cet intervalle sont vérifiés. Une collecte partielle ne produit aucun total journalier.</p>
+<p>Les ratios comparent les fees aux états de supply et aux estimations d'émission sur les mêmes blocs.
+L'intervalle entre ces états diffère de quelques secondes des 86 400 secondes civiles ; sa durée réelle est affichée.
+L'émission estimée est la somme des estimations de chaque lot, sans extrapoler les frais.
+Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisations USD journalières restent indisponibles.</p>
+{table(complete_days, daily_fields) if complete_days else '<p>Aucune journée complète collectée pour le moment.</p>'}
+<h3>Avancement de la collecte exhaustive</h3>
+{table(day_progress, [('date','Journée UTC'), ('status','État'), ('scanned_blocks','Blocs traités'), ('expected_blocks','Blocs attendus'), ('block_coverage_pct','Couverture des blocs (%)')]) if day_progress else '<p>La première collecte visera la dernière journée UTC terminée.</p>'}
+<h2>Critère 1 — anciennes fenêtres mesurées</h2>
+<p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
+La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
+Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
+<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
+L'émission estimée applique le taux et la supply observés au début de la fenêtre à sa durée, sur une base de 365 jours ; elle n'est pas une émission brute mesurée.
+La variation de supply est nette et ne permet pas d'isoler le burn. Les frais ne sont jamais soustraits de la dilution.</p>
+<p>Le prix affiché est le spot horodaté à la collecte. Sa valorisation éventuelle est une valorisation à la collecte, pas un prix historique de la fenêtre.
+Les snapshots de supply et d'inflation sont acceptés uniquement si la hauteur historique est confirmée par le fournisseur.</p>
+{table(windows, window_fields)}
+<h2>Archives historiques — {len(legacy)} observations</h2>
+<p class="notice">Les deux CSV historiques sont conservés à l'identique. La couverture des blocs et les timestamps des snapshots y sont inconnus.
+Les anciens prix USD, taux d'inflation, ratios de couverture et calculs de dilution sont non validés ; ils ne sont pas affichés comme indicateurs fiables.
+Les fees archivées sont des montants déclarés dans les transactions, sans preuve de burn.</p>
+{table(legacy, [('date','Date archive'), ('tx_total','Transactions observées'), ('tx_ibc','Transactions IBC'), ('total_fee_atom','Fees déclarées observées (ATOM)')])}
+<h2>Fichiers</h2><ul>{''.join(published)}</ul>
+'''
+    volume = ROOT / 'ecosystem_out_usd_daily.csv'
+    if volume.exists():
+        rows = read_rows(volume)
+        document += '<h2>Critère 2 — données existantes</h2>' + table(rows, [(k, k) for k in rows[0]] if rows else [])
+    document += '</body></html>'
+    (out / 'index.html').write_text(document, encoding='utf-8')
+    print('Dashboard generated; source CSVs retained at repository root.')
 
-    hub = safe_read_csv(HUB_FILE)
-    vol = safe_read_csv(VOL_FILE)
 
-    now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
-
-    if hub is None:
-        html = f"""<!doctype html>
-<html><head><meta charset="utf-8"><title>Cosmos Hub Monitor</title></head>
-<body>
-<h1>Cosmos Hub Monitor</h1>
-<p>Dernière génération: {now}</p>
-<p><b>Erreur :</b> {HUB_FILE} absent ou vide.</p>
-</body></html>"""
-        with open(OUT_HTML, "w", encoding="utf-8") as f:
-            f.write(html)
-        print("Dashboard généré (mais sans données Hub).")
-        return
-
-    hub["date"] = pd.to_datetime(hub["date"])
-    hub = hub.sort_values("date")
-    last = hub.iloc[-1]
-
-    # Valeurs clés (Critère 1)
-    k = {
-        "Date": str(last["date"].date()),
-        "Tx total": int(last.get("tx_total", 0)),
-        "Tx IBC": int(last.get("tx_ibc", 0)),
-        "Ratio IBC (%)": float(last.get("tx_ibc_ratio_pct", 0.0)),
-        "Fees totales (ATOM)": float(last.get("total_fee_atom", 0.0)),
-        "Fees IBC (ATOM)": float(last.get("ibc_fee_atom", 0.0)),
-        "Part fees IBC (%)": float(last.get("ibc_fee_share_pct", 0.0)),
-        "Inflation annuelle (%)": float(last.get("annual_inflation", 0.0)) * 100.0,
-        "Emission/jour (ATOM)": float(last.get("estimated_daily_emission_atom", 0.0)),
-        "Coverage fees (%)": float(last.get("fee_coverage_pct", 0.0)),
-        "Coverage fees IBC (%)": float(last.get("ibc_fee_coverage_pct", 0.0)),
-    }
-
-    # Tables
-    hub_last7 = hub.copy()
-    hub_last7["date"] = hub_last7["date"].dt.date
-
-    html_kv = "<table border='1' cellpadding='6' cellspacing='0'>"
-    for kk, vv in k.items():
-        html_kv += f"<tr><th align='left'>{kk}</th><td>{vv}</td></tr>"
-    html_kv += "</table>"
-
-    html = f"""<!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Cosmos Hub Monitor</title>
-  <style>
-    body {{ font-family: Arial, sans-serif; margin: 30px; }}
-    h1 {{ margin-bottom: 0; }}
-    .muted {{ color: #666; }}
-    table {{ border-collapse: collapse; }}
-    th, td {{ padding: 6px 10px; }}
-  </style>
-</head>
-<body>
-  <h1>Cosmos Hub Monitor</h1>
-  <p class="muted">Dernière génération: {now}</p>
-
-  <h2>Critère 1 — Snapshot (dernier jour)</h2>
-  {html_kv}
-
-  <h2>Critère 1 — 7 derniers jours (Hub)</h2>
-  {to_html_table(hub_last7[[
-      "date","tx_total","tx_ibc","tx_ibc_ratio_pct",
-      "total_fee_atom","ibc_fee_atom","ibc_fee_share_pct",
-      "fee_coverage_pct","ibc_fee_coverage_pct"
-  ]], max_rows=7)}
-
-  <h2>Fichiers</h2>
-  <ul>
-    <li><a href="hub_revenue_with_inflation.csv">hub_revenue_with_inflation.csv</a></li>
-    <li><a href="hub_revenue_daily.csv">hub_revenue_daily.csv</a></li>
-"""
-
-    if vol is not None:
-        vol["date"] = pd.to_datetime(vol["date"])
-        vol = vol.sort_values("date")
-        vol_last7 = vol.copy()
-        vol_last7["date"] = vol_last7["date"].dt.date
-        html += f"""
-    <li><a href="ecosystem_out_usd_daily.csv">ecosystem_out_usd_daily.csv</a></li>
-  </ul>
-
-  <h2>Critère 2 — 7 derniers jours (ecosystem OUT USD)</h2>
-  {to_html_table(vol_last7.tail(7), max_rows=7)}
-"""
-    else:
-        html += """
-  </ul>
-  <p class="muted">ecosystem_out_usd_daily.csv absent (OK si Critère 2 pas encore en prod).</p>
-"""
-
-    html += """
-</body></html>
-"""
-
-    with open(OUT_HTML, "w", encoding="utf-8") as f:
-        f.write(html)
-
-    # Copier les CSV dans /site pour téléchargement
-    for fn in ["hub_revenue_with_inflation.csv", "hub_revenue_daily.csv", "ecosystem_out_usd_daily.csv"]:
-        if os.path.exists(fn):
-            os.replace(fn, os.path.join(OUT_DIR, fn)) if not os.path.exists(os.path.join(OUT_DIR, fn)) else None
-
-    print("Dashboard généré:", OUT_HTML)
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

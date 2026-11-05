@@ -2,20 +2,31 @@ name: Daily Cosmos Monitor
 
 on:
   schedule:
-    - cron: "15 6 * * *"   # Tous les jours à 06:15 UTC
+    - cron: "15 * * * *"
   workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Première journée UTC (YYYY-MM-DD), seulement pour initialiser un historique vide"
+        required: false
+        type: string
 
 permissions:
   contents: write
 
+concurrency:
+  group: cosmos-monitor-data-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   run:
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     steps:
-      - name: Checkout repo (full history)
+      - name: Checkout repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref_name }}
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -23,49 +34,51 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      - name: Run Criterion 1 pipeline
-        run: |
-          python run_criteria1_pipeline.py
+      - name: Tests and archive integrity
+        run: python -m unittest discover -s tests -v
+
+      - name: Collect complete UTC days with checkpoints
+        id: collect
+        continue-on-error: true
+        env:
+          COLLECT_BUDGET_SECONDS: "1200"
+          CHUNK_BLOCKS: "120"
+          COLLECT_WORKERS: "4"
+          START_DATE: ${{ inputs.start_date }}
+        run: python run_criteria1_pipeline.py
+
+      # A network failure must not discard already validated chunks.
+      - name: Validate checkpoints and build daily export
+        run: python inflation_overlay.py
 
       - name: Generate HTML dashboard
-        run: |
-          python generate_dashboard_html.py
+        run: python generate_dashboard_html.py
 
-      - name: Show generated files (debug)
-        run: |
-          echo "=== Repo root ==="
-          ls -la
-          echo "=== site/ (if exists) ==="
-          ls -la site || true
-
-      - name: Commit updated CSVs to main
+      - name: Commit progress and complete days together
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add hub_criterion1_daily_complete.csv site/hub_criterion1_daily_complete.csv
+          if test -d data/criterion1_days; then
+            git add data/criterion1_days
+          fi
+          git add site/hub_revenue_daily.csv site/hub_revenue_with_inflation.csv site/index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update: UTC-day collection checkpoints and verified daily totals"
+            git push
+          fi
 
-          # Add CSVs whether they are in root and/or in site/
-          git add hub_revenue_daily.csv hub_revenue_with_inflation.csv || true
-          git add ecosystem_out_usd_daily.csv || true
+      - name: Report collection failure after saving progress
+        if: steps.collect.outcome == 'failure'
+        run: |
+          echo "Collection failed. Validated progress was saved; the next run resumes it."
+          exit 1
 
-          git add site/hub_revenue_daily.csv site/hub_revenue_with_inflation.csv || true
-          git add site/ecosystem_out_usd_daily.csv || true
-
-          # Optional: keep the published HTML versioned too
-          git add site/index.html || true
-
-          echo "=== git status (before commit) ==="
-          git status
-
-          # If nothing changed, exit cleanly
-          git diff --cached --quiet && echo "No changes to commit" && exit 0
-
-          git commit -m "Daily update: data + dashboard"
-          git push
-
-      - name: Deploy to GitHub Pages (gh-pages)
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
