@@ -1,125 +1,31 @@
 <!doctype html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>Cosmos Hub Monitor</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 30px; }
-    h1 { margin-bottom: 0; }
-    .muted { color: #666; }
-    table { border-collapse: collapse; }
-    th, td { padding: 6px 10px; }
-  </style>
-</head>
-<body>
-  <h1>Cosmos Hub Monitor</h1>
-  <p class="muted">Dernière génération: 2026-11-05 14:36 UTC</p>
-
-  <h2>Critère 1 — Snapshot (dernier jour)</h2>
-  <table border='1' cellpadding='6' cellspacing='0'><tr><th align='left'>Date</th><td>2026-11-05</td></tr><tr><th align='left'>Tx total</th><td>65</td></tr><tr><th align='left'>Tx IBC</th><td>26</td></tr><tr><th align='left'>Ratio IBC (%)</th><td>40.0</td></tr><tr><th align='left'>Fees totales (ATOM)</th><td>0.271539</td></tr><tr><th align='left'>Fees IBC (ATOM)</th><td>0.058712</td></tr><tr><th align='left'>Part fees IBC (%)</th><td>21.621940126464338</td></tr><tr><th align='left'>Inflation annuelle (%)</th><td>10.0</td></tr><tr><th align='left'>Emission/jour (ATOM)</th><td>147988.13711117726</td></tr><tr><th align='left'>Coverage fees (%)</th><td>0.00018348700463470538</td></tr><tr><th align='left'>Coverage fees IBC (%)</th><td>3.9673450281958846e-05</td></tr></table>
-
-  <h2>Critère 1 — 7 derniers jours (Hub)</h2>
-  <table border="1" class="dataframe">
-  <thead>
-    <tr style="text-align: right;">
-      <th>date</th>
-      <th>tx_total</th>
-      <th>tx_ibc</th>
-      <th>tx_ibc_ratio_pct</th>
-      <th>total_fee_atom</th>
-      <th>ibc_fee_atom</th>
-      <th>ibc_fee_share_pct</th>
-      <th>fee_coverage_pct</th>
-      <th>ibc_fee_coverage_pct</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>2026-10-30</td>
-      <td>44</td>
-      <td>11</td>
-      <td>25.000000</td>
-      <td>0.240532</td>
-      <td>0.027632</td>
-      <td>11.487869</td>
-      <td>0.000163</td>
-      <td>0.000019</td>
-    </tr>
-    <tr>
-      <td>2026-10-31</td>
-      <td>50</td>
-      <td>15</td>
-      <td>30.000000</td>
-      <td>0.432185</td>
-      <td>0.053736</td>
-      <td>12.433564</td>
-      <td>0.000293</td>
-      <td>0.000036</td>
-    </tr>
-    <tr>
-      <td>2026-11-01</td>
-      <td>61</td>
-      <td>7</td>
-      <td>11.475410</td>
-      <td>0.432059</td>
-      <td>0.019048</td>
-      <td>4.408657</td>
-      <td>0.000292</td>
-      <td>0.000013</td>
-    </tr>
-    <tr>
-      <td>2026-11-02</td>
-      <td>92</td>
-      <td>52</td>
-      <td>56.521739</td>
-      <td>0.403637</td>
-      <td>0.085099</td>
-      <td>21.083052</td>
-      <td>0.000273</td>
-      <td>0.000058</td>
-    </tr>
-    <tr>
-      <td>2026-11-03</td>
-      <td>83</td>
-      <td>13</td>
-      <td>15.662651</td>
-      <td>0.494873</td>
-      <td>0.031742</td>
-      <td>6.414171</td>
-      <td>0.000335</td>
-      <td>0.000021</td>
-    </tr>
-    <tr>
-      <td>2026-11-04</td>
-      <td>47</td>
-      <td>9</td>
-      <td>19.148936</td>
-      <td>0.394099</td>
-      <td>0.022945</td>
-      <td>5.822141</td>
-      <td>0.000266</td>
-      <td>0.000016</td>
-    </tr>
-    <tr>
-      <td>2026-11-05</td>
-      <td>65</td>
-      <td>26</td>
-      <td>40.000000</td>
-      <td>0.271539</td>
-      <td>0.058712</td>
-      <td>21.621940</td>
-      <td>0.000183</td>
-      <td>0.000040</td>
-    </tr>
-  </tbody>
-</table>
-
-  <h2>Fichiers</h2>
-  <ul>
-    <li><a href="hub_revenue_with_inflation.csv">hub_revenue_with_inflation.csv</a></li>
-    <li><a href="hub_revenue_daily.csv">hub_revenue_daily.csv</a></li>
-
-  </ul>
-  <p class="muted">ecosystem_out_usd_daily.csv absent (OK si Critère 2 pas encore en prod).</p>
-
+<html lang="fr"><head><meta charset="utf-8"><title>Cosmos Hub Monitor</title>
+<style>body{font-family:Arial,sans-serif;margin:30px;line-height:1.5}.scroll{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}.notice{background:#fff5d6;padding:16px}</style></head><body>
+<h1>Cosmos Hub Monitor</h1><p>Généré : 2026-11-05T15:26:52.229364+00:00</p>
+<h2>Critère 1 — journées UTC complètes</h2>
+<p>Une journée comprend tous les blocs horodatés entre 00:00 UTC inclus et le minuit suivant exclu.
+Les blocs précédant et suivant cet intervalle sont vérifiés. Une collecte partielle ne produit aucun total journalier.</p>
+<p>Les ratios comparent les fees aux états de supply et aux estimations d'émission sur les mêmes blocs.
+L'intervalle entre ces états diffère de quelques secondes des 86 400 secondes civiles ; sa durée réelle est affichée.
+L'émission estimée est la somme des estimations de chaque lot, sans extrapoler les frais.
+Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisations USD journalières restent indisponibles.</p>
+<p>Aucune journée complète collectée pour le moment.</p>
+<h3>Avancement de la collecte exhaustive</h3>
+<div class="scroll"><table><thead><tr><th>Journée UTC</th><th>État</th><th>Blocs traités</th><th>Blocs attendus</th><th>Couverture des blocs (%)</th></tr></thead><tbody><tr><td>2026-11-04</td><td>incomplete</td><td>1200</td><td>15057</td><td>7.969715082685793982865112572</td></tr></tbody></table></div>
+<h2>Critère 1 — anciennes fenêtres mesurées</h2>
+<p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
+La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
+Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
+<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
+L'émission estimée applique le taux et la supply observés au début de la fenêtre à sa durée, sur une base de 365 jours ; elle n'est pas une émission brute mesurée.
+La variation de supply est nette et ne permet pas d'isoler le burn. Les frais ne sont jamais soustraits de la dilution.</p>
+<p>Le prix affiché est le spot horodaté à la collecte. Sa valorisation éventuelle est une valorisation à la collecte, pas un prix historique de la fenêtre.
+Les snapshots de supply et d'inflation sont acceptés uniquement si la hauteur historique est confirmée par le fournisseur.</p>
+<p>Aucune fenêtre mesurée disponible.</p>
+<h2>Archives historiques — 253 observations</h2>
+<p class="notice">Les deux CSV historiques sont conservés à l'identique. La couverture des blocs et les timestamps des snapshots y sont inconnus.
+Les anciens prix USD, taux d'inflation, ratios de couverture et calculs de dilution sont non validés ; ils ne sont pas affichés comme indicateurs fiables.
+Les fees archivées sont des montants déclarés dans les transactions, sans preuve de burn.</p>
+<div class="scroll"><table><thead><tr><th>Date archive</th><th>Transactions observées</th><th>Transactions IBC</th><th>Fees déclarées observées (ATOM)</th></tr></thead><tbody><tr><td>2026-10-29</td><td>50</td><td>15</td><td>0.289294</td></tr><tr><td>2026-10-30</td><td>44</td><td>11</td><td>0.240532</td></tr><tr><td>2026-10-31</td><td>50</td><td>15</td><td>0.432185</td></tr><tr><td>2026-11-01</td><td>61</td><td>7</td><td>0.432059</td></tr><tr><td>2026-11-02</td><td>92</td><td>52</td><td>0.403637</td></tr><tr><td>2026-11-03</td><td>83</td><td>13</td><td>0.494873</td></tr><tr><td>2026-11-04</td><td>47</td><td>9</td><td>0.394099</td></tr></tbody></table></div>
+<h2>Fichiers</h2><ul><li><a href="hub_revenue_daily.csv">hub_revenue_daily.csv</a></li><li><a href="hub_revenue_with_inflation.csv">hub_revenue_with_inflation.csv</a></li><li><a href="hub_criterion1_daily_complete.csv">hub_criterion1_daily_complete.csv</a></li></ul>
 </body></html>
