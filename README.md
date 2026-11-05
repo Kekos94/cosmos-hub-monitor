@@ -72,7 +72,8 @@ La collecte réelle utilise les nœuds RPC/LCD publics et CoinGecko.
   déclarée vide qu'après vérification des blocs qui encadrent tout cet intervalle.
   Aucune émission ni dilution n'est inventée pendant cet arrêt.
 
-Le workflow `.github/workflows/daily.yml` s'exécute **chaque heure**, avec un
+Le workflow `.github/workflows/daily.yml` est programmé **toutes les 30 minutes**
+(aux minutes 15 et 45 de chaque heure UTC), avec un
 budget de collecte de 20 minutes vérifié entre les opérations et les lots.
 L'exécution suivante reprend automatiquement les mesures enregistrées.
 `COLLECT_BUDGET_SECONDS`, `CHUNK_BLOCKS` (1–1000) et `COLLECT_WORKERS` (1–8)
@@ -230,5 +231,5 @@ Pour republier sans refaire la collecte :
 Les checkpoints existants sont validés puis le tableau de bord est régénéré
 et publié. Aucun bloc n'est collecté dans ce mode. Il faut lancer une nouvelle
 exécution pour utiliser ces options : relancer une ancienne exécution réutilise
-sa définition de workflow antérieure. Les exécutions horaires continuent de
+sa définition de workflow antérieure. Les exécutions toutes les 30 minutes continuent de
 collecter normalement et reprennent les journées incomplètes.
