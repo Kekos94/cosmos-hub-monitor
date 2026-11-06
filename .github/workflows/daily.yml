@@ -90,6 +90,7 @@ jobs:
           fi
           git add site/hub_revenue_daily.csv site/hub_revenue_with_inflation.csv site/index.html
           git add site/criterion1.html site/dashboard.css site/dashboard.js
+          git add site/index-en.html site/criterion1-en.html site/criterion2-en.html
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else

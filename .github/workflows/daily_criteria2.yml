@@ -80,6 +80,7 @@ jobs:
           git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
           git add site/criterion2.html site/criterion2_progress.csv site/ibc_out_assets_daily.csv site/ibc_out_chains_daily.csv site/ecosystem_out_usd_daily.csv
           git add site/index.html site/dashboard.css site/dashboard.js
+          git add site/index-en.html site/criterion1-en.html site/criterion2-en.html
           if test -d data/criterion2; then
             git add data/criterion2
           fi

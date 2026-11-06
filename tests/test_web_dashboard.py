@@ -57,5 +57,29 @@ class DashboardTests(unittest.TestCase):
             self.assertEqual(d['criterion1'],[]); self.assertEqual(d['criterion2'],[])
             self.assertEqual(len(d['members']),4)
 
+    def test_english_and_french_share_exact_data_and_correct_language_links(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp);self.setup_root(root)
+            dashboard.main(root)
+            fr=(root/'site/index.html').read_text();en=(root/'site/index-en.html').read_text()
+            def data(s):return json.loads(s.split('id="monitor-data">')[1].split('</script>')[0])
+            self.assertEqual(data(fr),data(en))
+            self.assertIn('<html lang="en">',en)
+            self.assertIn('href="index.html" lang="fr" hreflang="fr"',en)
+            self.assertIn('href="index-en.html" lang="en" aria-current="page"',en)
+            self.assertIn('href="criterion1-en.html"',en)
+            self.assertIn('href="criterion2-en.html"',en)
+            self.assertIn('What the fees cover.',en)
+            self.assertIn('Les faits, à découvert.',fr)
+
+    def test_translated_detail_pages_keep_data_and_locale_navigation(self):
+        catalog=json.loads((dashboard.ROOT/'web/en.json').read_text())
+        source='<html lang="fr"><a href="index.html">Retour au dashboard</a><h1>Critère 2 — flux IBC sortants</h1><table><tr><th>Paquets non valorisés</th><td>376</td></tr></table></html>'
+        result=dashboard.english(source,catalog)
+        self.assertIn('href="index-en.html"',result)
+        self.assertIn('Unvalued packets',result)
+        self.assertIn('<td>376</td>',result)
+        self.assertIn('6,457,369.77',dashboard.english('<td>6 457 369,77</td>',catalog))
+
 
 if __name__=='__main__': unittest.main()

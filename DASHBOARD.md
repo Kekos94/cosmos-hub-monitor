@@ -1,5 +1,12 @@
 # Dashboard web
 
+Le sélecteur Français / English relie `index.html` à `index-en.html`.
+Les deux versions embarquent exactement les mêmes mesures. Les pages détaillées
+existent aussi en anglais (`criterion1-en.html`, `criterion2-en.html`).
+Les traductions sont dans `web/en.json` ; les formats de nombres, de dates et
+les messages des graphiques suivent la langue de la page. Les CSV sources
+conservent leurs colonnes et valeurs originales.
+
 La page d'accueil `site/index.html` regroupe les deux critères, leurs graphiques
 et l'état des collectes. `site/criterion1.html` et `site/criterion2.html`
 conservent les tableaux et méthodes détaillés. Le nom de présentation est
