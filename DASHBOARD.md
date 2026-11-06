@@ -78,3 +78,11 @@ including outcomes from later proofs, while the existing gross-volume charts
 retain their definitions. Each chain shows search coverage independently.
 Remote-source refunds are labelled unverified on the incoming view. Summary and
 compressed per-packet exports are downloadable; no net-flow calculation is added.
+
+The **Net flows of successful transfers** panel now provides chain and local-asset
+selectors, successful inflow/outflow/net cards, a per-asset historical chart and
+paired USD subtotals. It has independent selectors from the gross-flow view.
+The existing period filter applies to both. Exact figures remain in the new CSVs;
+small nonzero amounts use scientific notation rather than appearing as zero.
+The shared evidence cutoff and incomplete total valuations are explicit. The
+panel measures daily activity cohorts, not bank balances, market share or transit.

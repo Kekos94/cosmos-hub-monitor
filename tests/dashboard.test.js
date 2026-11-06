@@ -20,3 +20,11 @@ test('chart series neither fills missing days nor replaces unknown values with z
   assert.deepEqual(monitor.series([{date:'2026-11-05',fees:''},{date:'2026-11-03',fees:'7'}],'fees'),[
     {date:'2026-11-03',value:7},{date:'2026-11-05',value:null}]);
 });
+
+test('net amounts distinguish missing values, measured zero and one INJ base unit', () => {
+  assert.equal(monitor.amount('', 'en-GB'),null);
+  assert.equal(monitor.amount('0', 'en-GB'), '0');
+  assert.equal(monitor.amount('0.000000000000000001', 'en-GB'), '1E-18');
+  assert.equal(monitor.amount('-0.000000000000000001', 'en-GB'), '-1E-18');
+  assert.equal(monitor.amount('6249.251203','en-GB',true),'+6,249.251203');
+});

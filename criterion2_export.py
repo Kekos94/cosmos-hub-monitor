@@ -85,7 +85,9 @@ def fetch_needed_prices(root=DATA,*,budget=180,prices_root=PRICES):
     for d in days:
         if not d['complete']:continue
         for packet in d['packets']:
-            if packet.get('receipt_status') not in (None,'success_ack_in_receive_tx'):continue
+            # Missing same-tx ACKs may be confirmed by later lifecycle evidence.
+            # Fetching a reference price never turns an unknown receipt into a success.
+            if packet.get('receipt_status')=='error_ack_in_receive_tx':continue
             asset=resolve_asset(packet['denom'],d['plan']['assets']['mapping'])
             if asset and asset['coingecko_id']:needed[(d['plan']['date'],asset['coingecko_id'])]+=1
     token=http.REQUEST_DEADLINE.set(time.monotonic()+budget)

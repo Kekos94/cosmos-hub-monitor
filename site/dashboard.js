@@ -8,6 +8,10 @@ const Monitor = {
     cutoff.setUTCDate(cutoff.getUTCDate() - Number(period) + 1);
     return rows.filter(r => r.date >= cutoff.toISOString().slice(0, 10) && r.date <= last);
   },
+  amount(value, locale='fr-FR', signed=false) {
+    const n=Monitor.number(value);if(n===null)return null;
+    return new Intl.NumberFormat(locale,{maximumFractionDigits:6,notation:n!==0&&Math.abs(n)<0.000001?'scientific':'standard',signDisplay:signed?'exceptZero':'auto'}).format(value);
+  },
   latest(rows) { return rows.length ? [...rows].sort((a,b) => a.date.localeCompare(b.date)).at(-1) : null; },
   series(rows, key) {
     return [...rows].sort((a,b) => a.date.localeCompare(b.date)).map(r => ({date:r.date, value:Monitor.number(r[key])}));
@@ -31,7 +35,7 @@ function startDashboard() {
   const day = value => value ? new Date(value+"T00:00:00Z").toLocaleDateString(locale, {day:"numeric",month:"short",year:"numeric",timeZone:"UTC"}) : t("Aucune journée");
   const esc = value => String(value).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
   const card = (label, value, unit, note, accent=false) => `<article class="card${accent ? " accent" : ""}"><p class="card-label">${esc(label)}</p><div class="card-value">${esc(value)} <small>${esc(unit)}</small></div><p class="card-note">${esc(note)}</p></article>`;
-  const empty = (el, message=t("Aucune journée complète sur cette période.")) => { el.innerHTML = `<div class="chart-empty">${esc(message)}<span>Les données manquantes ne sont pas remplacées par zéro.</span></div>`; };
+  const empty = (el, message=t("Aucune journée complète sur cette période.")) => { el.innerHTML = `<div class="chart-empty">${esc(message)}<span>${esc(t("Les données manquantes ne sont pas remplacées par zéro."))}</span></div>`; };
   const svgEl = (tag, attrs={}, text) => {
     const el = document.createElementNS("http://www.w3.org/2000/svg",tag);
     for (const [k,v] of Object.entries(attrs)) el.setAttribute(k,v);
@@ -93,7 +97,7 @@ function startDashboard() {
     note.textContent=key==="sent_packets"?t("Un paquet n’est ni un utilisateur distinct, ni un montant en dollars."):t("Sous-totaux historiques valorisés ; les actifs sans prix sont exclus, jamais comptés à zéro.");
     el.append(note);
   }
-  const dates=[...data.criterion1,...data.criterion2,...(data.incoming||[])].map(r=>r.date).sort();
+  const dates=[...data.criterion1,...data.criterion2,...(data.incoming||[]),...(data.net_chains||[])].map(r=>r.date).sort();
   const last=dates.at(-1);
   $("build-stamp").textContent=t("Page générée le ")+new Date(data.generated_at).toLocaleString(locale,{timeZone:"UTC",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})+" UTC";
   function render() {
@@ -133,8 +137,39 @@ function startDashboard() {
       const headings=[t("Chaîne"),t("Paquets suivis"),t("Succès confirmés"),t("Erreurs / timeouts"),t("Sans conclusion"),t("Remboursements vérifiés"),t("Recherche complète jusqu’au (UTC)")];
       $("lifecycle-table").innerHTML='<div class="lifecycle-scroll"><table><thead><tr>'+headings.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+cohort.map(r=>'<tr><th scope="row">'+esc(names[r.chain]||r.chain)+'</th><td>'+esc(fmt(r.tracked_packets,0))+'</td><td>'+esc(fmt(r.success_confirmed,0))+'</td><td>'+esc(fmt(Number(r.error_acknowledged)+Number(r.timeout_confirmed),0))+'<small>'+esc(t("{errors} erreurs · {timeouts} timeouts",{errors:fmt(r.error_acknowledged,0),timeouts:fmt(r.timeout_confirmed,0)}))+'</small></td><td>'+esc(fmt(Number(r.awaiting_evidence)+Number(r.unsupported_ack)+Number(r.conflicts),0))+'</td><td>'+esc(incoming?t("Source distante non vérifiée"):fmt(r.refunds_verified,0))+'</td><td>'+esc(r.coverage_complete==='true'?r.complete_through_utc.replace('T',' ').replace('Z',''):t("Recherche incomplète"))+(r.latest_evidence_day?'<small>'+esc(t("Dernière preuve : {date}",{date:day(r.latest_evidence_day)}))+'</small>':'')+'</td></tr>').join('')+'</tbody></table></div>';
     }
-    $("lifecycle-note").textContent=t("Les cas sans conclusion restent inconnus. Les répétitions sans effet sont exclues ; un remboursement vérifié exige un mouvement bancaire correspondant. Une recherche complète ne signifie pas que tous les paquets sont résolus. Les séries brutes restent inchangées ; aucun flux net n’est calculé.");
+    $("lifecycle-note").textContent=t("Les cas sans conclusion restent inconnus. Les répétitions sans effet sont exclues ; un remboursement vérifié exige un mouvement bancaire correspondant. Une recherche complète ne signifie pas que tous les paquets sont résolus. Les séries brutes restent inchangées ; les flux nets sont présentés séparément ci-dessous.");
 
+  }
+  function renderNet() {
+    const allChains=Monitor.filter(data.net_chains||[],$("period").value,last);
+    const latestNet=Monitor.latest(allChains.filter(r=>r.coverage_status==='common_indexed_day'));
+    const rows=latestNet?allChains.filter(r=>r.date===latestNet.date):[];
+    const allAssets=Monitor.filter(data.net_assets||[],$("period").value,last);
+    const chain=$("net-chain").value;
+    const choices=latestNet?allAssets.filter(r=>r.date===latestNet.date&&r.chain===chain):[];
+    const old=$("net-asset").value;
+    const label=r=>(r.symbol||t("Actif non identifié"))+' · '+(r.denom.length>40?r.denom.slice(0,21)+'…'+r.denom.slice(-9):r.denom);
+    choices.sort((a,b)=>label(a).localeCompare(label(b)));
+    $("net-asset").innerHTML=choices.map(r=>'<option value="'+esc(r.denom)+'">'+esc(label(r))+'</option>').join('');
+    const native=choices.find(r=>r.metadata_status==='known'&&!r.denom.startsWith('ibc/')&&!r.denom.includes('/'));
+    if(choices.some(r=>r.denom===old))$("net-asset").value=old;else if(native)$("net-asset").value=native.denom;
+    const asset=choices.find(r=>r.denom===$("net-asset").value);
+    const unit=asset?.symbol||t("unités inconnues");
+    const amount=(v,signed=false)=>Monitor.amount(v,locale,signed)??t("Indisponible");
+    $("net-caption").textContent=latestNet?t("Cohorte du {date} UTC · preuves communes jusqu’au {cutoff}",{date:day(latestNet.date),cutoff:latestNet.evidence_through_utc.replace('T',' ').replace('Z',' UTC')}):t("En attente d’une journée commune complète dans les deux sens");
+    $("net-details").href='criterion2'+(language==='en'?'-en':'')+'.html#net-flows';
+    $("net-cards").innerHTML=card(t("Entrées réussies"),amount(asset?.confirmed_in_amount),unit,t("Réceptions de la journée, succès rapprochés"))+card(t("Sorties réussies"),amount(asset?.confirmed_out_amount),unit,t("Émissions de la journée, succès rapprochés"))+card(t("Solde net de cet actif"),amount(asset?.net_amount,true),unit,t("Entrées réussies − sorties réussies"),true)+card(t("Paquets incertains de cet actif"),fmt(asset?.unresolved_packets,0),t("paquets"),t("Ils bloquent le solde complet de l’actif"));
+    $("net-asset-note").textContent=asset?t("Dénomination locale : {denom}. {excluded} échecs exclus. Le prix historique ne sert qu’à la référence USD ; les montants en tokens restent séparés.",{denom:asset.denom,excluded:fmt(asset.excluded_packets,0)}):t("Aucun actif disponible dans une journée commune complète sur cette période.");
+    const headers=[t("Chaîne"),t("Actifs résolus valorisés / suivis"),t("Entrées du sous-ensemble USD"),t("Sorties du sous-ensemble USD"),t("Solde du sous-ensemble USD"),t("Solde total USD")];
+    if(!rows.length)empty($("net-summary"),t("Aucun solde n’est calculé tant que les deux sens et les index de preuves ne couvrent pas la même journée sur les quatre chaînes."));
+    else $("net-summary").innerHTML='<div class="lifecycle-scroll"><table><thead><tr>'+headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr><th scope="row">'+esc(names[r.chain]||r.chain)+'</th><td>'+esc(fmt(r.valued_assets,0)+' / '+fmt(r.assets,0))+'<small>'+esc(t("{count} paquets incertains",{count:fmt(r.unresolved_packets,0)}))+'</small></td><td>'+esc(fmt(r.valued_in_usd,2))+'</td><td>'+esc(fmt(r.valued_out_usd,2))+'</td><td>'+esc(fmt(r.valued_net_usd,2))+'</td><td>'+esc(fmt(r.total_net_usd,2))+'</td></tr>').join('')+'</tbody></table></div>';
+    $("net-valuation-note").textContent=t("Sous-totaux partiels : pour chaque chaîne, les entrées et sorties USD utilisent exactement les mêmes actifs résolus et valorisés. La couverture diffère entre chaînes ; ces soldes ne constituent pas un classement. Le total reste indisponible si des paquets, unités ou prix manquent. Un solde positif ne prouve pas une accumulation de capital.");
+    if(asset?.metadata_status==='unknown')$("net-asset-note").textContent+=' '+t("Unités non identifiées : les montants bruts exacts restent disponibles dans le CSV.");
+    if(asset?.metadata_status==='conflict')$("net-asset-note").textContent+=' '+t("Métadonnées contradictoires : conversion indisponible.");
+    if(Number(rows.find(r=>r.chain===chain)?.unknown_payload_packets)>0)$("net-asset-note").textContent+=' '+t("Des paquets incertains sans actif identifié empêchent un solde complet.");
+    const netHistory=asset?allAssets.filter(r=>r.chain===chain&&r.denom===asset.denom):[];
+    if(netHistory.some(r=>Monitor.number(r.net_amount)!==null))lineChart($("net-chart"),netHistory,'net_amount',unit);
+    else empty($("net-chart"),t("Le solde n’est pas disponible pour cet actif sur cette période."));
   }
   function statuses() {
     const yesterday=new Date();yesterday.setUTCDate(yesterday.getUTCDate()-1);const expected=yesterday.toISOString().slice(0,10);
@@ -160,8 +195,9 @@ function startDashboard() {
   }
   ["period","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
-  window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(render,120);});
-  render();statuses();
+  window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
+  ["period","net-chain","net-asset"].forEach(id=>$(id).addEventListener("change",renderNet));
+  render();renderNet();statuses();
 }
 if (typeof document !== "undefined") {
   try { startDashboard(); } catch(error) {

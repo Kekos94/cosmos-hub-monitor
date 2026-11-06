@@ -275,3 +275,69 @@ Protocol references: ibc-go v8.8.0 `proto/ibc/core/channel/v1/tx.proto`,
 `modules/core/keeper/msg_server.go`, `modules/apps/transfer/ibc_module.go`;
 Osmosis `x/ibc-hooks/wasm_hook.go`. Unsupported legacy message-response formats
 remain unverified rather than being inferred from an event.
+
+## Étape 2 — flux nets des transferts réussis
+
+`criterion2_net.py` calcule **entrées réussies − sorties réussies**, par chaîne,
+jour UTC et dénomination bancaire locale exacte. Le jour est celui de réception
+pour les entrées et d'émission pour les sorties : ce sont des **cohortes
+journalières d'activité**, pas des mouvements bancaires datés au règlement.
+Un accusé ultérieur peut préciser une cohorte antérieure. Une erreur ou un
+timeout confirmé exclut le transfert réussi ; un remboursement n'est jamais
+ajouté une seconde fois. Ce calcul ne prouve pas une variation de solde bancaire,
+une accumulation de capital ou le règlement au bénéficiaire final multi-sauts.
+
+Les huit cohortes (deux sens × quatre chaînes) doivent couvrir complètement la
+même journée UTC selon les index. Les hauteurs limites des plans entrant et
+sortant doivent être identiques sur chaque chaîne. Une collecte manquante ou
+partielle produit un état indisponible, jamais un zéro ni une extrapolation.
+La borne des preuves est le **minimum des couvertures journalières contiguës de
+tous les index de cycle de vie nécessaires, sur toutes les chaînes et les deux
+sens**. Seuls les journaux complets antérieurs à cette borne exclusive sont
+utilisés. Un succès connu plus tard dans le suivi de cycle de vie peut donc
+rester inconnu dans le net jusqu'à ce que la couverture commune le rejoigne.
+
+Les traces ICS20 sont ramenées à leur dénomination bancaire locale avant
+soustraction. Les symboles identiques ne suffisent jamais à regrouper des tokens,
+et deux vouchers de chemins différents restent distincts. Les montants bruts
+sont calculés en entiers Python ; les unités et prix utilisent Decimal, y compris
+pour les 18 décimales INJ et les différences d'une unité minimale entre montants
+très grands. Les métadonnées contradictoires entre plans bloquent la conversion,
+sans utiliser les décimales du token natif par défaut.
+
+Un paquet incertain bloque le solde complet de **son actif** et le total USD de
+la chaîne. Si un contenu incertain ne permet pas d'identifier l'actif, tous les
+soldes complets de la chaîne restent indisponibles. Le sous-total connu conserve
+son nom explicite dans le fichier par actif. Une absence de mouvement dans un
+sens n'est un zéro que si les deux cohortes et la couverture commune sont
+complètes. Les erreurs observées ne deviennent pas des entrées de zéro token.
+
+Les deux nouveaux exports racine, copiés dans `site/`, sont :
+- `ibc_net_assets_daily.csv` : brut exact, montants convertis, succès, échecs exclus et incertains,
+  solde connu et solde complet, métadonnées, prix historique et borne des preuves.
+- `ibc_net_chains_daily.csv` : couvertures, nombres de paquets/actifs, sous-totaux
+  USD appariés et totaux USD seulement si tous les actifs et paquets sont couverts.
+
+Pour le sous-total USD, un actif doit être résolu et valorisé, puis figurer dans
+**le même ensemble dans les deux termes** de la soustraction de chaque chaîne.
+Un actif dont la sortie est incertaine n'apporte pas seulement son entrée positive
+au sous-total. La couverture des actifs peut différer entre chaînes : les
+sous-totaux ne constituent pas un classement ni une part de marché. Aucun
+montant brut de tokens différents n'est additionné, et aucun total USD manquant
+n'est remplacé par zéro. Les références de prix sont celles du jour de la cohorte
+pour les deux sens, pas du jour d'un accusé ultérieur ; jamais de spot rétroappliqué.
+La collecte des prix peut inclure un actif reçu avant confirmation asynchrone ;
+posséder un prix ne confirme pas son transfert.
+
+Les exports conservent les lignes d'autres périmètres historiques ; le dashboard
+filtre le périmètre courant. Une disparition de cohorte/actif déjà exporté ou une
+régression de couverture bloque la réécriture. Les anciens CSV de flux bruts et
+les preuves immuables sont préservés. `publish_criterion2.py` régénère ces nouveaux
+exports à chaque exécution, sans ajouter de requête réseau au calcul des nets.
+La configuration horaire du workflow reste inchangée ; les deux nouveaux CSV
+racine et publiés sont ajoutés au commit automatique.
+
+Première cohorte commune, 5 novembre 2026 UTC, preuves avant le 6 novembre à
+00:00 UTC : ATOM natif sur le Hub, 116 879,948760 entrants réussis moins
+110 630,697557 sortants réussis = **+6 249,251203 ATOM**. Ce résultat par actif ne
+rend pas disponible le total USD tous actifs, dont la couverture reste partielle.
