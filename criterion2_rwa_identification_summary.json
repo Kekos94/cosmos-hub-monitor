@@ -1,0 +1,35 @@
+{
+  "registry_id": "5dbd0d44b67d18ca",
+  "review_date": "2026-11-07",
+  "scope": "initial_non_exhaustive_allowlist_not_total_cosmos_rwa",
+  "counts": [
+    {
+      "category": "fiat_stablecoin",
+      "identity_status": "verified_exact_identity",
+      "packet_observations": 2149
+    },
+    {
+      "category": "rwa_product",
+      "identity_status": "verified_exact_identity",
+      "packet_observations": 10
+    },
+    {
+      "category": "unreviewed",
+      "identity_status": "not_in_reviewed_allowlist",
+      "packet_observations": 12495
+    },
+    {
+      "category": "yield_stablecoin",
+      "identity_status": "verified_exact_identity",
+      "packet_observations": 6
+    }
+  ],
+  "unreviewed_chain_denominations": 154,
+  "strict_rwa_packet_observations": 10,
+  "caveats": [
+    "Incoming and outgoing observations are separate; never sum them as unique economic movements.",
+    "No reserves, balances, market value, successful settlement, or current issuer/network support is certified by this identity audit.",
+    "Absent from this non-exhaustive allowlist means unreviewed, not non-RWA.",
+    "Historical packets are classified using the dated review; current backing is not retroactively certified."
+  ]
+}

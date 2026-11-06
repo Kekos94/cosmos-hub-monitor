@@ -1,0 +1,151 @@
+{
+  "schema_version": 1,
+  "review_date": "2026-11-07",
+  "reviewed_at": "2026-11-06T23:10:52.725971+00:00",
+  "scope": "initial_non_exhaustive_allowlist_not_total_cosmos_rwa",
+  "sources_manifest": "data/criterion2_rwa_registry/2026-11-07/sources.json",
+  "products": [
+    {
+      "id": "ondo_usdy",
+      "symbol": "USDY",
+      "category": "rwa_product",
+      "issuer_brand": "Ondo Finance",
+      "claim": "Tokenized yield-bearing debt backed by cash-equivalent real-world assets, including US Treasuries; issuer-reported backing, not independently audited here.",
+      "product_status": "verified_primary_source",
+      "identity_status": "verified_native",
+      "origin_chain_id": "noble-1",
+      "origin_denom": "ausdy",
+      "decimals": 18,
+      "product_source_ids": [
+        "ondo_usdy"
+      ],
+      "identity_source_ids": [
+        "ondo_usdy",
+        "noble_assetlist.json"
+      ],
+      "network_support_status": "not_verified",
+      "include_in_strict_rwa": true
+    },
+    {
+      "id": "circle_usyc",
+      "symbol": "USYC",
+      "category": "rwa_product",
+      "issuer_brand": "Circle / USYC",
+      "claim": "Tokenized fund interest; primary product documentation reviewed, current Noble mainnet identity not yet independently established.",
+      "product_status": "verified_primary_source",
+      "identity_status": "pending_mainnet_identity",
+      "origin_chain_id": "",
+      "origin_denom": "",
+      "decimals": null,
+      "product_source_ids": [
+        "usyc_product"
+      ],
+      "identity_source_ids": [],
+      "network_support_status": "not_verified",
+      "include_in_strict_rwa": false
+    },
+    {
+      "id": "noble_usdn",
+      "symbol": "USDN",
+      "category": "yield_stablecoin",
+      "issuer_brand": "Noble / M0",
+      "claim": "Yield-bearing dollar stablecoin backed through M0; reported Treasury exposure is kept separate from tokenized investment products.",
+      "product_status": "verified_primary_source",
+      "identity_status": "verified_native",
+      "origin_chain_id": "noble-1",
+      "origin_denom": "uusdn",
+      "decimals": 6,
+      "product_source_ids": [
+        "noble_usdn"
+      ],
+      "identity_source_ids": [
+        "noble_assetlist.json"
+      ],
+      "network_support_status": "not_verified",
+      "include_in_strict_rwa": false
+    },
+    {
+      "id": "circle_usdc_noble",
+      "symbol": "USDC",
+      "category": "fiat_stablecoin",
+      "issuer_brand": "Circle",
+      "claim": "Dollar stablecoin; held separately from the strict tokenized investment product category.",
+      "product_status": "verified_primary_source",
+      "identity_status": "verified_native",
+      "origin_chain_id": "noble-1",
+      "origin_denom": "uusdc",
+      "decimals": 6,
+      "product_source_ids": [
+        "circle_usdc"
+      ],
+      "identity_source_ids": [
+        "noble_assetlist.json"
+      ],
+      "network_support_status": "not_verified",
+      "include_in_strict_rwa": false
+    }
+  ],
+  "representations": [
+    {
+      "product_id": "ondo_usdy",
+      "chain_id": "noble-1",
+      "denom": "ausdy",
+      "kind": "native",
+      "source_ids": [
+        "ondo_usdy",
+        "noble_assetlist.json"
+      ]
+    },
+    {
+      "product_id": "noble_usdn",
+      "chain_id": "noble-1",
+      "denom": "uusdn",
+      "kind": "native",
+      "source_ids": [
+        "noble_assetlist.json"
+      ]
+    },
+    {
+      "product_id": "circle_usdc_noble",
+      "chain_id": "noble-1",
+      "denom": "uusdc",
+      "kind": "native",
+      "source_ids": [
+        "noble_assetlist.json"
+      ]
+    },
+    {
+      "product_id": "ondo_usdy",
+      "chain_id": "osmosis-1",
+      "denom": "transfer/channel-750/ausdy",
+      "kind": "ics20_single_hop",
+      "channel": "channel-750",
+      "counterparty_channel": "channel-1",
+      "source_ids": [
+        "_IBC_noble-osmosis.json"
+      ],
+      "historical_route_required": true
+    },
+    {
+      "product_id": "ondo_usdy",
+      "chain_id": "injective-1",
+      "denom": "transfer/channel-148/ausdy",
+      "kind": "ics20_single_hop",
+      "channel": "channel-148",
+      "counterparty_channel": "channel-31",
+      "source_ids": [
+        "_IBC_injective-noble.json"
+      ],
+      "historical_route_required": true
+    }
+  ],
+  "rules": {
+    "symbol_matching": false,
+    "stablecoins_in_strict_rwa": false,
+    "unknown_is_non_rwa": false,
+    "backing_verified_independently": false,
+    "network_support_inferred_from_identity": false,
+    "historical_price_reapplication": false,
+    "historical_identity_review": "Review performed now; historical channel proof required for each observed IBC height; no historical backing or network-support certification."
+  }
+}

@@ -461,3 +461,13 @@ réception, émission et ACK asynchrone :
 [hash.go SDK](https://github.com/cosmos/cosmos-sdk/blob/v0.53.8/types/address/hash.go).
 Le modèle reconnaît ces preuves et s'abstient lorsqu'elles ne concordent pas ;
 il ne certifie pas à lui seul la version applicative historique du nœud.
+
+## Identification des produits RWA
+
+Un premier registre daté, non exhaustif et séparant produits tokenisés et
+stablecoins est documenté dans [RWA_REGISTRY.md](RWA_REGISTRY.md).
+L'audit hors ligne identifie USDY par origine exacte et preuves de canaux
+historiques. USYC reste candidat tant que son identité mainnet n'est pas établie.
+Cette brique ne modifie pas les séries économiques et n'est pas encore le filtre
+RWA du dashboard ; elle prépare ce filtre sans assimiler les tokens homonymes,
+les stablecoins ou les actifs non revus à des RWA vérifiés.

@@ -1,0 +1,79 @@
+[
+  {
+    "id": "noble_assetlist.json",
+    "kind": "chain_registry",
+    "source": "https://raw.githubusercontent.com/cosmos/chain-registry/d6d22e51f4b520ed993f3a939ab64d7979e2fcd3/noble/assetlist.json",
+    "repository_commit": "d6d22e51f4b520ed993f3a939ab64d7979e2fcd3",
+    "observed_at": "2026-11-06T23:10:52.725971+00:00",
+    "raw_sha256": "b098ab315bf5e71e73de1158c8a3ea5927730a19797b6ba9a612a63acb78601b",
+    "file": "data/criterion2_rwa_registry/2026-11-07/noble_assetlist.json.gz"
+  },
+  {
+    "id": "osmosis_assetlist.json",
+    "kind": "chain_registry",
+    "source": "https://raw.githubusercontent.com/cosmos/chain-registry/d6d22e51f4b520ed993f3a939ab64d7979e2fcd3/osmosis/assetlist.json",
+    "repository_commit": "d6d22e51f4b520ed993f3a939ab64d7979e2fcd3",
+    "observed_at": "2026-11-06T23:10:52.725971+00:00",
+    "raw_sha256": "544a9859d32877637246986eae0e9e5df7502e9f210f5408a4f64f91c2b5fe70",
+    "file": "data/criterion2_rwa_registry/2026-11-07/osmosis_assetlist.json.gz"
+  },
+  {
+    "id": "injective_assetlist.json",
+    "kind": "chain_registry",
+    "source": "https://raw.githubusercontent.com/cosmos/chain-registry/d6d22e51f4b520ed993f3a939ab64d7979e2fcd3/injective/assetlist.json",
+    "repository_commit": "d6d22e51f4b520ed993f3a939ab64d7979e2fcd3",
+    "observed_at": "2026-11-06T23:10:52.725971+00:00",
+    "raw_sha256": "60d2a35dad1478d191a6ae04d1c9cfd05905eeb1e95b0b796a30170851e4b0f4",
+    "file": "data/criterion2_rwa_registry/2026-11-07/injective_assetlist.json.gz"
+  },
+  {
+    "id": "_IBC_injective-noble.json",
+    "kind": "chain_registry",
+    "source": "https://raw.githubusercontent.com/cosmos/chain-registry/d6d22e51f4b520ed993f3a939ab64d7979e2fcd3/_IBC/injective-noble.json",
+    "repository_commit": "d6d22e51f4b520ed993f3a939ab64d7979e2fcd3",
+    "observed_at": "2026-11-06T23:10:52.725971+00:00",
+    "raw_sha256": "d9c85efe26c0b009724ecc67abb4895ac4307943432e8640fe27b02d5f1c4a0f",
+    "file": "data/criterion2_rwa_registry/2026-11-07/_IBC_injective-noble.json.gz"
+  },
+  {
+    "id": "_IBC_noble-osmosis.json",
+    "kind": "chain_registry",
+    "source": "https://raw.githubusercontent.com/cosmos/chain-registry/d6d22e51f4b520ed993f3a939ab64d7979e2fcd3/_IBC/noble-osmosis.json",
+    "repository_commit": "d6d22e51f4b520ed993f3a939ab64d7979e2fcd3",
+    "observed_at": "2026-11-06T23:10:52.725971+00:00",
+    "raw_sha256": "687fe59b6f2a1d4e19fac198ef8683f3597f1104ef3f6a47a902939d6d78d1a4",
+    "file": "data/criterion2_rwa_registry/2026-11-07/_IBC_noble-osmosis.json.gz"
+  },
+  {
+    "id": "ondo_usdy",
+    "kind": "issuer_product",
+    "source": "https://ondo.finance/usdy",
+    "observed_at": "2026-11-06T23:10:54.755100+00:00",
+    "raw_sha256": "89d9a5dc203b23c26fe2202615c27320221a8df81bda4bba534b4c301872f480",
+    "archive_policy": "URL and hash only; page reviewed, full copyrighted page not republished"
+  },
+  {
+    "id": "usyc_product",
+    "kind": "issuer_product",
+    "source": "https://usyc.docs.hashnote.com/overview/introduction.md",
+    "observed_at": "2026-11-06T23:10:55.071371+00:00",
+    "raw_sha256": "879ed8c6ba4284ffe5aa086a5bdca42863163272c58776c45f620dedf5dc3908",
+    "archive_policy": "URL and hash only; page reviewed, full copyrighted page not republished"
+  },
+  {
+    "id": "noble_usdn",
+    "kind": "issuer_product",
+    "source": "https://www.m0.org/press-releases/noble-launches-usdn-a-programmatic-and-composable-yield-stablecoin-for-application-developers",
+    "observed_at": "2026-11-06T23:10:55.265793+00:00",
+    "raw_sha256": "01495097c9b98cd8f7de53c59f07c7304a0df28059358ca2a429b162e958f1f3",
+    "archive_policy": "URL and hash only; page reviewed, full copyrighted page not republished"
+  },
+  {
+    "id": "circle_usdc",
+    "kind": "issuer_product",
+    "source": "https://www.circle.com/usdc",
+    "observed_at": "2026-11-06T23:10:55.380443+00:00",
+    "raw_sha256": "d4ec2880bf1eb6ce59ea30e94b6a9fd477923420fb53f75a4e12a5e6a357ae7d",
+    "archive_policy": "URL and hash only; page reviewed, full copyrighted page not republished"
+  }
+]
