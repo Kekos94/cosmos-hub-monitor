@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Cosmos Hub Monitor</title>
+<style>body{font-family:Arial,sans-serif;margin:30px;line-height:1.5}.scroll{overflow-x:auto}table{border-collapse:collapse}th,td{border:1px solid #ddd;padding:8px;text-align:left}.notice{background:#fff5d6;padding:16px}</style></head><body>
+<p><a href="index.html">Retour au dashboard</a></p><h1>Cosmos Hub Monitor</h1><p>Généré : 2026-11-06T12:11:10.002727+00:00</p>
+<h2>Critère 1 — journées UTC complètes</h2>
+<p>Une journée comprend tous les blocs horodatés entre 00:00 UTC inclus et le minuit suivant exclu.
+Les blocs précédant et suivant cet intervalle sont vérifiés. Une collecte partielle ne produit aucun total journalier.</p>
+<p>Les ratios comparent les fees aux états de supply et aux estimations d'émission sur les mêmes blocs.
+L'intervalle entre ces états diffère de quelques secondes des 86 400 secondes civiles ; sa durée réelle est affichée.
+L'émission estimée est la somme des estimations de chaque lot, sans extrapoler les frais.
+Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisations USD journalières restent indisponibles.</p>
+<div class="scroll"><table><thead><tr><th>Journée UTC</th><th>Blocs analysés</th><th>Couverture des blocs (%)</th><th>Transactions</th><th>Fees collectées (ATOM, tips inclus)</th><th>Dont tips (ATOM)</th><th>Complétude des fees</th><th>Frais attestés par transfert ante</th><th>Émission estimée sur les mêmes blocs (ATOM)</th><th>Fees / émission estimée (%)</th><th>Variation nette supply sur les mêmes blocs (ATOM)</th><th>Fees / hausse nette supply (%)</th><th>Durée entre états de blocs (s)</th><th>Burn effectif</th></tr></thead><tbody><tr><td>2026-11-04</td><td>15057</td><td>100</td><td>11663</td><td>75.928028</td><td>48.928178</td><td>complete</td><td>51</td><td>147930.2639991809058567799815</td><td>0.05132690630527125651816757608</td><td>186468.572307</td><td>0.04071894103151755301329873017</td><td>86399.352214</td><td>not_measured</td></tr></tbody></table></div>
+<h3>Avancement de la collecte exhaustive</h3>
+<div class="scroll"><table><thead><tr><th>Journée UTC</th><th>État</th><th>Blocs traités</th><th>Blocs attendus</th><th>Couverture des blocs (%)</th></tr></thead><tbody><tr><td>2026-11-04</td><td>complete</td><td>15057</td><td>15057</td><td>100</td></tr><tr><td>2026-11-05</td><td>incomplete</td><td>14280</td><td>15059</td><td>94.82701374593266485158377050</td></tr></tbody></table></div>
+<h2>Critère 1 — anciennes fenêtres mesurées</h2>
+<p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
+La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
+Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
+<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Pour certaines transactions échouées, un transfert ante au module historique de frais, corroboré par les événements de débit et de crédit, atteste le paiement. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
+L'émission estimée applique le taux et la supply observés au début de la fenêtre à sa durée, sur une base de 365 jours ; elle n'est pas une émission brute mesurée.
+La variation de supply est nette et ne permet pas d'isoler le burn. Les frais ne sont jamais soustraits de la dilution.</p>
+<p>Le prix affiché est le spot horodaté à la collecte. Sa valorisation éventuelle est une valorisation à la collecte, pas un prix historique de la fenêtre.
+Les snapshots de supply et d'inflation sont acceptés uniquement si la hauteur historique est confirmée par le fournisseur.</p>
+<p>Aucune fenêtre mesurée disponible.</p>
+<h2>Archives historiques — 253 observations</h2>
+<p class="notice">Les deux CSV historiques sont conservés à l'identique. La couverture des blocs et les timestamps des snapshots y sont inconnus.
+Les anciens prix USD, taux d'inflation, ratios de couverture et calculs de dilution sont non validés ; ils ne sont pas affichés comme indicateurs fiables.
+Les fees archivées sont des montants déclarés dans les transactions, sans preuve de burn.</p>
+<div class="scroll"><table><thead><tr><th>Date archive</th><th>Transactions observées</th><th>Transactions IBC</th><th>Fees déclarées observées (ATOM)</th></tr></thead><tbody><tr><td>2026-10-29</td><td>50</td><td>15</td><td>0.289294</td></tr><tr><td>2026-10-30</td><td>44</td><td>11</td><td>0.240532</td></tr><tr><td>2026-10-31</td><td>50</td><td>15</td><td>0.432185</td></tr><tr><td>2026-11-01</td><td>61</td><td>7</td><td>0.432059</td></tr><tr><td>2026-11-02</td><td>92</td><td>52</td><td>0.403637</td></tr><tr><td>2026-11-03</td><td>83</td><td>13</td><td>0.494873</td></tr><tr><td>2026-11-04</td><td>47</td><td>9</td><td>0.394099</td></tr></tbody></table></div>
+<h2>Fichiers</h2><ul><li><a href="hub_revenue_daily.csv">hub_revenue_daily.csv</a></li><li><a href="hub_revenue_with_inflation.csv">hub_revenue_with_inflation.csv</a></li><li><a href="hub_criterion1_daily_complete.csv">hub_criterion1_daily_complete.csv</a></li><li><a href="ecosystem_out_usd_daily.csv">ecosystem_out_usd_daily.csv</a></li></ul>
+<h2>Critère 2 — flux IBC multichaînes</h2><p><a href="criterion2.html">Consulter les transferts, la couverture et les comparaisons</a></p></body></html>

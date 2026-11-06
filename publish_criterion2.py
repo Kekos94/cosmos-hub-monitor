@@ -28,7 +28,7 @@ def main():
     links=''.join(f'<li><a href="{name}">{name}</a></li>' for name in files)
     document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Critère 2</title>
 <style>body{{font:16px/1.5 Arial,sans-serif;margin:30px}}table{{border-collapse:collapse}}td,th{{border:1px solid #ddd;padding:8px}}.scroll{{overflow:auto}}.notice{{background:#fff3d1;padding:16px}}</style></head><body>
-<p><a href="index.html">Retour au critère 1</a></p><h1>Critère 2 — flux IBC sortants</h1>
+<p><a href="index.html">Retour au dashboard</a> · <a href="criterion1.html">Critère 1 détaillé</a></p><h1>Critère 2 — flux IBC sortants</h1>
 <p>Généré : {datetime.now(timezone.utc).isoformat()}</p>
 <p>Périmètre configuré : {html.escape(', '.join(c['name'] for c in cfg['chains']))}.</p>
 <p class="notice">Ces mesures portent sur les paquets ICS20 v1 émis via le port transfer, selon l'index de transactions du fournisseur.
@@ -50,6 +50,8 @@ Les tokens sont convertis selon leurs propres unités du Chain Registry ; aucun 
 ni une part des RWA. Les multi-sauts et transferts de retour peuvent représenter plusieurs émissions pour un même mouvement économique.</p>
 <h2>Fichiers</h2><ul>{links}</ul></body></html>'''
     (site/'criterion2.html').write_text(document,encoding='utf-8')
+    from build_web_dashboard import main as build_dashboard
+    build_dashboard(ROOT)
     print('Criterion 2 page generated; Criterion 1 outputs unchanged.')
 
 

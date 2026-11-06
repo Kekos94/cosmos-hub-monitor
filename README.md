@@ -302,3 +302,8 @@ Sa configuration, ses limites de couverture, les unités par actif, les prix
 historiques et les instructions sont décrits dans [CRITERION2.md](CRITERION2.md).
 La page dédiée est `site/criterion2.html`. Aucun script de collecte du critère 1
 n'est remplacé par ce nouveau pipeline.
+# Dashboard web
+
+L'accueil réunit désormais les deux critères avec graphiques, filtres de période,
+état des collectes et téléchargements. Les détails et la préparation du domaine
+personnalisé sont documentés dans [DASHBOARD.md](DASHBOARD.md).

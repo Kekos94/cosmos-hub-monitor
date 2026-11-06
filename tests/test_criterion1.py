@@ -146,10 +146,11 @@ class PersistenceTests(unittest.TestCase):
             (root / 'site').mkdir()
             (root / 'hub_revenue_daily.csv').write_text('date,tx_total\n2026-11-05,7\n')
             (root / 'site/hub_revenue_daily.csv').write_text('stale')
-            with patch.object(dashboard, 'ROOT', root), patch.object(dashboard, 'WINDOWS', root / 'hub_criterion1_windows.csv'):
+            with patch.object(dashboard, 'ROOT', root), patch.object(dashboard, 'WINDOWS', root / 'hub_criterion1_windows.csv'), patch('build_web_dashboard.main') as build_public:
                 dashboard.main()
+            build_public.assert_called_once_with(root)
             self.assertEqual((root / 'hub_revenue_daily.csv').read_bytes(), (root / 'site/hub_revenue_daily.csv').read_bytes())
-            html = (root / 'site/index.html').read_text()
+            html = (root / 'site/criterion1.html').read_text()
             self.assertIn('Aucune fenêtre mesurée', html)
             self.assertIn('non validés', html)
 

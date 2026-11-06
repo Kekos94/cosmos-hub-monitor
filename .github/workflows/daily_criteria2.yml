@@ -12,6 +12,10 @@ on:
       - 'publish_criterion2.py'
       - 'config/criterion2_chains.json'
       - 'tests/test_criterion2*.py'
+      - 'build_web_dashboard.py'
+      - 'web/**'
+      - 'tests/test_web_dashboard.py'
+      - 'tests/dashboard.test.js'
   workflow_dispatch:
     inputs:
       start_date:
@@ -48,6 +52,11 @@ jobs:
         run: pip install -r requirements.txt
       - name: Tests
         run: python -m unittest discover -s tests -v
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Dashboard data and filter checks
+        run: node --test tests/dashboard.test.js
       - name: Collect indexed IBC days
         id: collect
         if: inputs.publish_only != true
@@ -70,6 +79,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
           git add site/criterion2.html site/criterion2_progress.csv site/ibc_out_assets_daily.csv site/ibc_out_chains_daily.csv site/ecosystem_out_usd_daily.csv
+          git add site/index.html site/dashboard.css site/dashboard.js
           if test -d data/criterion2; then
             git add data/criterion2
           fi

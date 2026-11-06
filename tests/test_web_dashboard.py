@@ -1,0 +1,61 @@
+import csv
+import json
+import shutil
+import tempfile
+import unittest
+from pathlib import Path
+
+import build_web_dashboard as dashboard
+from criterion2_pipeline import load_config
+
+
+class DashboardTests(unittest.TestCase):
+    def setup_root(self, root):
+        (root / 'config').mkdir()
+        shutil.copy2(dashboard.ROOT / 'config/criterion2_chains.json', root / 'config/criterion2_chains.json')
+        shutil.copytree(dashboard.ROOT / 'web', root / 'web')
+        return load_config(root / 'config/criterion2_chains.json')[1]
+
+    def write(self, root, name, records):
+        with (root / name).open('w', newline='') as stream:
+            writer = csv.DictWriter(stream, fieldnames=list(records[0]))
+            writer.writeheader(); writer.writerows(records)
+
+    def test_partial_days_and_old_universes_never_become_summary_cards(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); uid=self.setup_root(root)
+            self.write(root,'hub_criterion1_daily_complete.csv',[
+                dict(date='2026-11-04',coverage_status='complete_utc_day_blocks',collected_fee_atom=''),
+                dict(date='2026-11-05',coverage_status='incomplete',collected_fee_atom='500')])
+            self.write(root,'ecosystem_out_usd_daily.csv',[
+                dict(date='2026-11-04',universe_id='old',indexed_chains_complete='4'),
+                dict(date='2026-11-05',universe_id=uid,indexed_chains_complete='3'),
+                dict(date='2026-11-06',universe_id=uid,indexed_chains_complete='4')])
+            d=dashboard.payload(root)
+            self.assertEqual([r['date'] for r in d['criterion1']],['2026-11-04'])
+            self.assertEqual(d['criterion1'][0]['collected_fee_atom'],'')
+            self.assertEqual([r['date'] for r in d['criterion2']],['2026-11-06'])
+
+    def test_embedded_data_is_safe_and_source_csv_unchanged(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); self.setup_root(root)
+            self.write(root,'hub_criterion1_daily_complete.csv',[
+                dict(date='2026-11-04',coverage_status='complete_utc_day_blocks',note='</script><script>alert(1)</script>')])
+            before=(root/'hub_criterion1_daily_complete.csv').read_bytes()
+            dashboard.main(root)
+            document=(root/'site/index.html').read_text()
+            encoded=document.split('id="monitor-data">')[1].split('</script>')[0]
+            self.assertNotIn('</script>',encoded)
+            self.assertEqual(json.loads(encoded)['criterion1'][0]['note'],'</script><script>alert(1)</script>')
+            self.assertEqual((root/'hub_criterion1_daily_complete.csv').read_bytes(),before)
+            self.assertEqual((root/'site/dashboard.js').read_bytes(),(root/'web/dashboard.js').read_bytes())
+
+    def test_empty_history_remains_empty(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); self.setup_root(root)
+            d=dashboard.payload(root)
+            self.assertEqual(d['criterion1'],[]); self.assertEqual(d['criterion2'],[])
+            self.assertEqual(len(d['members']),4)
+
+
+if __name__=='__main__': unittest.main()

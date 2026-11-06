@@ -10,6 +10,7 @@ on:
       - '*.py'
       - 'tests/**'
       - 'requirements.txt'
+      - 'web/**'
   workflow_dispatch:
     inputs:
       publish_only:
@@ -51,6 +52,12 @@ jobs:
       - name: Tests and archive integrity
         run: python -m unittest discover -s tests -v
 
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: Dashboard data and filter checks
+        run: node --test tests/dashboard.test.js
+
       - name: Collect complete UTC days with checkpoints
         id: collect
         if: inputs.publish_only != true
@@ -82,6 +89,7 @@ jobs:
             git add data/criterion1_days
           fi
           git add site/hub_revenue_daily.csv site/hub_revenue_with_inflation.csv site/index.html
+          git add site/criterion1.html site/dashboard.css site/dashboard.js
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
