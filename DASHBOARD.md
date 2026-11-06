@@ -95,3 +95,11 @@ basis. Daily charts retain their separate history filter. USD windows use a
 constant resolved, valued asset set on both sides across the full observed window,
 with historical daily prices. C1 publication reuses the latest C2 window snapshot;
 stale window end dates receive an explicit refresh notice.
+
+Le panneau **Transit vérifié via le Hub**, disponible en français et en anglais,
+présente les cohortes quotidiennes PFM, la couverture des transactions candidates,
+les métadonnées de canaux historiques et la borne commune des confirmations.
+Les succès, échecs, retours à la source et cas indéterminés restent distincts.
+Les routes indiquent le prochain saut, et les montants confirmés sont ventilés
+par actif. Les CSV et la méthode détaillée sont téléchargeables depuis le panneau.
+Il s'agit du sous-ensemble PFM prouvé, pas de l'ensemble du transit du réseau.

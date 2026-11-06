@@ -187,6 +187,26 @@ function startDashboard() {
     if(netHistory.some(r=>Monitor.number(r.net_amount)!==null))lineChart($("net-chart"),netHistory,'net_amount',unit);
     else empty($("net-chart"),t("Le solde n’est pas disponible pour cet actif sur cette période."));
   }
+  function renderTransit() {
+    const all=data.transit||[],latest=Monitor.latest(all);
+    const rows=Monitor.filter(all,$("period").value,latest?.date).sort((a,b)=>b.date.localeCompare(a.date));
+    const selected=$("transit-day").value;
+    $("transit-day").innerHTML=rows.map(r=>`<option value="${esc(r.date)}">${esc(day(r.date))}</option>`).join('');
+    if(rows.some(r=>r.date===selected))$("transit-day").value=selected;
+    const row=rows.find(r=>r.date===$("transit-day").value);
+    if(!row){empty($("transit-cards"));$("transit-coverage").textContent=t("Aucune preuve de transit disponible sur cette période.");$("transit-routes").innerHTML='';$("transit-assets").innerHTML='';return;}
+    $("transit-cards").innerHTML=card(t("Transits confirmés"),fmt(row.confirmed_transit,0),t("paquets"),t("Succès entrant et sortant · chaînes distinctes"),true)
+      +card(t("Premières émissions PFM liées"),fmt(row.linked_attempts,0),t("liens"),t("Échecs et cas indéterminés inclus"))
+      +card(t("Échecs confirmés"),fmt(row.failed_forward,0),t("paquets"),t("Exclus des montants de transit"))
+      +card(t("Liens indéterminés"),fmt(Number(row.unresolved)+Number(row.topology_unknown),0),t("paquets"),t("Règlement ou topologie sans preuve concluante"));
+    const complete=row.collection_status==='candidate_proofs_complete';
+    $("transit-coverage").textContent=t("{saved}/{total} transactions candidates contrôlées · {channels}/{expected} canaux historiques vérifiés · {received} réceptions observées sur le Hub.",{saved:fmt(row.inspected_transactions,0),total:fmt(row.candidate_transactions,0),channels:fmt(row.topology_proofs,0),expected:fmt(row.topology_expected,0),received:fmt(row.received_packets,0)})+' '+(complete?t("Preuves candidates complètes selon les index du fournisseur."):t("Collecte partielle : les nombres affichés sont uniquement ceux déjà prouvés."))+' '+t("Borne des confirmations : {date}.",{date:row.evidence_through_utc||t("Indisponible")})+' '+t("Retours à la source : {returns}. Réceptions sans lien prouvé : {unlinked} (statut de transit inconnu).",{returns:fmt(row.return_to_source,0),unlinked:fmt(Number(row.noncandidate_receipts)+Number(row.unlinked_candidate_receipts),0)})+(row.lower_bound_packet_share_pct!==''?' '+t("Part minimale identifiée des réceptions en nombre de paquets : {share} %.",{share:fmt(row.lower_bound_packet_share_pct,2)}):'');
+    const table=(headers,records)=>'<div class="scroll"><table><thead><tr>'+headers.map(x=>'<th>'+esc(t(x))+'</th>').join('')+'</tr></thead><tbody>'+records.map(cells=>'<tr>'+cells.map(x=>'<td>'+esc(x)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>';
+    const routes=(data.transit_routes||[]).filter(r=>r.date===row.date).sort((a,b)=>Number(b.confirmed_packets)-Number(a.confirmed_packets));
+    $("transit-routes").innerHTML=routes.length?table(["Chaîne source","Via","Prochain saut","Transits confirmés","Échecs confirmés","Non résolus"],routes.map(r=>[r.source_chain,"Cosmos Hub",r.next_chain,fmt(r.confirmed_packets,0),fmt(r.failed_packets,0),fmt(r.unresolved_packets,0)])):t("Aucune route prouvée disponible.");
+    const assets=(data.transit_assets||[]).filter(r=>r.date===row.date);
+    $("transit-assets").innerHTML=assets.length?table(["Actif local","Transits confirmés","Montant confirmé","USD de référence"],assets.map(r=>[r.symbol||r.bank_denom,fmt(r.confirmed_packets,0),Monitor.amount(r.amount_display,locale)??t("Indisponible"),fmt(r.confirmed_usd,2)])):t("Aucun montant confirmé disponible.");
+  }
   function statuses() {
     const yesterday=new Date();yesterday.setUTCDate(yesterday.getUTCDate()-1);const expected=yesterday.toISOString().slice(0,10);
     const status=(label,latest,detail)=>{
@@ -213,7 +233,8 @@ function startDashboard() {
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window"].forEach(id=>$(id).addEventListener("change",renderNet));
-  render();renderNet();statuses();
+  ["period","transit-day"].forEach(id=>$(id).addEventListener("change",renderTransit));
+  render();renderNet();renderTransit();statuses();
 }
 if (typeof document !== "undefined") {
   try { startDashboard(); } catch(error) {

@@ -1,0 +1,2 @@
+universe_id,date,model,received_packets,candidate_receipts,candidate_transactions,inspected_transactions,linked_attempts,confirmed_transit,return_to_source,failed_forward,unresolved,topology_unknown,noncandidate_receipts,unlinked_candidate_receipts,topology_proofs,topology_expected,collection_status,evidence_through_utc,lower_bound_packet_share_pct
+62bfaf30df0c4b2c,2026-11-05,pfm_v10_6_same_recv_message_bank_evidence_v1,2106,371,369,369,355,354,0,1,0,0,1735,16,699,699,candidate_proofs_complete,2026-11-06T00:00:00Z,16.80911680911680911680911681

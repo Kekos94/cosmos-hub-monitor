@@ -392,3 +392,72 @@ les trous ne sont jamais reliés. En historique court, les cartes sont explicite
 libellées « observées » et « sur les jours couverts » ; le bilan complet reste
 indisponible. Aucun remplissage ni récupération automatique de journées antérieures
 n'est déclenché par ce changement.
+
+## Étape 3 — transit PFM prouvé sur le Hub
+
+`criterion2_transit_collect.py` examine uniquement les transactions du Cosmos Hub
+présentes à la fois dans les cohortes complètes de réceptions et d'émissions de la
+même journée UTC. Cette liste est un filtre de candidats, jamais un compteur de
+transit. Pour attribuer une première émission, `criterion2_transit_evidence.py`
+exige une instruction PFM explicite, un `MsgRecvPacket` exécuté (réponse enum 2,
+NOOP exclu), l'identité et le hash du paquet entrant, le compte intermédiaire PFM
+dérivé du canal et de l'expéditeur, le destinataire/canal/mémo `next` attendus,
+le même actif et montant, et des crédits/débits bancaires uniques dans le même
+`msg_index`. Un montant ou un horaire commun ne suffit pas. Les liens sont
+bijectifs : aucune réception ni émission n'est comptée deux fois.
+
+Les requêtes historiques `Channel` et `ChannelClientState` doivent répondre à la
+hauteur exacte de la transaction. Canal OPEN, port, canal de contrepartie et
+connexion doivent correspondre aux événements. Seuls les clients Tendermint et
+les versions ICS20 reconnues sont interprétés. Deux canaux différents vers la
+même chaîne sont un **retour à la source**, pas un transit vers une autre chaîne.
+Une topologie absente reste inconnue ; la topologie actuelle ne remplace jamais
+une réponse historique indisponible. Les données RPC sont des preuves fournies
+par le prestataire, pas un audit cryptographique indépendant par client léger.
+
+`criterion2_transit_export.py` utilise une borne UTC commune aux index locaux
+entrants et sortants du Hub ; les journaux incomplets et postérieurs sont exclus.
+Un **transit confirmé** exige le succès du paquet entrant ET de la première
+émission liée, avec chaînes source et prochain saut distinctes. Un succès parent
+après timeout de la première émission peut correspondre à une nouvelle tentative :
+il reste indéterminé sans preuve du lien de cette tentative. Les échecs confirmés
+restent séparés et sont exclus des montants. Le prochain saut ne prouve ni le
+bénéficiaire final ni le règlement de tous les sauts ultérieurs.
+
+Cette première version mesure un **sous-ensemble automatique PFM**. Les transferts
+manuels, différés, autres mécanismes et nouvelles tentatives sans lien prouvé ne
+sont pas attribués. Une réception sans lien n'est pas déclarée non transitaire.
+La part affichée est le minimum identifié parmi les **réceptions observées du
+Hub, en nombre de paquets**, pas une part de marché ni une centralité globale.
+La complétude des candidats et des métadonnées historiques est affichée ; une
+collecte partielle ne devient jamais un total de journée extrapolé.
+
+Le bundle `data/criterion2_transit/<univers>/cosmoshub/<date>/observations.json.gz`
+conserve les transactions et réponses historiques brutes. Chaque sauvegarde
+vérifie que toutes les observations antérieures sont conservées à l'identique.
+Les requêtes groupées valident tous les identifiants de réponse ; un fournisseur
+sans batch utilise les requêtes individuelles. Le budget de 300 secondes par
+workflow conserve les checkpoints pour l'exécution suivante et signale les
+erreurs après sauvegarde. `publish_only` ne lance aucune collecte de transit.
+
+Quatre nouveaux CSV sont publiés à la racine et dans `site/` :
+- `ibc_transit_daily.csv` : couverture, liens, états et part minimale en paquets ;
+- `ibc_transit_routes_daily.csv` : chaîne source → Hub → prochain saut ;
+- `ibc_transit_assets_daily.csv` : montants des seuls transits confirmés par actif ;
+- `ibc_transit_packets.csv` : identifiants parents/enfants, états et hash des preuves.
+
+Les unités et prix historiques proviennent des snapshots existants de la journée
+de réception. Aucun spot n'est rétroappliqué, aucune parité USDC n'est imposée,
+et des tokens différents ne sont jamais additionnés en unités brutes. Les exports
+C1, sorties/entrées, confirmations, nets et fenêtres gardent leur définition et
+leurs historiques. Le dashboard FR/EN lit uniquement ces exports ; la publication
+C1 ne déclenche aucune nouvelle collecte ni aucun recalcul du transit.
+
+Références officielles du modèle : Gaia v29.0.1 épingle PFM v10.6.0 et SDK v0.53.8
+([go.mod](https://github.com/cosmos/gaia/blob/v29.0.1/go.mod)). Dérivation du compte,
+réception, émission et ACK asynchrone :
+[keeper.go](https://github.com/cosmos/ibc-apps/blob/middleware/packet-forward-middleware/v10.6.0/middleware/packet-forward-middleware/packetforward/keeper/keeper.go),
+[ibc_middleware.go](https://github.com/cosmos/ibc-apps/blob/middleware/packet-forward-middleware/v10.6.0/middleware/packet-forward-middleware/packetforward/ibc_middleware.go),
+[hash.go SDK](https://github.com/cosmos/cosmos-sdk/blob/v0.53.8/types/address/hash.go).
+Le modèle reconnaît ces preuves et s'abstient lorsqu'elles ne concordent pas ;
+il ne certifie pas à lui seul la version applicative historique du nœud.

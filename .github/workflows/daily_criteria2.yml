@@ -74,6 +74,14 @@ jobs:
           LIFECYCLE_BUDGET_SECONDS: "600"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_lifecycle_collect.py
+      - name: Verify same-message Hub PFM transit
+        id: transit
+        if: inputs.publish_only != true
+        continue-on-error: true
+        env:
+          TRANSIT_BUDGET_SECONDS: "300"
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: python criterion2_transit_collect.py
       - name: Validate and export historical valuations
         env:
           COINGECKO_DEMO_API_KEY: ${{ secrets.COINGECKO_DEMO_API_KEY }}
@@ -85,6 +93,10 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ibc_transit_*.csv site/ibc_transit_*.csv
+          if test -d data/criterion2_transit; then
+            git add data/criterion2_transit
+          fi
           git add ibc_net_windows_chains_latest.csv ibc_net_windows_assets_latest.csv site/ibc_net_windows_chains_latest.csv site/ibc_net_windows_assets_latest.csv
           git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
           git add ibc_net_chains_daily.csv ibc_net_assets_daily.csv site/ibc_net_chains_daily.csv site/ibc_net_assets_daily.csv
@@ -109,7 +121,7 @@ jobs:
             git push
           fi
       - name: Report collection errors after preserving checked pages
-        if: steps.collect.outcome == 'failure' || steps.lifecycle.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.lifecycle.outcome == 'failure' || steps.transit.outcome == 'failure'
         run: exit 1
       - name: Publish site
         id: deploy_first

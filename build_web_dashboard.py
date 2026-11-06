@@ -12,6 +12,8 @@ from pathlib import Path
 from criterion1_daily import load_days, progress
 from criterion2_pipeline import load_config,incoming_config
 from criterion2_net import config as net_config
+from criterion2_core import digest
+from criterion2_transit_evidence import MODEL as TRANSIT_MODEL
 
 ROOT = Path(__file__).resolve().parent
 
@@ -52,6 +54,7 @@ def payload(root=ROOT):
     cfg, uid = load_config(root / 'config/criterion2_chains.json')
     _,in_uid=incoming_config(root / 'config/criterion2_chains.json')
     _,_,_,net_uid=net_config(root/'config/criterion2_chains.json')
+    transit_uid=digest(dict(model=TRANSIT_MODEL,incoming=in_uid,outgoing=uid))[:16]
     window_asset_fields='universe_id date window_days chain denom symbol decimals coingecko_id metadata_status confirmed_in_amount confirmed_out_amount net_amount observed_net_amount unresolved_packets excluded_packets'.split()
     # Never mix historical universes or substitute partially collected days.
     c1 = [r for r in rows(root, 'hub_criterion1_daily_complete.csv')
@@ -70,6 +73,9 @@ def payload(root=ROOT):
                 net_assets=[r for r in rows(root,'ibc_net_assets_daily.csv') if r['universe_id']==net_uid],
                 net_window_chains=[r for r in rows(root,'ibc_net_windows_chains_latest.csv') if r['universe_id']==net_uid],
                 net_window_assets=[{k:r[k] for k in window_asset_fields} for r in rows(root,'ibc_net_windows_assets_latest.csv') if r['universe_id']==net_uid],
+                transit=[r for r in rows(root,'ibc_transit_daily.csv') if r['universe_id']==transit_uid],
+                transit_assets=[r for r in rows(root,'ibc_transit_assets_daily.csv') if r['universe_id']==transit_uid],
+                transit_routes=[r for r in rows(root,'ibc_transit_routes_daily.csv') if r['universe_id']==transit_uid],
                 incoming_universe_id=in_uid,
                 incoming=[r for r in rows(root,'ecosystem_in_usd_daily.csv') if r['universe_id']==in_uid and int(r['indexed_chains_complete'])==len(cfg['chains'])],
                 incoming_chains=[r for r in rows(root,'ibc_in_chains_daily.csv') if r['universe_id']==in_uid],

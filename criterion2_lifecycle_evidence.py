@@ -77,8 +77,9 @@ def packet(raw):
     return p,data
 
 
-def messages(tx):
+def messages(tx,*,message_kinds=None):
     """Decode only IBC messages and authz wrappers, preserving top-level response indexes."""
+    message_kinds=MESSAGE_KINDS if message_kinds is None else message_kinds
     raw=base64.b64decode(tx['tx'],validate=True);body=single(raw,1,required=True);items=repeated(body,1)
     responses=[]
     response_data=tx['tx_result'].get('data')
@@ -95,8 +96,8 @@ def messages(tx):
             children=repeated(data,2)
             child_responses=repeated(response,1) if response is not None else []
             for i,child in enumerate(children):walk(child,outer,path+[i],child_responses[i] if len(child_responses)==len(children) else None,depth+1)
-        elif url.startswith(PREFIX) and url[len(PREFIX):] in MESSAGE_KINDS:
-            p,packet_data=packet(single(data,1,required=True));kind=MESSAGE_KINDS[url[len(PREFIX):]]
+        elif url.startswith(PREFIX) and url[len(PREFIX):] in message_kinds:
+            p,packet_data=packet(single(data,1,required=True));kind=message_kinds[url[len(PREFIX):]]
             result.append(dict(identity=identity(p),kind=kind,outer=outer,path=path,packet_data=packet_data,
                                acknowledgement=single(data,2) if kind=='acknowledge_packet' else b'',
                                response_result=uint(response,1) if response is not None else None))
