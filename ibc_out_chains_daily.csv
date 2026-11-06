@@ -1,0 +1,5 @@
+universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packets,unpriced_packets,valued_out_usd,total_out_usd,failed_indexed_transactions,price_method
+190892289baf1e61,2026-11-05,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,928,892,36,179038.6814313538406323788636,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-05,injective,injective-1,indexed_complete,ics20_v1_gross_sent,606,557,49,1319658.331579721950025156599584454463032,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_gross_sent,1050,1005,45,3276027.5063900386094212165754,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,4418,3647,771,1648786.92878713486620357743498775646440899344,,0,historical_daily_reference_not_execution_price

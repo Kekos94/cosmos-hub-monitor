@@ -294,3 +294,11 @@ Ces résultats sont exportés avec `fee_audit_status=verified` et
 `fee_evidence_recovered=51`. Ils ne prouvent pas encore que les déclenchements
 planifiés GitHub Actions ont repris : ce point doit être confirmé par un
 événement `schedule` après publication du correctif.
+
+## Critère 2 — flux IBC multichaînes
+
+Le pipeline séparé compare Cosmos Hub, Osmosis, Noble et Injective.
+Sa configuration, ses limites de couverture, les unités par actif, les prix
+historiques et les instructions sont décrits dans [CRITERION2.md](CRITERION2.md).
+La page dédiée est `site/criterion2.html`. Aucun script de collecte du critère 1
+n'est remplacé par ce nouveau pipeline.

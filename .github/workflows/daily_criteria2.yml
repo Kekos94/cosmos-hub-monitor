@@ -1,0 +1,109 @@
+name: Criterion 2 — IBC multichain
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/daily_criteria2.yml'
+      - 'criterion2_*.py'
+      - 'run_criteria2_pipeline.py'
+      - 'publish_criterion2.py'
+      - 'config/criterion2_chains.json'
+      - 'tests/test_criterion2*.py'
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: "Première journée UTC (YYYY-MM-DD), seulement pour initialiser une collecte vide"
+        required: false
+        type: string
+      publish_only:
+        description: "Régénérer et publier le critère 2 sans collecter de nouveaux transferts"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+# Same repository writer lock as Criterion 1: never race git pushes or Pages.
+concurrency:
+  group: cosmos-monitor-data-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  criterion2:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Tests
+        run: python -m unittest discover -s tests -v
+      - name: Collect indexed IBC days
+        id: collect
+        if: inputs.publish_only != true
+        continue-on-error: true
+        env:
+          START_DATE: ${{ inputs.start_date }}
+          CRITERION2_BUDGET_SECONDS: "1200"
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: python criterion2_pipeline.py
+      - name: Validate and export historical valuations
+        env:
+          COINGECKO_DEMO_API_KEY: ${{ secrets.COINGECKO_DEMO_API_KEY }}
+          COINGECKO_PRO_API_KEY: ${{ secrets.COINGECKO_PRO_API_KEY }}
+        run: python criterion2_export.py --fetch-prices
+      - name: Generate Criterion 2 page
+        run: python publish_criterion2.py
+      - name: Commit Criterion 2 data and progress
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
+          git add site/criterion2.html site/criterion2_progress.csv site/ibc_out_assets_daily.csv site/ibc_out_chains_daily.csv site/ecosystem_out_usd_daily.csv
+          if test -d data/criterion2; then
+            git add data/criterion2
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Criterion 2 indexed IBC transfers and historical valuations"
+            git push
+          fi
+      - name: Report collection errors after preserving checked pages
+        if: steps.collect.outcome == 'failure'
+        run: exit 1
+      - name: Publish site
+        id: deploy_first
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+      - name: Wait before publication retry
+        if: steps.deploy_first.outcome == 'failure'
+        run: sleep 15
+      - name: Retry publication
+        id: deploy_second
+        if: steps.deploy_first.outcome == 'failure'
+        continue-on-error: true
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site
+      - name: Wait before final publication retry
+        if: steps.deploy_second.outcome == 'failure'
+        run: sleep 30
+      - name: Final publication retry
+        if: steps.deploy_second.outcome == 'failure'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./site

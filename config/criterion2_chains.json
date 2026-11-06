@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "scope": "ics20_v1_gross_sent",
+  "chains": [
+    {
+      "name": "cosmoshub",
+      "chain_id": "cosmoshub-4",
+      "rpc": [
+        "https://cosmos-rpc.polkachu.com",
+        "https://rpc.cosmos.directory/cosmoshub"
+      ],
+      "query_mode": "height_ranges"
+    },
+    {
+      "name": "osmosis",
+      "chain_id": "osmosis-1",
+      "rpc": [
+        "https://osmosis-rpc.polkachu.com",
+        "https://rpc.osmosis.zone"
+      ],
+      "query_mode": "height_ranges"
+    },
+    {
+      "name": "noble",
+      "chain_id": "noble-1",
+      "rpc": [
+        "https://noble-rpc.polkachu.com",
+        "https://rpc.lavenderfive.com/noble"
+      ],
+      "query_mode": "height_ranges"
+    },
+    {
+      "name": "injective",
+      "chain_id": "injective-1",
+      "rpc": [
+        "https://injective-rpc.polkachu.com",
+        "https://injective-rpc.highstakes.ch"
+      ],
+      "query_mode": "height_ranges"
+    }
+  ]
+}

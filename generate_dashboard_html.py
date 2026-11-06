@@ -88,7 +88,10 @@ Les fees archivées sont des montants déclarés dans les transactions, sans pre
 <h2>Fichiers</h2><ul>{''.join(published)}</ul>
 '''
     volume = ROOT / 'ecosystem_out_usd_daily.csv'
-    if volume.exists():
+    if (out / 'criterion2.html').exists():
+        html_link = '<h2>Critère 2 — flux IBC multichaînes</h2><p><a href="criterion2.html">Consulter les transferts, la couverture et les comparaisons</a></p>'
+        document += html_link
+    elif volume.exists():
         rows = read_rows(volume)
         document += '<h2>Critère 2 — données existantes</h2>' + table(rows, [(k, k) for k in rows[0]] if rows else [])
     document += '</body></html>'
