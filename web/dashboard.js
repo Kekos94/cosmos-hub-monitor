@@ -141,10 +141,13 @@ function startDashboard() {
 
   }
   function renderNet() {
-    const allChains=Monitor.filter(data.net_chains||[],$("period").value,last);
-    const latestNet=Monitor.latest(allChains.filter(r=>r.coverage_status==='common_indexed_day'));
+    const mode=$("net-window").value,rolling=mode!=='1';
+    const dailyChains=Monitor.filter(data.net_chains||[],$("period").value,last);
+    const dailyAssets=Monitor.filter(data.net_assets||[],$("period").value,last);
+    const allChains=rolling?(data.net_window_chains||[]).filter(r=>String(r.window_days)===mode):dailyChains;
+    const latestNet=Monitor.latest(rolling?allChains:allChains.filter(r=>r.coverage_status==='common_indexed_day'));
     const rows=latestNet?allChains.filter(r=>r.date===latestNet.date):[];
-    const allAssets=Monitor.filter(data.net_assets||[],$("period").value,last);
+    const allAssets=rolling?(data.net_window_assets||[]).filter(r=>String(r.window_days)===mode):dailyAssets;
     const chain=$("net-chain").value;
     const choices=latestNet?allAssets.filter(r=>r.date===latestNet.date&&r.chain===chain):[];
     const old=$("net-asset").value;
@@ -156,18 +159,31 @@ function startDashboard() {
     const asset=choices.find(r=>r.denom===$("net-asset").value);
     const unit=asset?.symbol||t("unités inconnues");
     const amount=(v,signed=false)=>Monitor.amount(v,locale,signed)??t("Indisponible");
-    $("net-caption").textContent=latestNet?t("Cohorte du {date} UTC · preuves communes jusqu’au {cutoff}",{date:day(latestNet.date),cutoff:latestNet.evidence_through_utc.replace('T',' ').replace('Z',' UTC')}):t("En attente d’une journée commune complète dans les deux sens");
-    $("net-details").href='criterion2'+(language==='en'?'-en':'')+'.html#net-flows';
-    $("net-cards").innerHTML=card(t("Entrées réussies"),amount(asset?.confirmed_in_amount),unit,t("Réceptions de la journée, succès rapprochés"))+card(t("Sorties réussies"),amount(asset?.confirmed_out_amount),unit,t("Émissions de la journée, succès rapprochés"))+card(t("Solde net de cet actif"),amount(asset?.net_amount,true),unit,t("Entrées réussies − sorties réussies"),true)+card(t("Paquets incertains de cet actif"),fmt(asset?.unresolved_packets,0),t("paquets"),t("Ils bloquent le solde complet de l’actif"));
+    const cutoff=latestNet?.evidence_through_utc?.replace('T',' ').replace('Z',' UTC')||t("Indisponible");
+    $("net-caption").textContent=!latestNet?t("En attente d’une journée commune complète dans les deux sens"):rolling?t("Du {start} au {end} UTC · {covered}/{expected} jours couverts · preuves jusqu’au {cutoff}",{start:day(latestNet.start_date),end:day(latestNet.end_date),covered:latestNet.covered_days,expected:mode,cutoff}):t("Cohorte du {date} UTC · preuves communes jusqu’au {cutoff}",{date:day(latestNet.date),cutoff});
+    $("net-details").href='criterion2'+(language==='en'?'-en':'')+'.html'+(rolling?'#windows':'#net-flows');
+    const fullAsset=asset?.net_amount!==''&&asset?.net_amount!=null;
+    const shownNet=rolling&&!fullAsset?asset?.observed_net_amount:asset?.net_amount;
+    $("net-cards").innerHTML=card(rolling?t("Entrées réussies observées"):t("Entrées réussies"),amount(asset?.confirmed_in_amount),unit,rolling?t("Sur les jours couverts uniquement"):t("Réceptions de la journée, succès rapprochés"))+card(rolling?t("Sorties réussies observées"):t("Sorties réussies"),amount(asset?.confirmed_out_amount),unit,rolling?t("Sur les jours couverts uniquement"):t("Émissions de la journée, succès rapprochés"))+card(rolling&&!fullAsset?t("Solde sur les jours couverts"):t("Solde net de cet actif"),amount(shownNet,true),unit,rolling&&!fullAsset?t("Bilan complet de la période indisponible"):t("Entrées réussies − sorties réussies"),true)+(rolling?card(t("Couverture de la période"),latestNet?latestNet.covered_days+' / '+mode:t("Indisponible"),t("jours"),t("Jours manquants jamais remplacés par zéro")):card(t("Paquets incertains de cet actif"),fmt(asset?.unresolved_packets,0),t("paquets"),t("Ils bloquent le solde complet de l’actif")));
+    $("net-coverage-note").hidden=!rolling;$("net-days").hidden=!rolling;
+    if(rolling){
+      $("net-coverage-note").textContent=latestNet?.coverage_status==='complete_window'?t("Tous les jours de la fenêtre sont couverts. Les confirmations et les prix manquants peuvent encore empêcher un bilan complet."):t("Historique incomplet : {covered}/{expected} jours couverts. Les chiffres sont les cumuls observés sur ces jours uniquement ; le bilan complet de la période reste indisponible. Aucune extrapolation.",{covered:latestNet?.covered_days||'0',expected:mode});
+      if(latestNet?.evidence_status==='mixed_cutoffs')$("net-coverage-note").textContent=t("{covered}/{expected} jours couverts, mais les bornes de preuves diffèrent entre journées. Les montants cumulés restent indisponibles.",{covered:latestNet.covered_days,expected:mode});
+      const currentDay=new Date();currentDay.setUTCDate(currentDay.getUTCDate()-1);
+      if(latestNet&&latestNet.end_date<currentDay.toISOString().slice(0,10))$("net-coverage-note").textContent=t("Bilan en attente d’actualisation : il se termine le {date} UTC. Les dates affichées sont celles du dernier calcul disponible.",{date:day(latestNet.end_date)})+' '+$("net-coverage-note").textContent;
+      const list=value=>value?value.split(';').map(day).join(', '):t("Aucun");
+      $("net-days-detail").textContent=t("Jours couverts : {covered}. Jours manquants : {missing}.",{covered:list(latestNet?.covered_dates),missing:list(latestNet?.missing_dates)});
+    }
     $("net-asset-note").textContent=asset?t("Dénomination locale : {denom}. {excluded} échecs exclus. Le prix historique ne sert qu’à la référence USD ; les montants en tokens restent séparés.",{denom:asset.denom,excluded:fmt(asset.excluded_packets,0)}):t("Aucun actif disponible dans une journée commune complète sur cette période.");
-    const headers=[t("Chaîne"),t("Actifs résolus valorisés / suivis"),t("Entrées du sous-ensemble USD"),t("Sorties du sous-ensemble USD"),t("Solde du sous-ensemble USD"),t("Solde total USD")];
+    if(rolling&&asset)$("net-asset-note").textContent+=' '+t("{count} paquets incertains pour cet actif.",{count:fmt(asset.unresolved_packets,0)});
+    const headers=[t("Chaîne"),...(rolling?[t("Jours couverts")]:[]),t("Actifs résolus valorisés / suivis"),t("Entrées du sous-ensemble USD"),t("Sorties du sous-ensemble USD"),t("Solde du sous-ensemble USD"),t("Solde total USD")];
     if(!rows.length)empty($("net-summary"),t("Aucun solde n’est calculé tant que les deux sens et les index de preuves ne couvrent pas la même journée sur les quatre chaînes."));
-    else $("net-summary").innerHTML='<div class="lifecycle-scroll"><table><thead><tr>'+headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr><th scope="row">'+esc(names[r.chain]||r.chain)+'</th><td>'+esc(fmt(r.valued_assets,0)+' / '+fmt(r.assets,0))+'<small>'+esc(t("{count} paquets incertains",{count:fmt(r.unresolved_packets,0)}))+'</small></td><td>'+esc(fmt(r.valued_in_usd,2))+'</td><td>'+esc(fmt(r.valued_out_usd,2))+'</td><td>'+esc(fmt(r.valued_net_usd,2))+'</td><td>'+esc(fmt(r.total_net_usd,2))+'</td></tr>').join('')+'</tbody></table></div>';
-    $("net-valuation-note").textContent=t("Sous-totaux partiels : pour chaque chaîne, les entrées et sorties USD utilisent exactement les mêmes actifs résolus et valorisés. La couverture diffère entre chaînes ; ces soldes ne constituent pas un classement. Le total reste indisponible si des paquets, unités ou prix manquent. Un solde positif ne prouve pas une accumulation de capital.");
+    else $("net-summary").innerHTML='<div class="lifecycle-scroll"><table><thead><tr>'+headers.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr><th scope="row">'+esc(names[r.chain]||r.chain)+'</th>'+(rolling?'<td>'+esc(r.covered_days+' / '+mode)+'</td>':'')+'<td>'+esc(fmt(r.valued_assets,0)+' / '+fmt(r.assets,0))+'<small>'+esc(t("{count} paquets incertains",{count:fmt(r.unresolved_packets,0)}))+'</small></td><td>'+esc(fmt(r.valued_in_usd,2))+'</td><td>'+esc(fmt(r.valued_out_usd,2))+'</td><td>'+esc(fmt(r.valued_net_usd,2))+'</td><td>'+esc(fmt(r.total_net_usd,2))+'</td></tr>').join('')+'</tbody></table></div>';
+    $("net-valuation-note").textContent=rolling?t("Les sous-totaux USD portent sur les jours couverts et sur les mêmes actifs résolus et valorisés dans les deux sens pendant toute la fenêtre. Chaque journée garde son prix historique. La couverture diffère entre chaînes ; le total de la période reste indisponible si un jour, un actif ou une confirmation manque."):t("Sous-totaux partiels : pour chaque chaîne, les entrées et sorties USD utilisent exactement les mêmes actifs résolus et valorisés. La couverture diffère entre chaînes ; ces soldes ne constituent pas un classement. Le total reste indisponible si des paquets, unités ou prix manquent. Un solde positif ne prouve pas une accumulation de capital.");
     if(asset?.metadata_status==='unknown')$("net-asset-note").textContent+=' '+t("Unités non identifiées : les montants bruts exacts restent disponibles dans le CSV.");
     if(asset?.metadata_status==='conflict')$("net-asset-note").textContent+=' '+t("Métadonnées contradictoires : conversion indisponible.");
     if(Number(rows.find(r=>r.chain===chain)?.unknown_payload_packets)>0)$("net-asset-note").textContent+=' '+t("Des paquets incertains sans actif identifié empêchent un solde complet.");
-    const netHistory=asset?allAssets.filter(r=>r.chain===chain&&r.denom===asset.denom):[];
+    const netHistory=asset?.metadata_status==='known'?dailyAssets.filter(r=>r.chain===chain&&r.denom===asset.denom&&String(r.decimals)===String(asset.decimals)&&r.coingecko_id===asset.coingecko_id):[];
     if(netHistory.some(r=>Monitor.number(r.net_amount)!==null))lineChart($("net-chart"),netHistory,'net_amount',unit);
     else empty($("net-chart"),t("Le solde n’est pas disponible pour cet actif sur cette période."));
   }
@@ -196,7 +212,7 @@ function startDashboard() {
   ["period","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
-  ["period","net-chain","net-asset"].forEach(id=>$(id).addEventListener("change",renderNet));
+  ["period","net-chain","net-asset","net-window"].forEach(id=>$(id).addEventListener("change",renderNet));
   render();renderNet();statuses();
 }
 if (typeof document !== "undefined") {

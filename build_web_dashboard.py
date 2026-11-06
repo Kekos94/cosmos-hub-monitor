@@ -52,6 +52,7 @@ def payload(root=ROOT):
     cfg, uid = load_config(root / 'config/criterion2_chains.json')
     _,in_uid=incoming_config(root / 'config/criterion2_chains.json')
     _,_,_,net_uid=net_config(root/'config/criterion2_chains.json')
+    window_asset_fields='universe_id date window_days chain denom symbol decimals coingecko_id metadata_status confirmed_in_amount confirmed_out_amount net_amount observed_net_amount unresolved_packets excluded_packets'.split()
     # Never mix historical universes or substitute partially collected days.
     c1 = [r for r in rows(root, 'hub_criterion1_daily_complete.csv')
           if r['coverage_status'] == 'complete_utc_day_blocks']
@@ -67,6 +68,8 @@ def payload(root=ROOT):
                 lifecycle_progress=rows(root,'ibc_lifecycle_progress.csv'),
                 net_chains=[r for r in rows(root,'ibc_net_chains_daily.csv') if r['universe_id']==net_uid],
                 net_assets=[r for r in rows(root,'ibc_net_assets_daily.csv') if r['universe_id']==net_uid],
+                net_window_chains=[r for r in rows(root,'ibc_net_windows_chains_latest.csv') if r['universe_id']==net_uid],
+                net_window_assets=[{k:r[k] for k in window_asset_fields} for r in rows(root,'ibc_net_windows_assets_latest.csv') if r['universe_id']==net_uid],
                 incoming_universe_id=in_uid,
                 incoming=[r for r in rows(root,'ecosystem_in_usd_daily.csv') if r['universe_id']==in_uid and int(r['indexed_chains_complete'])==len(cfg['chains'])],
                 incoming_chains=[r for r in rows(root,'ibc_in_chains_daily.csv') if r['universe_id']==in_uid],
@@ -76,6 +79,8 @@ def payload(root=ROOT):
 
 def main(root=ROOT):
     root = Path(root); site = root / 'site'; site.mkdir(exist_ok=True)
+    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv'):
+        if (root/name).exists():shutil.copy2(root/name,site/name)
     data = payload(root)
     encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
     template = (root / 'web/index.html').read_text(encoding='utf-8')

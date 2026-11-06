@@ -85,6 +85,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ibc_net_windows_chains_latest.csv ibc_net_windows_assets_latest.csv site/ibc_net_windows_chains_latest.csv site/ibc_net_windows_assets_latest.csv
           git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
           git add ibc_net_chains_daily.csv ibc_net_assets_daily.csv site/ibc_net_chains_daily.csv site/ibc_net_assets_daily.csv
           git add ibc_lifecycle_daily.csv ibc_lifecycle_progress.csv ibc_packet_lifecycle.csv.gz

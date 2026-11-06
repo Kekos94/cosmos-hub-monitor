@@ -8,6 +8,7 @@ from criterion2_export import exports
 from criterion2_incoming_export import exports as incoming_exports
 from criterion2_lifecycle_export import exports as lifecycle_exports
 from criterion2_net import exports as net_exports,config as net_config
+from criterion2_windows import exports as window_exports
 
 
 def table(rows,fields):
@@ -29,11 +30,13 @@ def main():
     lifecycle,life_progress=lifecycle_exports()
     net_chains,net_assets=net_exports()
     net_chains=[r for r in net_chains if r['universe_id']==net_config()[-1]]
+    window_chains,window_assets=window_exports()
     cfg,uid=load_config();site=ROOT/'site';site.mkdir(exist_ok=True)
     files=['criterion2_progress.csv','ibc_out_chains_daily.csv','ibc_out_assets_daily.csv','ecosystem_out_usd_daily.csv']
     files+=['criterion2_incoming_progress.csv','ibc_in_chains_daily.csv','ibc_in_assets_daily.csv','ecosystem_in_usd_daily.csv']
     files+=['ibc_lifecycle_daily.csv','ibc_lifecycle_progress.csv','ibc_packet_lifecycle.csv.gz']
     files+=['ibc_net_chains_daily.csv','ibc_net_assets_daily.csv']
+    files+=['ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv']
     for name in files:shutil.copy2(ROOT/name,site/name)
     links=''.join(f'<li><a href="{name}">{name}</a></li>' for name in files)
     document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Critère 2</title>
@@ -76,6 +79,10 @@ ni une part des RWA. Les multi-sauts et transferts de retour peuvent représente
 <p>Les sous-totaux USD utilisent exactement les mêmes actifs résolus et valorisés dans les deux sens pour chaque chaîne. Leur couverture peut différer entre chaînes : ce ne sont ni des totaux complets ni un classement. Le total USD reste indisponible dès qu’un actif ou un paquet manque. Un solde positif indique davantage d’entrées réussies que de sorties réussies sur la période ; il ne prouve ni une accumulation de capital, ni une centralité de transit.</p>
 {table(net_chains,[('date','Cohorte UTC'),('chain','Chaîne'),('coverage_status','Couverture indexée'),('evidence_through_utc','Borne commune des preuves (UTC)'),('valued_assets','Actifs résolus valorisés'),('unpriced_assets','Actifs sans valorisation'),('unresolved_packets','Paquets incertains'),('valued_in_usd','Entrées du sous-ensemble USD'),('valued_out_usd','Sorties du sous-ensemble USD'),('valued_net_usd','Solde du sous-ensemble USD'),('total_net_usd','Solde total USD'),('net_status','État du solde')])}
 <p>Le fichier par actif contient les montants bruts exacts, les unités, le prix historique de référence et le solde de chaque dénomination locale. Il conserve les calculs connus séparément des soldes complets. Les séries d’entrées et de sorties brutes gardent leur définition antérieure.</p>
+<h2 id="windows">Cumuls sur 7, 30 et 90 jours</h2>
+<p>Chaque fenêtre se termine à la dernière journée UTC close lors de la génération. Les jours couverts sont les journées communes indexées complètes des quatre chaînes dans les deux sens. Les jours manquants ne sont jamais remplacés par zéro. Le cumul observé porte uniquement sur ces jours ; le bilan complet exige tous les jours de la fenêtre et des états de confirmation compatibles.</p>
+<p>Les montants sont additionnés par dénomination locale et avec des unités cohérentes. Pour un cumul USD, un actif doit être résolu et valorisé sur chacune de ses journées actives ; le même ensemble est utilisé pour les entrées et les sorties sur toute la fenêtre. Les valorisations journalières historiques sont additionnées, sans revaloriser le passé au dernier prix. Si les bornes de preuves diffèrent entre journées, les montants cumulés restent indisponibles.</p>
+{table(window_chains,[('window_days','Fenêtre (jours)'),('start_date','Début UTC'),('end_date','Fin UTC incluse'),('chain','Chaîne'),('covered_days','Jours couverts'),('missing_days','Jours manquants'),('valued_in_usd','Entrées du sous-ensemble USD'),('valued_out_usd','Sorties du sous-ensemble USD'),('valued_net_usd','Solde du sous-ensemble USD'),('total_net_usd','Solde total USD'),('evidence_status','État des preuves')])}
 <h2>Fichiers</h2><ul>{links}</ul></body></html>'''
     (site/'criterion2.html').write_text(document,encoding='utf-8')
     from build_web_dashboard import main as build_dashboard

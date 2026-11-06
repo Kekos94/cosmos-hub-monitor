@@ -86,3 +86,12 @@ The existing period filter applies to both. Exact figures remain in the new CSVs
 small nonzero amounts use scientific notation rather than appearing as zero.
 The shared evidence cutoff and incomplete total valuations are explicit. The
 panel measures daily activity cohorts, not bank balances, market share or transit.
+
+The net-flow **Summary** selector now provides Day / 7-day / 30-day / 90-day
+views, with a 7-day default. The cards show observed cumulative amounts and
+covered-day counts; incomplete windows never masquerade as complete balances.
+Expandable covered/missing-day lists and new CSV downloads provide the exact
+basis. Daily charts retain their separate history filter. USD windows use a
+constant resolved, valued asset set on both sides across the full observed window,
+with historical daily prices. C1 publication reuses the latest C2 window snapshot;
+stale window end dates receive an explicit refresh notice.

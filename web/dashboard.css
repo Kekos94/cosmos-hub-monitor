@@ -8,3 +8,5 @@
 .net-panel{margin-top:24px}.net-controls{gap:16px;flex-wrap:wrap}.net-controls label{display:flex;align-items:center;gap:10px}.net-controls select{max-width:100%}.net-controls label:last-child{min-width:0;flex:1}.net-controls label:last-child select{min-width:0;max-width:650px}.net-panel table{width:100%;border-collapse:collapse;font-size:13px}.net-panel th,.net-panel td{padding:12px 10px;text-align:right;border-bottom:1px solid #e8ecf3;white-space:nowrap}.net-panel th:first-child,.net-panel td:first-child{text-align:left}.net-panel td small{display:block;color:#65738b;font-size:11px}.net-panel .notice{margin-bottom:12px}@media(max-width:640px){.net-controls label{width:100%;justify-content:space-between}.net-controls label:last-child select{max-width:75%}}
 
 .net-panel .chart-note{overflow-wrap:anywhere}
+
+#net-days{margin:12px 0 20px}#net-days summary{cursor:pointer;color:#315cf4}#net-days-detail{line-height:1.8}#net-coverage-note{margin:12px 0}.net-controls label:last-child{flex:1 1 320px}

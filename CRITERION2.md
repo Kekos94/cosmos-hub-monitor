@@ -341,3 +341,54 @@ Première cohorte commune, 5 novembre 2026 UTC, preuves avant le 6 novembre à
 00:00 UTC : ATOM natif sur le Hub, 116 879,948760 entrants réussis moins
 110 630,697557 sortants réussis = **+6 249,251203 ATOM**. Ce résultat par actif ne
 rend pas disponible le total USD tous actifs, dont la couverture reste partielle.
+
+## Cumuls calendaires sur 7, 30 et 90 jours
+
+`criterion2_windows.py` lit les deux CSV quotidiens de flux nets et calcule les
+fenêtres inclusives de 7, 30 et 90 jours, terminées à la dernière journée UTC
+close lors du calcul. La borne ne recule pas jusqu'à la dernière observation
+pour masquer un retard. Chaque bilan indique ses dates, jours couverts,
+jours manquants et la liste explicite de ces journées.
+
+Un jour couvert exige les cohortes communes complètes des quatre chaînes dans
+les deux sens, selon les index des fournisseurs (la même réserve de couverture
+que les séries quotidiennes). Un jour manquant ou incomplet est exclu du cumul
+observé et bloque le bilan complet. Il ne devient jamais un zéro. Une absence
+d'un actif n'est un zéro que sur une journée entièrement couverte, avec un registre
+d'actifs complet et sans contenu incertain pouvant appartenir à cet actif.
+
+Les montants bruts sont additionnés en entiers par dénomination locale, puis
+convertis avec des unités cohérentes. Des unités ou identifiants de prix
+contradictoires entre journées bloquent la conversion. Un état incertain sur
+une journée active bloque le net observé de cet actif, ainsi que le total complet.
+Des bornes de preuves différentes entre jours bloquent les montants cumulés ;
+on n'additionne pas des états de confirmation arrêtés à des dates différentes.
+
+Le sous-total USD utilise un ensemble d'actifs constant dans les deux sens et
+sur toute la fenêtre observée : un actif doit être résolu et valorisé sur chacune
+de ses journées actives. Un prix manquant une seule journée exclut cet actif
+entier du sous-total USD de la période. On additionne ses valorisations journalières
+historiques ; on ne revalorise pas tous les jours au dernier prix. Les couvertures
+peuvent différer entre chaînes : les sous-totaux ne sont pas un classement.
+
+Deux nouveaux fichiers sont publiés à la racine et dans `site/` :
+- `ibc_net_windows_chains_latest.csv` : derniers bilans des fenêtres, couverture,
+  cumuls USD observés et totaux complets seulement quand tous les jours et actifs
+  sont couverts.
+- `ibc_net_windows_assets_latest.csv` : cumuls exacts par actif, unités, états,
+  net observé sur les jours couverts et net complet de la fenêtre séparés.
+
+Ce sont des vues calculées du dernier bilan, pas de nouveaux relevés historiques.
+Les CSV quotidiens, checkpoints et preuves existants ne sont pas modifiés.
+Le workflow du critère 2 recalcule et commit ces vues avec les données quotidiennes,
+sans nouvelles requêtes réseau pour l'agrégation. La publication du critère 1
+réutilise le dernier bilan disponible et ne dépend pas de son recalcul. Si la
+fenêtre n'atteint plus hier en UTC, le dashboard signale le retard d'actualisation.
+
+Le sélecteur **Bilan : Jour / Cumul 7 jours / Cumul 30 jours / Cumul 90 jours**
+pilote les cartes et le tableau des nets. La vue par défaut est 7 jours. Le
+filtre **Historique affiché** continue de régler le graphique quotidien, dont
+les trous ne sont jamais reliés. En historique court, les cartes sont explicitement
+libellées « observées » et « sur les jours couverts » ; le bilan complet reste
+indisponible. Aucun remplissage ni récupération automatique de journées antérieures
+n'est déclenché par ce changement.
