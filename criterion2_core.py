@@ -8,9 +8,16 @@ from decimal import Decimal, localcontext
 
 SCOPE = 'ics20_v1_gross_sent'
 IN_SCOPE = 'ics20_v1_received_ack_observed'
+LIFE_EVENTS={
+    'ics20_v1_write_ack':('write_acknowledgement','packet_dst_port'),
+    'ics20_v1_source_ack':('acknowledge_packet','packet_src_port'),
+    'ics20_v1_timeout':('timeout_packet','packet_src_port'),
+    'ics20_v1_timeout_close':('timeout_on_close_packet','packet_src_port'),
+}
 
 
 def event_spec(scope=SCOPE):
+    if scope in LIFE_EVENTS:return LIFE_EVENTS[scope]
     if scope==SCOPE:return 'send_packet','packet_src_port'
     if scope==IN_SCOPE:return 'recv_packet','packet_dst_port'
     raise ValueError('Unknown IBC flow scope')
@@ -22,6 +29,9 @@ def search_query(first,end,scope=SCOPE):
 
 
 def flow_packets(plan,tx):
+    if plan['scope'] in LIFE_EVENTS:
+        from criterion2_lifecycle_evidence import records
+        return records(plan,tx)
     if plan['scope']==IN_SCOPE:
         from criterion2_receipts import received_packets
         return received_packets(plan['chain_id'],tx)

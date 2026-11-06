@@ -6,6 +6,7 @@ from decimal import Decimal
 from criterion2_pipeline import ROOT, load_config
 from criterion2_export import exports
 from criterion2_incoming_export import exports as incoming_exports
+from criterion2_lifecycle_export import exports as lifecycle_exports
 
 
 def table(rows,fields):
@@ -24,9 +25,11 @@ def table(rows,fields):
 def main():
     progress,chains,assets,comparisons=exports()
     in_progress,in_chains,in_assets,in_comparisons=incoming_exports()
+    lifecycle,life_progress=lifecycle_exports()
     cfg,uid=load_config();site=ROOT/'site';site.mkdir(exist_ok=True)
     files=['criterion2_progress.csv','ibc_out_chains_daily.csv','ibc_out_assets_daily.csv','ecosystem_out_usd_daily.csv']
     files+=['criterion2_incoming_progress.csv','ibc_in_chains_daily.csv','ibc_in_assets_daily.csv','ecosystem_in_usd_daily.csv']
+    files+=['ibc_lifecycle_daily.csv','ibc_lifecycle_progress.csv','ibc_packet_lifecycle.csv.gz']
     for name in files:shutil.copy2(ROOT/name,site/name)
     links=''.join(f'<li><a href="{name}">{name}</a></li>' for name in files)
     document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Critère 2</title>
@@ -36,7 +39,7 @@ def main():
 <p>Périmètre configuré : {html.escape(', '.join(c['name'] for c in cfg['chains']))}.</p>
 <p class="notice">Ces mesures portent sur les paquets ICS20 v1 émis via le port transfer, selon l'index de transactions du fournisseur.
 Elles dépendent de la complétude de cet index ; elles ne constituent pas un audit de chaque bloc.
-Ce sont des flux bruts émis : les accusés de réception, erreurs et remboursements ne sont pas réconciliés.
+Ces séries conservent les flux bruts émis. Les confirmations et remboursements sont rapprochés séparément dans le suivi ci-dessous.
 Les protocoles IBC v2, NFT, CCTP et les autres ports ne sont pas inclus.</p>
 <h2>Avancement — aucune extrapolation des données partielles</h2>
 {table(progress,[('date','Jour UTC'),('chain','Chaîne'),('coverage_status','Couverture indexée'),('indexed_transactions_saved','Transactions contrôlées'),('indexed_transactions_total','Résultats annoncés par l’index'),('sent_packets_saved','Paquets observés'),('source','Fournisseur')])}
@@ -57,6 +60,12 @@ ni une part des RWA. Les multi-sauts et transferts de retour peuvent représente
 {table(in_progress,[('date','Jour UTC'),('chain','Chaîne'),('coverage_status','Couverture indexée'),('indexed_transactions_saved','Transactions contrôlées'),('observed_packets_saved','Réceptions observées')])}
 {table(in_comparisons,[('date','Jour UTC'),('chains','Périmètre'),('observed_packets','Réceptions observées'),('received_packets','Entrées confirmées'),('error_ack_packets','Accusés d’erreur'),('unconfirmed_packets','Réceptions non confirmées'),('valued_in_usd','Sous-total entrant valorisé USD'),('hub_share_confirmed_packet_count_pct','Part Hub des entrées confirmées (%)')])}
 {table(in_chains,[('date','Jour UTC'),('chain','Chaîne'),('observed_packets','Réceptions observées'),('received_packets','Entrées confirmées'),('error_ack_packets','Accusés d’erreur'),('unconfirmed_packets','Réceptions non confirmées'),('unpriced_packets','Entrées confirmées non valorisées'),('valued_in_usd','Sous-total entrant valorisé USD')])}
+<h2 id="lifecycle">Confirmations et remboursements — cohortes de paquets</h2>
+<p>Les paquets restent rattachés à leur jour UTC d’émission ou de réception. Des preuves de transactions ultérieures peuvent compléter leur état. La couverture indique jusqu’à quelle borne UTC tous les index nécessaires ont été parcourus sans trou depuis la cohorte ; une recherche complète ne garantit pas que tous les paquets soient résolus.</p>
+<p>Les répétitions sans effet (NOOP) sont exclues : une confirmation source exige une réponse de message exécutée. Les accusés standard, IBC hooks et ICS29 reconnus sont interprétés ; les autres restent inconnus. Un timeout confirmé ou un accusé d’erreur ne suffit pas à déclarer un remboursement : il faut un crédit bancaire correspondant, avec débit, montant, actif, bénéficiaire et contexte applicatif vérifiés. Les remboursements sur une chaîne source distante restent non vérifiés.</p>
+<p>Les séries brutes et les entrées confirmées dans la transaction de réception gardent leur définition. Ce rapprochement ne calcule aucun flux net et ne prouve pas le règlement au bénéficiaire final à travers plusieurs sauts.</p>
+{table(lifecycle,[('date','Cohorte UTC'),('chain','Chaîne'),('direction','Sens'),('tracked_packets','Paquets suivis'),('success_confirmed','Succès confirmés'),('error_acknowledged','Accusés d’erreur'),('timeout_confirmed','Timeouts confirmés'),('awaiting_evidence','Sans preuve concluante'),('unsupported_ack','Accusés non interprétés'),('conflicts','Preuves contradictoires'),('refunds_verified','Remboursements vérifiés'),('refunds_unverified','Remboursements non vérifiés'),('complete_through_utc','Index parcourus jusqu’au (UTC)'),('latest_evidence_day','Dernier jour de preuve')])}
+{table(life_progress,[('date','Jour UTC'),('chain','Chaîne'),('scope','Index de preuve'),('coverage_status','Couverture indexée'),('scanned_heights','Hauteurs parcourues'),('expected_heights','Hauteurs attendues'),('events','Événements observés')])}
 <h2>Fichiers</h2><ul>{links}</ul></body></html>'''
     (site/'criterion2.html').write_text(document,encoding='utf-8')
     from build_web_dashboard import main as build_dashboard

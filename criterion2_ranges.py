@@ -5,7 +5,7 @@ import time
 from datetime import datetime,timezone
 from pathlib import Path
 
-from criterion2_core import attributes,digest,flow_packets,utc,verify_search_tx,day_bounds,search_query,event_spec,SCOPE,IN_SCOPE
+from criterion2_core import attributes,digest,flow_packets,utc,verify_search_tx,day_bounds,search_query,event_spec,SCOPE,IN_SCOPE,LIFE_EVENTS
 
 
 def query(first,end,scope=SCOPE):
@@ -83,10 +83,12 @@ def validate_fragments(plan,records):
                 raise ValueError('Duplicate/out-of-range indexed transaction')
             hashes.add(key[2]);valid.add(key[2]);keys.append(key)
         for p in r['packets']:
+            lifecycle=(plan['scope'] in LIFE_EVENTS and p.get('record_type')=='lifecycle_event' and p.get('event_type')==event_spec(plan['scope'])[0]
+                       and p['amount_raw']=='' and p['packet_id']==f'{plan["chain_id"]}/evidence/{p["event_type"]}/{p["tx_hash"]}/{p["event_index"]}')
             valid_amount=p['amount_raw'].isdigit() and int(p['amount_raw'])>0
             rejected_payload=(plan['scope']==IN_SCOPE and p.get('receipt_status') in ('error_ack_in_receive_tx','unconfirmed_ack_in_receive_tx')
                               and p.get('payload_status')=='invalid_or_unsupported' and p['amount_raw']=='')
-            if p['tx_hash'] not in valid or p['chain_id']!=plan['chain_id'] or p['packet_id'] in ids or not (valid_amount or rejected_payload):
+            if p['tx_hash'] not in valid or p['chain_id']!=plan['chain_id'] or p['packet_id'] in ids or not (valid_amount or rejected_payload or lifecycle):
                 raise ValueError('Duplicate or invalid packet in adaptive range')
             ids.add(p['packet_id']);flows.append(p)
         cursor=end+1

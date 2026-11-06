@@ -220,3 +220,58 @@ le workflow du critère 2 ne régénère pas les calculs ou CSV du critère 1.
 Les erreurs de collecte sont signalées après sauvegarde du progrès vérifié,
 et les publications GitHub Pages disposent de trois tentatives espacées.
 Le mode `publish_only` permet de régénérer l'export et la page sans collecter.
+
+## Lifecycle reconciliation (v1)
+
+`criterion2_lifecycle_collect.py` scans closed UTC days independently for
+`write_acknowledgement`, `acknowledge_packet`, `timeout_packet` and the legacy
+`timeout_on_close_packet` index, on all four configured chains. Each compressed
+journal contains validated, contiguous height ranges, a fixed provider, packet
+identities and hashed payload/evidence. Saved ranges are append-only; complete
+journals cannot be rewritten. The hourly workflow spends up to 600 seconds on
+this stage and resumes unfinished journals on the next run. The original
+send/receive checkpoints and historical volume CSVs are preserved.
+
+`criterion2_lifecycle_export.py` attaches evidence to **complete original packet
+cohorts**, by local chain, both ports/channels, sequence and exact payload SHA256.
+Evidence can occur in later transactions and later closed days; it never moves
+the original cohort date. Incoming state uses local destination write-ack proof;
+outgoing state uses local source execution proof. These are separate perspectives,
+not a cross-chain topology join or a multi-hop settlement guarantee.
+
+Source core events alone are insufficient: IBC may emit them on NOOP replays.
+Raw protobuf messages and TxMsgData responses (including authz wrappers) must
+prove result `SUCCESS=2`; NOOP, absent and unknown responses cannot confirm.
+Standard ICS20 acknowledgements and explicit Osmosis IBC-hooks / ICS29 fee
+middleware envelopes are decoded with bounded schemas. Unsupported envelopes
+stay unknown; contradictory terminal outcomes or payloads stay conflicts.
+An elapsed timeout timestamp is never treated as a confirmed timeout.
+
+A refund is verified only for an executed source error/timeout with matching
+application context and one explicitly message-indexed bank transfer, recipient
+credit and sender debit. Recipient, amount and local bank denomination must match
+the original packet. Ambiguous multi-message credits, ante-fee movements and
+missing proof do not count. Incoming error refunds on remote sources remain
+unverified. A failure and a verified refund are distinct fields.
+
+New exports (also published under `site/`):
+- `ibc_lifecycle_daily.csv`: per-chain/direction/original-day counts, plus search coverage.
+- `ibc_lifecycle_progress.csv`: provider and per-stream scanned/expected heights.
+- `ibc_packet_lifecycle.csv.gz`: per-packet outcomes, evidence IDs and refund proof hashes.
+
+All outcome counts partition the original cohort. Refund counts are a subset of
+confirmed failures, not an additional outcome. `coverage_complete` means all
+required local indexes cover the cohort day; `complete_through_utc` is the minimum
+contiguous exclusive UTC boundary across those streams, starting at that cohort.
+A missing subsequent day stops coverage even if a later journal exists. Positive
+proof from a partial journal may be shown, but search coverage stays incomplete.
+`latest_evidence_day` records the latest journal day of matched positive proof,
+which can extend beyond complete search coverage when a later journal is partial.
+Completed search is **not** equivalent to all packets having settled. Event-index
+completeness remains conditional on the provider, as in the original ledger.
+No net flows, USD settlement total or transit metric is calculated in this step.
+
+Protocol references: ibc-go v8.8.0 `proto/ibc/core/channel/v1/tx.proto`,
+`modules/core/keeper/msg_server.go`, `modules/apps/transfer/ibc_module.go`;
+Osmosis `x/ibc-hooks/wasm_hook.go`. Unsupported legacy message-response formats
+remain unverified rather than being inferred from an event.

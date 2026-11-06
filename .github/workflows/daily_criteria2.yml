@@ -66,6 +66,14 @@ jobs:
           CRITERION2_BUDGET_SECONDS: "1200"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_pipeline.py
+      - name: Reconcile IBC confirmations and refund evidence
+        id: lifecycle
+        if: inputs.publish_only != true
+        continue-on-error: true
+        env:
+          LIFECYCLE_BUDGET_SECONDS: "600"
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: python criterion2_lifecycle_collect.py
       - name: Validate and export historical valuations
         env:
           COINGECKO_DEMO_API_KEY: ${{ secrets.COINGECKO_DEMO_API_KEY }}
@@ -78,6 +86,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add criterion2_progress.csv ibc_out_assets_daily.csv ibc_out_chains_daily.csv ecosystem_out_usd_daily.csv
+          git add ibc_lifecycle_daily.csv ibc_lifecycle_progress.csv ibc_packet_lifecycle.csv.gz
+          git add site/ibc_lifecycle_daily.csv site/ibc_lifecycle_progress.csv site/ibc_packet_lifecycle.csv.gz
           git add criterion2_incoming_progress.csv ibc_in_assets_daily.csv ibc_in_chains_daily.csv ecosystem_in_usd_daily.csv
           git add site/criterion2_incoming_progress.csv site/ibc_in_assets_daily.csv site/ibc_in_chains_daily.csv site/ecosystem_in_usd_daily.csv
           git add site/criterion2.html site/criterion2_progress.csv site/ibc_out_assets_daily.csv site/ibc_out_chains_daily.csv site/ecosystem_out_usd_daily.csv
@@ -89,12 +99,15 @@ jobs:
           if test -d data/criterion2_incoming; then
             git add data/criterion2_incoming
           fi
+          if test -d data/criterion2_lifecycle; then
+            git add data/criterion2_lifecycle
+          fi
           if ! git diff --cached --quiet; then
             git commit -m "Update Criterion 2 indexed IBC transfers and historical valuations"
             git push
           fi
       - name: Report collection errors after preserving checked pages
-        if: steps.collect.outcome == 'failure'
+        if: steps.collect.outcome == 'failure' || steps.lifecycle.outcome == 'failure'
         run: exit 1
       - name: Publish site
         id: deploy_first

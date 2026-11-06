@@ -11,7 +11,7 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import hub_fee_monitor_v41 as http
-from criterion2_core import SCOPE, IN_SCOPE, asset_index, day_bounds, digest, flow_packets, search_query, utc, verify_search_tx
+from criterion2_core import SCOPE, IN_SCOPE, LIFE_EVENTS, asset_index, day_bounds, digest, flow_packets, search_query, utc, verify_search_tx
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data' / 'criterion2'
@@ -163,7 +163,7 @@ def build_plan(client, day, universe_id, assets, *, page_size=50, now=None, memb
 def validate_plan(p):
     begin,finish=day_bounds(p['date'])
     first,end=int(p['start_height']),int(p['end_height'])
-    if p['schema_version']!=1 or p['scope'] not in (SCOPE,IN_SCOPE) or first<2 or end<first-1:
+    if p['schema_version']!=1 or p['scope'] not in (SCOPE,IN_SCOPE,*LIFE_EVENTS) or first<2 or end<first-1:
         raise ValueError('Invalid IBC day plan')
     if not 1<=p['page_size']<=100:raise ValueError('Invalid pagination size')
     if p.get('query_mode','paged') not in ('paged','height_ranges'):

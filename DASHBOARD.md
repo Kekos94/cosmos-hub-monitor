@@ -71,3 +71,10 @@ sa vérification et les enregistrements DNS. Ajouter le domaine choisi dans
 le certificat est disponible. La publication envoie le dossier `site/`, donc
 ce fichier doit être conservé dans le dépôt pour les prochaines exécutions.
 Ne pas enregistrer les données d'un domaine hypothétique dans le projet.
+
+The bilingual **Confirmations and refunds** panel follows the selected outgoing /
+incoming direction and period. It shows the latest complete packet cohort,
+including outcomes from later proofs, while the existing gross-volume charts
+retain their definitions. Each chain shows search coverage independently.
+Remote-source refunds are labelled unverified on the incoming view. Summary and
+compressed per-packet exports are downloadable; no net-flow calculation is added.

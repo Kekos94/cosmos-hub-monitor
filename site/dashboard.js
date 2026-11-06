@@ -102,7 +102,7 @@ function startDashboard() {
     const flowData=incoming?(data.incoming||[]).map(normalize):data.criterion2;
     const chainData=incoming?(data.incoming_chains||[]).map(normalize):data.chains;
     const c1=Monitor.filter(data.criterion1,$("period").value,last),c2=Monitor.filter(flowData,$("period").value,last);
-    $("ibc-description").textContent=incoming?t("Les entrées confirmées sont les réceptions ICS20 v1 avec un accusé de succès interprété dans la même transaction. Les erreurs et confirmations manquantes sont affichées séparément. Ce n’est pas une mesure du transit."):t("Comparaison des paquets ICS20 v1 émis par les quatre chaînes, sur une même journée. Les montants sont bruts ; les remboursements ne sont pas réconciliés.");
+    $("ibc-description").textContent=incoming?t("Les entrées confirmées sont les réceptions ICS20 v1 avec un accusé de succès interprété dans la même transaction. Les erreurs et confirmations manquantes sont affichées séparément. Ce n’est pas une mesure du transit."):t("Comparaison des paquets ICS20 v1 émis par les quatre chaînes, sur une même journée. Les montants sont bruts ; le suivi des confirmations et remboursements est présenté séparément.");
     $("flow-title").textContent=incoming?t("Entrées confirmées par chaîne"):t("Flux sortants par chaîne");
     $("flow-metric").options[0].textContent=incoming?t("Paquets reçus confirmés"):t("Paquets émis");
     $("share-metric").options[0].textContent=incoming?t("Part des entrées confirmées (%)"):t("Part des paquets (%)");
@@ -124,6 +124,17 @@ function startDashboard() {
     if(incoming && b) $("valuation-note").textContent=t("Entrées : {observed} réceptions observées, {confirmed} avec succès confirmé, {errors} avec accusé d’erreur et {unknown} sans confirmation interprétable dans la transaction de réception. {unpriced} entrées confirmées sans valorisation. Les parts portent sur le sous-ensemble confirmé ; aucun rapprochement de transit ou de solde net.",{observed:fmt(b.observed_packets,0),confirmed:fmt(b.received_packets,0),errors:fmt(b.error_ack_packets,0),unknown:fmt(b.unconfirmed_packets,0),unpriced:fmt(b.unpriced_packets,0)});
     barChart($("chains-chart"),chains,$("flow-metric").value,incoming);
     lineChart($("share-chart"),c2,$("share-metric").value,"%");
+    const life=Monitor.filter((data.lifecycle||[]).filter(r=>r.direction===(incoming?'in':'out')),$("period").value,last);
+    const latestLife=Monitor.latest(life),cohort=latestLife?life.filter(r=>r.date===latestLife.date):[];
+    $("lifecycle-caption").textContent=latestLife?t("Cohorte du {date} UTC · {direction}",{date:day(latestLife.date),direction:incoming?t("Entrées observées"):t("Sorties émises")}):t("Aucune cohorte complète disponible");
+    $("lifecycle-details").href='criterion2'+(language==='en'?'-en':'')+'.html#lifecycle';
+    if(!cohort.length) empty($("lifecycle-table"),t("Aucune preuve de suivi disponible sur cette période."));
+    else {
+      const headings=[t("Chaîne"),t("Paquets suivis"),t("Succès confirmés"),t("Erreurs / timeouts"),t("Sans conclusion"),t("Remboursements vérifiés"),t("Recherche complète jusqu’au (UTC)")];
+      $("lifecycle-table").innerHTML='<div class="lifecycle-scroll"><table><thead><tr>'+headings.map(h=>'<th scope="col">'+esc(h)+'</th>').join('')+'</tr></thead><tbody>'+cohort.map(r=>'<tr><th scope="row">'+esc(names[r.chain]||r.chain)+'</th><td>'+esc(fmt(r.tracked_packets,0))+'</td><td>'+esc(fmt(r.success_confirmed,0))+'</td><td>'+esc(fmt(Number(r.error_acknowledged)+Number(r.timeout_confirmed),0))+'<small>'+esc(t("{errors} erreurs · {timeouts} timeouts",{errors:fmt(r.error_acknowledged,0),timeouts:fmt(r.timeout_confirmed,0)}))+'</small></td><td>'+esc(fmt(Number(r.awaiting_evidence)+Number(r.unsupported_ack)+Number(r.conflicts),0))+'</td><td>'+esc(incoming?t("Source distante non vérifiée"):fmt(r.refunds_verified,0))+'</td><td>'+esc(r.coverage_complete==='true'?r.complete_through_utc.replace('T',' ').replace('Z',''):t("Recherche incomplète"))+(r.latest_evidence_day?'<small>'+esc(t("Dernière preuve : {date}",{date:day(r.latest_evidence_day)}))+'</small>':'')+'</td></tr>').join('')+'</tbody></table></div>';
+    }
+    $("lifecycle-note").textContent=t("Les cas sans conclusion restent inconnus. Les répétitions sans effet sont exclues ; un remboursement vérifié exige un mouvement bancaire correspondant. Une recherche complète ne signifie pas que tous les paquets sont résolus. Les séries brutes restent inchangées ; aucun flux net n’est calculé.");
+
   }
   function statuses() {
     const yesterday=new Date();yesterday.setUTCDate(yesterday.getUTCDate()-1);const expected=yesterday.toISOString().slice(0,10);

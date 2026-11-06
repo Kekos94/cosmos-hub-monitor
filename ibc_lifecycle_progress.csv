@@ -1,0 +1,17 @@
+universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_heights,events,source
+4824de746173ff1d,2026-11-05,cosmoshub,cosmoshub-4,ics20_v1_source_ack,indexed_complete,15059,15059,928,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,cosmoshub,cosmoshub-4,ics20_v1_timeout,indexed_complete,15059,15059,1,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,cosmoshub,cosmoshub-4,ics20_v1_timeout_close,indexed_complete,15059,15059,0,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,cosmoshub,cosmoshub-4,ics20_v1_write_ack,indexed_complete,15059,15059,2106,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_source_ack,indexed_complete,142609,142609,607,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_timeout,indexed_complete,142609,142609,1,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_timeout_close,indexed_complete,142609,142609,0,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_write_ack,indexed_complete,142609,142609,745,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_source_ack,indexed_complete,76712,76712,1116,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout,indexed_complete,76712,76712,2,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout_close,indexed_complete,76712,76712,0,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_write_ack,indexed_complete,76712,76712,1182,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,104443,104443,4379,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,104443,104443,15,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,104443,104443,0,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,104443,104443,3626,https://osmosis-rpc.polkachu.com

@@ -61,6 +61,8 @@ def payload(root=ROOT):
                 criterion1_progress=[progress(s) for s in load_days(root / 'data/criterion1_days')],
                 criterion2=sorted(c2, key=lambda r:r['date']),
                 chains=[r for r in rows(root, 'ibc_out_chains_daily.csv') if r['universe_id'] == uid],
+                lifecycle=[r for r in rows(root,'ibc_lifecycle_daily.csv') if r['universe_id'] in (uid,in_uid)],
+                lifecycle_progress=rows(root,'ibc_lifecycle_progress.csv'),
                 incoming_universe_id=in_uid,
                 incoming=[r for r in rows(root,'ecosystem_in_usd_daily.csv') if r['universe_id']==in_uid and int(r['indexed_chains_complete'])==len(cfg['chains'])],
                 incoming_chains=[r for r in rows(root,'ibc_in_chains_daily.csv') if r['universe_id']==in_uid],
