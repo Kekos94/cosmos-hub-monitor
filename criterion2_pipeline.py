@@ -11,10 +11,11 @@ from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import hub_fee_monitor_v41 as http
-from criterion2_core import SCOPE, asset_index, day_bounds, digest, packets, utc, verify_search_tx
+from criterion2_core import SCOPE, IN_SCOPE, asset_index, day_bounds, digest, flow_packets, search_query, utc, verify_search_tx
 
 ROOT = Path(__file__).resolve().parent
 DATA = ROOT / 'data' / 'criterion2'
+IN_DATA = ROOT / 'data' / 'criterion2_incoming'
 CONFIG = ROOT / 'config' / 'criterion2_chains.json'
 
 
@@ -75,8 +76,15 @@ def load_config(path=CONFIG):
             raise ValueError('Missing secure RPC endpoints')
         if not c['name'].isalnum():
             raise ValueError('Invalid registry chain name')
-    uid = digest({'scope':SCOPE,'chains':sorted((c['name'],c['chain_id']) for c in chains)})[:16]
+    uid = digest({'scope':cfg['scope'],'chains':sorted((c['name'],c['chain_id']) for c in chains)})[:16]
     return cfg, uid
+
+
+def incoming_config(path=CONFIG):
+    cfg,_=load_config(path)
+    cfg=dict(cfg,scope=IN_SCOPE,chains=[dict(c,query_mode='height_ranges') for c in cfg['chains']])
+    uid=digest({'scope':IN_SCOPE,'chains':sorted((c['name'],c['chain_id']) for c in cfg['chains'])})[:16]
+    return cfg,uid
 
 
 class Client:
@@ -110,7 +118,7 @@ class Client:
                                      'per_page':str(page_size),'order_by':'asc'})
 
 
-def build_plan(client, day, universe_id, assets, *, page_size=50, now=None, members=None):
+def build_plan(client, day, universe_id, assets, *, page_size=50, now=None, members=None, scope=SCOPE):
     now = now or datetime.now(timezone.utc)
     begin, finish = day_bounds(day)
     if finish > now:raise ValueError('UTC day is not closed')
@@ -138,9 +146,9 @@ def build_plan(client, day, universe_id, assets, *, page_size=50, now=None, memb
             else:b=m
         return a
     first,following=bound(begin),bound(finish)
-    query=f"send_packet.packet_src_port='transfer' AND tx.height>={first} AND tx.height<={following-1}"
+    query=search_query(first,following-1,scope)
     # A halted day has an empty block range. Querying tx.height>=first AND <=first-1 is safe.
-    plan=dict(schema_version=1,scope=SCOPE,date=day,universe_id=universe_id,
+    plan=dict(schema_version=1,scope=scope,date=day,universe_id=universe_id,
               chain=client.chain['name'],chain_id=client.chain['chain_id'],source=client.source,
               members=members or [dict(name=client.chain['name'],chain_id=client.chain['chain_id'])],
               query_mode=client.chain.get('query_mode','paged'),
@@ -155,7 +163,7 @@ def build_plan(client, day, universe_id, assets, *, page_size=50, now=None, memb
 def validate_plan(p):
     begin,finish=day_bounds(p['date'])
     first,end=int(p['start_height']),int(p['end_height'])
-    if p['schema_version']!=1 or p['scope']!=SCOPE or first<2 or end<first-1:
+    if p['schema_version']!=1 or p['scope'] not in (SCOPE,IN_SCOPE) or first<2 or end<first-1:
         raise ValueError('Invalid IBC day plan')
     if not 1<=p['page_size']<=100:raise ValueError('Invalid pagination size')
     if p.get('query_mode','paged') not in ('paged','height_ranges'):
@@ -167,7 +175,7 @@ def validate_plan(p):
     if not utc(p['last_block']['time'])<finish<=utc(p['following_block']['time']):raise ValueError('Invalid end boundary')
     if first<=end and not begin<=utc(p['first_block']['time'])<=utc(p['last_block']['time'])<finish:
         raise ValueError('Day plan contains blocks outside UTC day')
-    expected=f"send_packet.packet_src_port='transfer' AND tx.height>={first} AND tx.height<={end}"
+    expected=search_query(first,end,p['scope'])
     if p['query']!=expected or p['assets_sha256']!=digest(p['assets']):raise ValueError('Plan query/metadata changed')
 
 
@@ -181,7 +189,7 @@ def make_page(plan, response, page_number):
         identity=verify_search_tx(tx,plan)
         keys.append(list(identity))
         failed+=int(int(tx['tx_result']['code'])!=0)
-        flows.extend(packets(plan['chain_id'],tx))
+        flows.extend(flow_packets(plan,tx))
     return dict(schema_version=1,plan_sha256=digest(plan),page=page_number,total_count=total,
                 tx_keys=keys,packets=flows,failed_indexed_txs=failed,observed_at=datetime.now(timezone.utc).isoformat())
 
@@ -310,7 +318,7 @@ def run_collection(cfg,uid,*,budget=1200,start_date=None,root=DATA):
                         try:
                             client=Client(chain,source)
                             assets=assets or registry_assets(chain)
-                            plan=build_plan(client,day,uid,assets,members=sorted([dict(name=c['name'],chain_id=c['chain_id']) for c in cfg['chains']],key=lambda c:c['name']))
+                            plan=build_plan(client,day,uid,assets,members=sorted([dict(name=c['name'],chain_id=c['chain_id']) for c in cfg['chains']],key=lambda c:c['name']),scope=cfg['scope'])
                             # Check capability before pinning a provider; gateways may forbid range queries.
                             probe=client.search(plan['query'],1,1)
                             if int(probe['total_count'])<0 or len(probe.get('txs') or [])!=min(1,int(probe['total_count'])):raise ValueError('Invalid index capability response')
@@ -339,8 +347,17 @@ def run_collection(cfg,uid,*,budget=1200,start_date=None,root=DATA):
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--budget',type=int,default=int(os.environ.get('CRITERION2_BUDGET_SECONDS','1200')))
     parser.add_argument('--start-date',default=os.environ.get('START_DATE') or None)
+    parser.add_argument('--direction',choices=['out','in','both'],default='both')
     args=parser.parse_args();cfg,uid=load_config()
-    run_collection(cfg,uid,budget=args.budget,start_date=args.start_date)
+    errors=[]
+    for direction in (['out','in'] if args.direction=='both' else [args.direction]):
+        selected,selected_uid=(cfg,uid) if direction=='out' else incoming_config()
+        budget=args.budget if args.direction!='both' else max(1,args.budget//4 if direction=='out' else args.budget*3//4)
+        try:
+            run_collection(selected,selected_uid,budget=budget,start_date=args.start_date,root=DATA if direction=='out' else IN_DATA)
+        except Exception as exc:
+            errors.append(f'{direction}: {exc}')
+    if errors:raise RuntimeError('\n'.join(errors))
 
 
 if __name__=='__main__':main()

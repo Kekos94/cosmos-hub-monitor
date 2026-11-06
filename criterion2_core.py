@@ -7,6 +7,25 @@ from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, localcontext
 
 SCOPE = 'ics20_v1_gross_sent'
+IN_SCOPE = 'ics20_v1_received_ack_observed'
+
+
+def event_spec(scope=SCOPE):
+    if scope==SCOPE:return 'send_packet','packet_src_port'
+    if scope==IN_SCOPE:return 'recv_packet','packet_dst_port'
+    raise ValueError('Unknown IBC flow scope')
+
+
+def search_query(first,end,scope=SCOPE):
+    event,port=event_spec(scope)
+    return f"{event}.{port}='transfer' AND tx.height>={first} AND tx.height<={end}"
+
+
+def flow_packets(plan,tx):
+    if plan['scope']==IN_SCOPE:
+        from criterion2_receipts import received_packets
+        return received_packets(plan['chain_id'],tx)
+    return packets(plan['chain_id'],tx)
 
 
 def digest(value):
@@ -98,7 +117,8 @@ def verify_search_tx(tx, plan):
     raw = base64.b64decode(tx['tx'], validate=True)
     if hashlib.sha256(raw).hexdigest().upper() != tx['hash'].upper():
         raise ValueError('Search transaction hash mismatch')
-    if not any(e['type'] == 'send_packet' and attributes(e).get('packet_src_port') == 'transfer'
+    event,port=event_spec(plan.get('scope',SCOPE))
+    if not any(e['type'] == event and attributes(e).get(port) == 'transfer'
                for e in tx['tx_result'].get('events') or []):
         raise ValueError('Search endpoint ignored the transfer filter')
     return height, index, tx['hash'].upper()

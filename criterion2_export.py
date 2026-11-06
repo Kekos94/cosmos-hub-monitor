@@ -15,8 +15,8 @@ from pathlib import Path
 
 import requests
 import hub_fee_monitor_v41 as http
-from criterion2_core import compare_day, decimal_amount, digest, resolve_asset, validate_price, valued_packet
-from criterion2_pipeline import ROOT, DATA, atomic, inspect_day, read, write_once
+from criterion2_core import SCOPE, compare_day, decimal_amount, digest, resolve_asset, validate_price, valued_packet
+from criterion2_pipeline import ROOT, DATA, IN_DATA, atomic, inspect_day, read, write_once
 
 PRICES=DATA/'prices'
 
@@ -81,9 +81,11 @@ def all_days(root=DATA):
 
 def fetch_needed_prices(root=DATA,*,budget=180,prices_root=PRICES):
     needed=Counter()
-    for d in all_days(root):
+    days=all_days(root)+(all_days(IN_DATA) if root==DATA else [])
+    for d in days:
         if not d['complete']:continue
         for packet in d['packets']:
+            if packet.get('receipt_status') not in (None,'success_ack_in_receive_tx'):continue
             asset=resolve_asset(packet['denom'],d['plan']['assets']['mapping'])
             if asset and asset['coingecko_id']:needed[(d['plan']['date'],asset['coingecko_id'])]+=1
     token=http.REQUEST_DEADLINE.set(time.monotonic()+budget)
@@ -122,6 +124,7 @@ def exports(root=DATA,out=ROOT,prices_root=PRICES):
     progress=[];chains=[];assets=[];groups={};group_members={}
     for d in all_days(root):
         p=d['plan'];uid=p['universe_id'];day=p['date'];name=p['chain'];status='indexed_complete' if d['complete'] else 'incomplete'
+        if p['scope']!=SCOPE:raise ValueError('Incoming scope in outgoing ledger')
         progress.append(dict(universe_id=uid,date=day,chain=name,chain_id=p['chain_id'],coverage_status=status,
                              coverage_method=p['coverage_method'],start_height=p['start_height'],end_height=p['end_height'],
                              expected_blocks=p['end_height']-p['start_height']+1,indexed_transactions_saved=d['scanned_txs'],
@@ -175,6 +178,8 @@ def main():
     parser=argparse.ArgumentParser();parser.add_argument('--fetch-prices',action='store_true');args=parser.parse_args()
     if args.fetch_prices:fetch_needed_prices()
     rows=exports();print(f'Criterion 2 exports: {len(rows[0])} chain-days, {len(rows[3])} common-day comparisons.')
+    from criterion2_incoming_export import exports as incoming_exports
+    incoming_exports()
 
 
 if __name__=='__main__':main()

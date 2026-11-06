@@ -7,6 +7,13 @@ Les traductions sont dans `web/en.json` ; les formats de nombres, de dates et
 les messages des graphiques suivent la langue de la page. Les CSV sources
 conservent leurs colonnes et valeurs originales.
 
+Le critère 2 propose désormais un choix **Sorties émises / Entrées avec succès
+confirmé**, avec des dates et historiques indépendants. Les réceptions observées,
+accusés d'erreur et confirmations manquantes sont distingués dans l'avis de
+qualité et dans les tableaux détaillés. Les quatre nouveaux CSV entrants sont
+téléchargeables ; aucune addition entrées + sorties ou soustraction de solde
+net n'est effectuée. Les limites exactes des accusés sont dans `CRITERION2.md`.
+
 La page d'accueil `site/index.html` regroupe les deux critères, leurs graphiques
 et l'état des collectes. `site/criterion1.html` et `site/criterion2.html`
 conservent les tableaux et méthodes détaillés. Le nom de présentation est

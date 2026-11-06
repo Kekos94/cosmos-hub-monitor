@@ -28,6 +28,12 @@ class RangeClient(FakeClient):
 
 
 class AdaptiveRangeTests(unittest.TestCase):
+    def test_complete_response_is_canonicalized_without_dropping_transactions(self):
+        from criterion2_ranges import read_fragment
+        c=RangeClient();c.txs=list(reversed(c.txs));p=plan()
+        r=read_fragment(c,p,11,13)
+        self.assertEqual([k[0] for k in r['tx_keys']],[11,12,13])
+        self.assertEqual(len(r['packets']),3)
     def test_normal_range_completes_without_scanning_blocks(self):
         with tempfile.TemporaryDirectory() as tmp:
             c=RangeClient();p=plan();p['query_mode']='height_ranges';write_once(Path(tmp)/'plan.json',p)

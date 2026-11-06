@@ -55,6 +55,7 @@ class DashboardTests(unittest.TestCase):
             root=Path(tmp); self.setup_root(root)
             d=dashboard.payload(root)
             self.assertEqual(d['criterion1'],[]); self.assertEqual(d['criterion2'],[])
+            self.assertEqual(d['incoming'],[])
             self.assertEqual(len(d['members']),4)
 
     def test_english_and_french_share_exact_data_and_correct_language_links(self):

@@ -1,11 +1,71 @@
 # Critère 2 — activité relative des flux IBC
 
-Cette première version compare **Cosmos Hub, Osmosis, Noble et Injective**.
+Ce critère compare **Cosmos Hub, Osmosis, Noble et Injective**.
 La configuration est dans `config/criterion2_chains.json`. Un identifiant de
 périmètre est calculé à partir des chaînes et du protocole ; ajouter une chaîne
 crée un nouveau périmètre sans mélanger ses parts avec l'ancien dénominateur.
 
-## Ce que les chiffres mesurent
+## Entrées ajoutées : registre séparé
+
+Les sorties historiques conservent leur périmètre et leurs checkpoints.
+Les entrées sont collectées séparément dans `data/criterion2_incoming/`, avec
+un identifiant propre au périmètre `ics20_v1_received_ack_observed`.
+Le filtre est `recv_packet.packet_dst_port='transfer'`. Le jour est celui du
+bloc de réception sur la chaîne destinataire, pas le jour d'émission.
+
+Chaque transaction réussie est contrôlée pour distinguer :
+
+- **réception observée** : événement `recv_packet` ICS20 v1 ;
+- **entrée confirmée** : `write_acknowledgement` correspondant aux deux ports,
+  deux canaux et à la séquence, avec le succès standard ICS20 (`result: AQ==`),
+  observé dans la même transaction ;
+- **accusé d'erreur** : réception exclue des montants entrants confirmés ;
+- **non confirmé** : accusé absent, asynchrone ou format de middleware non
+  interprété, conservé séparément sans supposer un succès ou un échec.
+
+Les accusés écrits dans une transaction ultérieure ne sont pas rapprochés dans
+cette version. En particulier, certains accusés de contrats/IBC hooks sont
+classés non confirmés même s'ils peuvent représenter un succès : la part des
+entrées confirmées est donc une part de ce sous-ensemble, potentiellement biaisée.
+Les transactions échouées n'ajoutent aucune réception. Les événements bancaires
+génériques ne sont pas utilisés comme preuve d'un transfert IBC entrant.
+Un contenu malformé ou un montant nul rejeté par l'application reste une
+réception rejetée/non confirmée observée, avec montant indisponible ; il ne
+devient pas une entrée de zéro token. Un succès standard accompagné d'un
+contenu incompatible bloque la validation au lieu d'inventer un montant.
+
+La dénomination locale est reconstruite suivant
+[ICS20](https://github.com/cosmos/ibc/blob/main/spec/app/ics-020-fungible-token-transfer/README.md)
+et le [traçage de source](https://github.com/cosmos/ibc-go/blob/main/docs/architecture/adr-001-coin-source-tracing.md) :
+retrait du préfixe du canal source lors d'un retour, sinon ajout du canal
+destinataire avant rapprochement avec le Chain Registry. Un port distant peut
+être un contrat ; le port local est `transfer`. Aucun montant n'est converti
+selon les unités du token natif par défaut.
+
+Seules les entrées avec succès confirmé sont valorisées aux prix historiques
+datés déjà utilisés par les sorties. Les quatre chaînes doivent avoir la même
+journée indexée complète pour publier une comparaison. Le total USD reste vide
+si des réceptions ne sont pas confirmées ou si une entrée confirmée n'a pas de
+valorisation. Les échecs et inconnues ne sont jamais présentés comme un total nul.
+
+Exports ajoutés à la racine et dans `site/` : `criterion2_incoming_progress.csv`,
+`ibc_in_chains_daily.csv`, `ibc_in_assets_daily.csv`, `ecosystem_in_usd_daily.csv`.
+Le dashboard français et anglais propose un choix de sens des flux ; les
+tableaux détaillés décrivent également les réceptions rejetées ou non confirmées.
+La rubrique de qualité suit séparément l'avancement entrant de chaque chaîne.
+
+Le collecteur exécute les deux sens par défaut avec un budget total réparti
+(un quart pour les sorties, trois quarts pour les entrées). `--direction in`
+ou `--direction out` permet une reprise indépendante. Une erreur d'un sens
+n'empêche pas la tentative de l'autre ; elle reste signalée en fin d'exécution.
+Les plages vérifiées sont conservées pour l'exécution suivante.
+
+Les entrées et sorties ne constituent pas un solde net : elles peuvent concerner
+des jours, actifs et couvertures de valorisation différents. Un accusé de succès
+ne prouve pas un crédit définitif au bénéficiaire à travers tous les sauts.
+La mesure du transit et le rapprochement de bout en bout restent hors périmètre.
+
+## Ce que les chiffres sortants mesurent
 
 - Les paquets **ICS20 v1** émis avec `send_packet.packet_src_port='transfer'`.
 - Les montants bruts émis, par actif, chaîne et journée UTC terminée.
