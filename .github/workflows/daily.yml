@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "17 2 * * *"
       timezone: "Europe/Paris"
+    - cron: "17 8 * * *"
+      timezone: "Europe/Paris"
   workflow_dispatch:
     inputs:
       publish_only:
@@ -24,7 +26,64 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check_night:
+    if: github.event_name == 'schedule' && github.event.schedule == '17 8 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - name: Check the previous scheduled run
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYTHON'
+          import json
+          import os
+          from datetime import datetime
+          from urllib.parse import urlencode
+          from urllib.request import Request, urlopen
+          from zoneinfo import ZoneInfo
+
+          query = urlencode({
+              'event': 'schedule', 'branch': os.environ['GITHUB_REF_NAME'], 'per_page': 30,
+          })
+          url = (f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
+                 f"/actions/workflows/daily.yml/runs?{query}")
+          request = Request(url, headers={
+              'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+              'Accept': 'application/vnd.github+json',
+          })
+          paris = ZoneInfo('Europe/Paris')
+
+          def created(run):
+              return datetime.fromisoformat(run['created_at'].replace('Z', '+00:00')).astimezone(paris)
+
+          try:
+              with urlopen(request, timeout=15) as response:
+                  runs = json.load(response)['workflow_runs']
+              current = next(run for run in runs if str(run['id']) == os.environ['GITHUB_RUN_ID'])
+              cutoff = created(current)
+              previous = max(
+                  (run for run in runs if created(run).date() == cutoff.date() and created(run) < cutoff),
+                  key=created, default=None,
+              )
+              if previous and previous['conclusion'] == 'success':
+                  with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                      output.write('skip=true\n')
+                  print(f"Nightly run {previous['id']} succeeded. Skipping morning recovery.")
+              else:
+                  print('No successful nightly run found. Starting morning recovery.')
+          except (OSError, ValueError, KeyError, StopIteration) as exc:
+              print(f'Could not check nightly run ({exc}). Starting morning recovery.')
+          PYTHON
+
   run:
+    needs: check_night
+    if: ${{ !cancelled() && needs.check_night.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 180
     steps:
