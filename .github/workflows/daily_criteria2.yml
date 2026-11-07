@@ -4,6 +4,8 @@ on:
   schedule:
     - cron: "17 6 * * *"
       timezone: "Europe/Paris"
+    - cron: "17 12 * * *"
+      timezone: "Europe/Paris"
   workflow_dispatch:
     inputs:
       start_date:
@@ -25,7 +27,90 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  check_morning:
+    if: github.event_name == 'schedule' && github.event.schedule == '17 12 * * *'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      skip: ${{ steps.check.outputs.skip }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.ref_name }}
+          persist-credentials: false
+      - name: Check the morning run and UTC day coverage
+        id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 - <<'PYTHON'
+          import csv
+          import json
+          import os
+          from datetime import datetime, timedelta, timezone
+          from pathlib import Path
+          from urllib.parse import urlencode
+          from urllib.request import Request, urlopen
+          from zoneinfo import ZoneInfo
+
+          query = urlencode({
+              'event': 'schedule', 'branch': os.environ['GITHUB_REF_NAME'], 'per_page': 30,
+          })
+          url = (f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
+                 f"/actions/workflows/daily_criteria2.yml/runs?{query}")
+          request = Request(url, headers={
+              'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+              'Accept': 'application/vnd.github+json',
+          })
+          paris = ZoneInfo('Europe/Paris')
+
+          def created(run):
+              return datetime.fromisoformat(run['created_at'].replace('Z', '+00:00')).astimezone(paris)
+
+          def rows_for(path, day):
+              with open(path, newline='', encoding='utf-8') as stream:
+                  return [row for row in csv.DictReader(stream) if row['date'] == day]
+
+          try:
+              with urlopen(request, timeout=15) as response:
+                  runs = json.load(response)['workflow_runs']
+              current = next(run for run in runs if str(run['id']) == os.environ['GITHUB_RUN_ID'])
+              cutoff = created(current)
+              morning = max(
+                  (run for run in runs if created(run).date() == cutoff.date() and created(run) < cutoff),
+                  key=created, default=None,
+              )
+              if morning and morning['conclusion'] == 'success':
+                  day = (cutoff.astimezone(timezone.utc).date() - timedelta(days=1)).isoformat()
+                  config = json.loads(Path('config/criterion2_chains.json').read_text())
+                  expected = {chain['chain_id'] for chain in config['chains']}
+                  net = rows_for('site/ibc_net_chains_daily.csv', day)
+                  transit = rows_for('site/ibc_transit_daily.csv', day)
+                  # A common indexed day requires both directions and all lifecycle streams.
+                  complete = (
+                      {row['chain_id'] for row in net} == expected
+                      and all(row['coverage_status'] == 'common_indexed_day' for row in net)
+                      and bool(transit)
+                      and all(row['collection_status'] == 'candidate_proofs_complete' for row in transit)
+                  )
+                  if complete:
+                      with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                          output.write('skip=true\n')
+                      print(f"Morning run {morning['id']} succeeded and IBC coverage for {day} is complete.")
+                  else:
+                      print(f'IBC coverage for {day} is missing or incomplete. Starting recovery.')
+              else:
+                  print('No successful morning run found. Starting recovery.')
+          except (OSError, ValueError, KeyError, StopIteration) as exc:
+              print(f'Could not check morning run or coverage ({exc}). Starting recovery.')
+          PYTHON
+
   criterion2:
+    needs: check_morning
+    if: ${{ !cancelled() && needs.check_morning.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
     steps:
