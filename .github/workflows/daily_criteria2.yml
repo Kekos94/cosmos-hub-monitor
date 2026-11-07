@@ -2,20 +2,8 @@ name: Criterion 2 — IBC multichain
 
 on:
   schedule:
-    - cron: "7 * * * *"
-  push:
-    branches: [main]
-    paths:
-      - '.github/workflows/daily_criteria2.yml'
-      - 'criterion2_*.py'
-      - 'run_criteria2_pipeline.py'
-      - 'publish_criterion2.py'
-      - 'config/criterion2_chains.json'
-      - 'tests/test_criterion2*.py'
-      - 'build_web_dashboard.py'
-      - 'web/**'
-      - 'tests/test_web_dashboard.py'
-      - 'tests/dashboard.test.js'
+    - cron: "17 6 * * *"
+      timezone: "Europe/Paris"
   workflow_dispatch:
     inputs:
       start_date:
