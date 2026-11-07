@@ -64,7 +64,8 @@ def payload(root=ROOT):
     return dict(generated_at=datetime.now(timezone.utc).isoformat(), universe_id=uid,
                 members=[c['name'] for c in cfg['chains']],
                 criterion1=sorted(c1, key=lambda r:r['date']),
-                emission=rows(root, 'hub_criterion1_emission_daily.csv'),
+                emission=[{key: value for key, value in row.items() if key != 'criterion3_status'}
+                          for row in rows(root, 'hub_criterion1_emission_daily.csv')],
                 criterion1_progress=[progress(s) for s in load_days(root / 'data/criterion1_days')],
                 criterion2=sorted(c2, key=lambda r:r['date']),
                 chains=[r for r in rows(root, 'ibc_out_chains_daily.csv') if r['universe_id'] == uid],

@@ -77,6 +77,9 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('1A — IBC activity on the Hub', en)
             self.assertIn('1D — Measured monetary issuance', en)
             self.assertIn('href="hub_criterion1_emission_daily.csv"', en)
+            self.assertIn('365-day monetary inflation', en)
+            self.assertNotIn('critère 3', fr.casefold())
+            self.assertNotIn('criterion 3', en.casefold())
             self.assertIn('href="criterion2-en.html#transit"', en)
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
