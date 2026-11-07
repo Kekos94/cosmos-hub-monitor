@@ -6,4 +6,4 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63205667,63282378,76712,1047,1047,1050,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63282379,63359773,77395,622,622,624,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,74130725,74235167,104443,4415,4415,4418,https://osmosis-rpc.polkachu.com
-190892289baf1e61,2026-11-06,osmosis,osmosis-1,incomplete,complete_index_query_not_block_scan,74235168,74339204,104037,2581,,2584,https://osmosis-rpc.polkachu.com
+190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,74235168,74339204,104037,3119,3119,3122,https://osmosis-rpc.polkachu.com
