@@ -32,18 +32,21 @@ jobs:
     timeout-minutes: 5
     permissions:
       actions: read
+      contents: read
     outputs:
       skip: ${{ steps.check.outputs.skip }}
     steps:
-      - name: Check the previous scheduled run
+      - name: Check the nightly run and published UTC day
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 - <<'PYTHON'
+          import csv
+          import io
           import json
           import os
-          from datetime import datetime
+          from datetime import datetime, timedelta, timezone
           from urllib.parse import urlencode
           from urllib.request import Request, urlopen
           from zoneinfo import ZoneInfo
@@ -72,9 +75,27 @@ jobs:
                   key=created, default=None,
               )
               if previous and previous['conclusion'] == 'success':
-                  with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-                      output.write('skip=true\n')
-                  print(f"Nightly run {previous['id']} succeeded. Skipping morning recovery.")
+                  day = (cutoff.astimezone(timezone.utc).date() - timedelta(days=1)).isoformat()
+                  export_url = (f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
+                                '/contents/hub_criterion1_daily_complete.csv?ref=gh-pages')
+                  export_request = Request(export_url, headers={
+                      'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
+                      'Accept': 'application/vnd.github.raw+json',
+                  })
+                  with urlopen(export_request, timeout=15) as response:
+                      rows = csv.DictReader(io.TextIOWrapper(response, encoding='utf-8'))
+                      complete = any(
+                          row['date'] == day and row['chain_id'] == 'cosmoshub-4'
+                          and row['coverage_status'] == 'complete_utc_day_blocks'
+                          and row['block_coverage_pct'] == '100'
+                          for row in rows
+                      )
+                  if complete:
+                      with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+                          output.write('skip=true\n')
+                      print(f"Nightly run {previous['id']} succeeded and {day} is complete.")
+                  else:
+                      print(f'{day} is missing or incomplete. Starting morning recovery.')
               else:
                   print('No successful nightly run found. Starting morning recovery.')
           except (OSError, ValueError, KeyError, StopIteration) as exc:
