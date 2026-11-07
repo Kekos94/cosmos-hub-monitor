@@ -6,4 +6,4 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_gross_sent,1050,1045,5,3279938.2958444022619123049937380033304944,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,ics20_v1_gross_sent,624,621,3,2489480.5525216375392432593266,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,4418,4202,216,1679576.04266412879923051560698448522984780444,,0,historical_daily_reference_not_execution_price
-190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,3122,2792,330,1397193.724063169269265602192299415698729091,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,3122,2860,262,1400798.049354573116242488690615904427153488,,0,historical_daily_reference_not_execution_price
