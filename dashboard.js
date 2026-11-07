@@ -157,8 +157,7 @@ function startDashboard() {
       card(t("Burn effectif mesuré"), fmt(audit?.effective_burn_atom, 6), "ATOM", t("Destructions d’ATOM observées")) +
       card(t("Inflation monétaire annualisée"), fmt(audit?.annualized_monetary_inflation_pct, 4), "%", t("Rythme de la journée")) +
       card(t("Inflation monétaire sur 365 jours"), fmt(audit?.monetary_inflation_365d_pct, 4), "%",
-        audit?.criterion3_status === "below_5_pct" ? t("Critère 3 · seuil atteint") :
-          audit?.criterion3_status === "at_or_above_5_pct" ? t("Critère 3 · seuil non atteint") : t("Critère 3 · données insuffisantes"));
+        t("Historique de 365 jours réconciliés requis"));
     const n=b ? Monitor.number(b.sent_packets):null,p=b ? Monitor.number(b.priced_packets):null;
     const coverage=n>0 && p!==null ? p/n*100:null;
     $("c2-cards").innerHTML=card(incoming?t("Part du Hub · entrées confirmées"):t("Part du Hub · paquets"),fmt(b?.hub_share_packet_count_pct,2),"%",t("Dans les quatre chaînes"),true)+card(t("Part du Hub · USD valorisés"),fmt(b?.hub_share_valued_usd_pct,2),"%",t("Part du sous-ensemble valorisé"))+card(incoming?t("Entrées valorisées · quatre chaînes"):t("Flux valorisés · quatre chaînes"),fmt(b?.valued_out_usd,0),"USD",t("Sous-total, pas volume économique net"))+card(t("Paquets avec valorisation"),fmt(coverage,1),"%",b?fmt(b.unpriced_packets,0)+t(" paquets non valorisés"):t("Couverture en nombre, pas en valeur"));
