@@ -51,6 +51,9 @@
       <div class="toolbar"><label>Actif <select id="rwa-asset"></select></label><label>Journée UTC <select id="rwa-day"></select></label></div>
       <div id="rwa-results" aria-live="polite"></div>
       <p id="rwa-transit" class="chart-note"></p>
+      <div class="panel-head"><div><h4 id="rwa-stock">Encours RWA à la clôture UTC</h4></div><a href="ibc_rwa_balances_daily.csv" download>Encours RWA · CSV ↓</a></div>
+      <p class="muted">L’offre hors escrow ICS20 correspond à l’offre locale moins les unités immobilisées par le module de transfert IBC. Les montants portent sur les représentations du registre et sont exprimés en unités du produit.</p>
+      <div id="rwa-balances" aria-live="polite"></div>
     </div>
     <div class="panel" id="transit"><div class="panel-head"><div><h3>Transit vérifié via le Hub</h3><p>Chaîne source → Cosmos Hub → prochain saut</p></div><label class="chart-select">Cohorte UTC <select id="transit-day"></select></label></div>
     <p class="muted">Sous-ensemble PFM : une réception et une émission reliées dans le même message exécuté, avec instruction de routage et mouvements bancaires vérifiés. Un transit confirmé exige le succès des deux paquets vers une chaîne différente de la source.</p>

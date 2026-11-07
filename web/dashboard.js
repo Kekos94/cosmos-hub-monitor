@@ -189,19 +189,20 @@ function startDashboard() {
   }
   function renderRwa() {
     const all = data.rwa || [];
+    const balances = data.rwa_balances || [];
     const assetSelect = $("rwa-asset");
     const daySelect = $("rwa-day");
     const selectedAsset = assetSelect.value;
     const selectedDay = daySelect.value;
-    const products = new Map(all.map(row => [row.product_id, row.symbol]));
+    const products = new Map([...all, ...balances].map(row => [row.product_id, row.symbol]));
     assetSelect.innerHTML = [...products].map(([id, symbol]) =>
       `<option value="${esc(id)}">${esc(symbol)}</option>`).join('');
     if (products.has(selectedAsset)) assetSelect.value = selectedAsset;
-    const dates = [...new Set([...(data.net_chains || []), ...all].map(row => row.date))].sort().reverse();
+    const dates = [...new Set([...(data.net_chains || []), ...all, ...balances].map(row => row.date))].sort().reverse();
     daySelect.innerHTML = dates.map(date => `<option value="${esc(date)}">${esc(day(date))}</option>`).join('');
     if (dates.includes(selectedDay)) daySelect.value = selectedDay;
     else {
-      const observedDay = dates.find(date => all.some(row => row.date === date && row.product_id === assetSelect.value));
+      const observedDay = dates.find(date => [...balances, ...all].some(row => row.date === date && row.product_id === assetSelect.value));
       if (observedDay) daySelect.value = observedDay;
     }
     const rows = all.filter(row => row.product_id === assetSelect.value && row.date === daySelect.value);
@@ -209,25 +210,38 @@ function startDashboard() {
     $("rwa-transit").textContent = transit
       ? t("{count} transits PFM confirmés pour cet actif.", {count: fmt(transit, 0)})
       : t("Aucun transit PFM RWA vérifié pour cette sélection.");
-    if (!rows.length) {
-      empty($("rwa-results"), t("Aucune observation RWA identifiée pour cette sélection."));
-      return;
-    }
     const amount = (value, symbol) => {
       const displayed = Monitor.amount(value, locale);
       return displayed === null ? t("Indisponible") : `${displayed} ${symbol}`;
     };
-    const headers = ["Chaîne", "Montant entrant confirmé", "Montant sortant confirmé", "Solde vérifié", "Identités en attente", "Règlements en attente"];
     const chainIds = {"cosmoshub-4": "Cosmos Hub", "osmosis-1": "Osmosis", "noble-1": "Noble", "injective-1": "Injective"};
-    const cells = rows.map(row => [
-      chainIds[row.chain_id] || row.chain_id, amount(row.confirmed_in, row.symbol),
-      amount(row.confirmed_out, row.symbol), amount(row.net_amount, row.symbol),
-      fmt(row.pending_identity, 0), fmt(row.unsettled, 0),
-    ]);
-    $("rwa-results").innerHTML = '<div class="lifecycle-scroll"><table><thead><tr>' +
+    const chainName = row => chainIds[row.chain_id] || row.chain_id;
+    const table = (headers, cells) => '<div class="lifecycle-scroll"><table><thead><tr>' +
       headers.map(label => `<th>${esc(t(label))}</th>`).join('') + '</tr></thead><tbody>' +
       cells.map(row => '<tr>' + row.map(value => `<td>${esc(value)}</td>`).join('') + '</tr>').join('') +
       '</tbody></table></div>';
+    const stock = balances.filter(row => row.product_id === assetSelect.value && row.date === daySelect.value);
+    if (stock.length) {
+      $("rwa-balances").innerHTML = table(
+        ["Chaîne", "Offre locale", "Escrow ICS20", "Offre hors escrow ICS20", "Bloc de clôture"],
+        stock.map(row => [chainName(row), amount(row.supply_amount, row.symbol),
+          amount(row.escrow_amount, row.symbol), amount(row.local_amount, row.symbol),
+          row.height ? fmt(row.height, 0) : t("Indisponible")]),
+      );
+    } else {
+      empty($("rwa-balances"), t("Aucun encours vérifié pour cette sélection."));
+    }
+    if (!rows.length) {
+      empty($("rwa-results"), t("Aucune observation RWA identifiée pour cette sélection."));
+      return;
+    }
+    const headers = ["Chaîne", "Montant entrant confirmé", "Montant sortant confirmé", "Solde vérifié", "Identités en attente", "Règlements en attente"];
+    const cells = rows.map(row => [
+      chainName(row), amount(row.confirmed_in, row.symbol),
+      amount(row.confirmed_out, row.symbol), amount(row.net_amount, row.symbol),
+      fmt(row.pending_identity, 0), fmt(row.unsettled, 0),
+    ]);
+    $("rwa-results").innerHTML = table(headers, cells);
   }
   function renderTransit() {
     const all=data.transit||[],latest=Monitor.latest(all);

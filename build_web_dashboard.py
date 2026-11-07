@@ -71,6 +71,7 @@ def payload(root=ROOT):
                 lifecycle_progress=rows(root,'ibc_lifecycle_progress.csv'),
                 net_chains=[r for r in rows(root,'ibc_net_chains_daily.csv') if r['universe_id']==net_uid],
                 rwa=rows(root,'ibc_rwa_daily.csv'),
+                rwa_balances=rows(root,'ibc_rwa_balances_daily.csv'),
                 net_assets=[r for r in rows(root,'ibc_net_assets_daily.csv') if r['universe_id']==net_uid],
                 net_window_chains=[r for r in rows(root,'ibc_net_windows_chains_latest.csv') if r['universe_id']==net_uid],
                 net_window_assets=[{k:r[k] for k in window_asset_fields} for r in rows(root,'ibc_net_windows_assets_latest.csv') if r['universe_id']==net_uid],
@@ -86,7 +87,7 @@ def payload(root=ROOT):
 
 def main(root=ROOT):
     root = Path(root); site = root / 'site'; site.mkdir(exist_ok=True)
-    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv'):
+    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv'):
         if (root/name).exists():shutil.copy2(root/name,site/name)
     data = payload(root)
     encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')

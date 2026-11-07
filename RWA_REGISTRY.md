@@ -93,8 +93,25 @@ et les transits PFM identifiés. Le CSV `ibc_rwa_daily.csv` conserve les montant
 exacts. Le workflow vérifie les nouveaux canaux historiques des représentations
 déjà inscrites au registre. Une preuve absente ou contradictoire laisse
 l'identité en attente.
-Les encours demandent un collecteur de soldes/supply et une déduplication des
-escrows et représentations, distincts de cet audit de flux.
+## Encours par chaîne
+
+Le workflow IBC relève l’offre bancaire et l’escrow comptabilisé par le module
+ICS20 pour chaque représentation vérifiée du registre. Les deux requêtes
+historiques utilisent le dernier bloc strictement antérieur à minuit UTC,
+identifié par les bornes du plan de collecte. Les représentations IBC exigent
+aussi la vérification du canal et du client à cette hauteur.
+
+Le tableau présente l’offre locale, l’escrow ICS20 et leur différence en
+unités du produit. L’offre hors escrow retire les unités déjà immobilisées
+par le module de transfert, y compris lorsqu’une représentation est relayée.
+La mesure est publiée par chaîne et par dénomination du registre. Elle
+n’additionne pas les offres brutes et ne fournit pas d’encours mondial.
+Les autres formes de garde, de pont ou d’encapsulation sortent de ce calcul.
+
+Le CSV `ibc_rwa_balances_daily.csv` fournit les quantités exactes, le bloc,
+l’heure et le hash de preuve. Les réponses du fournisseur sont conservées
+dans `data/criterion2_rwa_balances/`. Les valeurs restent indisponibles
+lorsque la hauteur ou la preuve historique manque.
 
 ## Sources primaires
 

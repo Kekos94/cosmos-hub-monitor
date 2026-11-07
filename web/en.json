@@ -398,5 +398,13 @@
   "Aucune observation RWA identifiée pour cette sélection.": "No identified RWA observations for this selection.",
   "Montant entrant confirmé": "Confirmed incoming amount",
   "Montant sortant confirmé": "Confirmed outgoing amount",
-  "Tips inclus dans les frais (ATOM)": "Tips included in fees (ATOM)"
+  "Tips inclus dans les frais (ATOM)": "Tips included in fees (ATOM)",
+  "Encours RWA à la clôture UTC": "RWA balances at UTC close",
+  "Encours RWA · CSV ↓": "RWA balances · CSV ↓",
+  "L’offre hors escrow ICS20 correspond à l’offre locale moins les unités immobilisées par le module de transfert IBC. Les montants portent sur les représentations du registre et sont exprimés en unités du produit.": "Supply outside ICS20 escrow is local supply minus units held by the IBC transfer module. Figures cover registered representations and are expressed in product units.",
+  "Offre locale": "Local supply",
+  "Escrow ICS20": "ICS20 escrow",
+  "Offre hors escrow ICS20": "Supply outside ICS20 escrow",
+  "Bloc de clôture": "Closing block",
+  "Aucun encours vérifié pour cette sélection.": "No verified balance for this selection."
 }
