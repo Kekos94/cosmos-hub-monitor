@@ -5,10 +5,11 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from criterion1_data import enrich
-from criterion1_daily import daily_summary
-from criterion1_fee_audit import apply_fee_audit, load_fee_audit, state_hash, compress_audit
+from criterion1_daily import DAY_DIR, daily_summary
+from criterion1_fee_audit import apply_fee_audit, load_fee_audit, state_hash, compress_audit, audit_pending
 from test_daily import plan, chunk, TIMES
 from test_fee_evidence import fixture as failed_fixture
 
@@ -92,6 +93,24 @@ class FeeAuditTests(unittest.TestCase):
         self.assertEqual(row['collected_fee_atom'],'')
         self.assertEqual(row['fee_to_estimated_emission_pct'],'')
         self.assertEqual(row['tx_without_fee_event'],'1')
+
+
+    def test_pending_audit_resumes_only_complete_days_with_missing_evidence(self):
+        state, audit = fixture()
+        partial = dict(state, date='2026-11-06', chunks=[])
+        complete = dict(state, date='2026-11-07')
+        with tempfile.TemporaryDirectory() as tmp:
+            audit_dir = Path(tmp)
+            (audit_dir / (state['date'] + '.json.gz')).touch()
+            (audit_dir / (complete['date'] + '.json')).write_text(json.dumps(audit))
+            with patch('criterion1_daily.load_days', return_value=[state, partial, complete]), \
+                 patch('criterion1_daily.progress', side_effect=[{'status': 'complete'}, {'status': 'incomplete'}, {'status': 'complete'}]), \
+                 patch('criterion1_fee_audit.audit_day') as run:
+                self.assertFalse(audit_pending(budget_seconds=30, audit_directory=audit_dir))
+            run.assert_called_once_with(
+                complete['date'], directory=DAY_DIR,
+                audit_directory=audit_dir,
+            )
 
 
 if __name__=='__main__':unittest.main()

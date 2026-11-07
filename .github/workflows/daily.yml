@@ -70,6 +70,14 @@ jobs:
           START_DATE: ${{ inputs.start_date }}
         run: python run_criteria1_pipeline.py
 
+      - name: Audit missing fee evidence for complete days
+        id: fee_audit
+        if: inputs.publish_only != true
+        continue-on-error: true
+        env:
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: python criterion1_fee_audit.py --pending --budget-seconds 900
+
       # A network failure must not discard already validated chunks.
       - name: Validate checkpoints and build daily export
         run: python inflation_overlay.py
@@ -137,3 +145,10 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+
+
+      - name: Report fee audit failure after saving and publishing progress
+        if: steps.fee_audit.outcome == 'failure'
+        run: |
+          echo "Fee audit interrupted. Validated chunks were saved for the next run."
+          exit 1

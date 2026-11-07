@@ -3,6 +3,7 @@ import argparse
 import gzip
 import os
 import tempfile
+import time
 import hashlib
 import json
 from decimal import Decimal
@@ -131,13 +132,14 @@ def load_fee_audit(state, directory=AUDIT_DIR):
     return audit if audit['complete'] else None
 
 
-def audit_day(day):
+def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
     from criterion1_daily import DAY_DIR, atomic_text, progress, validate_day
-    state = json.loads((DAY_DIR / (day + '.json')).read_text())
+    directory = Path(directory) if directory is not None else DAY_DIR
+    state = json.loads((directory / (day + '.json')).read_text())
     validate_day(state)
     if progress(state)['status'] != 'complete':
         raise ValueError('Finish UTC-day block coverage before auditing historical fees')
-    path = AUDIT_DIR / (day + '.json')
+    path = Path(audit_directory) / (day + '.json')
     existing = path.with_suffix('.json.gz') if path.with_suffix('.json.gz').exists() else path
     audit = read_audit(existing) if existing.exists() else dict(
         schema_version=1, date=day, state_sha256=state_hash(state), observed_at=utcnow(), complete=False, chunks=[])
@@ -178,7 +180,48 @@ def audit_day(day):
     print(f'Fee audit complete: recovered {recovered}; remaining unknown {sum(int(c["tx_without_fee_event"]) for c in audited["chunks"])}', flush=True)
 
 
+def audit_pending(*, budget_seconds, directory=None, audit_directory=AUDIT_DIR):
+    from criterion1_daily import DAY_DIR, load_days, progress
+
+    if budget_seconds <= 0:
+        raise ValueError('Fee audit budget must be positive')
+    directory = Path(directory) if directory is not None else DAY_DIR
+    deadline = time.monotonic() + budget_seconds
+    token = monitor.REQUEST_DEADLINE.set(deadline)
+    failed = False
+    try:
+        for state in load_days(directory):
+            if progress(state)['status'] != 'complete':
+                continue
+            if not any(int(chunk['tx_without_fee_event']) for chunk in state['chunks']):
+                continue
+            day = state['date']
+            if (Path(audit_directory) / (day + '.json.gz')).exists():
+                continue
+            if time.monotonic() >= deadline:
+                print('Fee audit time budget reached; saved chunks retained.', flush=True)
+                break
+            print(f'Auditing missing fee evidence for {day}', flush=True)
+            try:
+                audit_day(day, directory=directory, audit_directory=audit_directory)
+            except TimeoutError:
+                print('Fee audit time budget reached; saved chunks retained.', flush=True)
+                break
+            except RuntimeError as exc:
+                print(f'Fee audit for {day} interrupted; saved chunks retained: {exc}', flush=True)
+                failed = True
+    finally:
+        monitor.REQUEST_DEADLINE.reset(token)
+    return failed
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('day')
-    audit_day(parser.parse_args().day)
+    selection = parser.add_mutually_exclusive_group(required=True)
+    selection.add_argument('day', nargs='?')
+    selection.add_argument('--pending', action='store_true')
+    parser.add_argument('--budget-seconds', type=int, default=900)
+    args = parser.parse_args()
+    if args.pending:
+        raise SystemExit(int(audit_pending(budget_seconds=args.budget_seconds)))
+    audit_day(args.day)
