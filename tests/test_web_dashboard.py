@@ -70,7 +70,7 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('href="index-en.html" lang="en" aria-current="page"',en)
             self.assertIn('href="criterion1-en.html"',en)
             self.assertIn('href="criterion2-en.html"',en)
-            self.assertIn('What the fees cover.',en)
+            self.assertIn('ATOM issuance coverage by collected fees',en)
             self.assertIn('Les faits, à découvert.',fr)
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
