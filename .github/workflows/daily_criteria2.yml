@@ -112,7 +112,7 @@ jobs:
     needs: check_morning
     if: ${{ !cancelled() && needs.check_morning.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v6
         with:
@@ -144,7 +144,7 @@ jobs:
         if: inputs.publish_only != true
         continue-on-error: true
         env:
-          LIFECYCLE_BUDGET_SECONDS: "600"
+          LIFECYCLE_BUDGET_SECONDS: "1200"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_lifecycle_collect.py
       - name: Verify same-message Hub PFM transit
