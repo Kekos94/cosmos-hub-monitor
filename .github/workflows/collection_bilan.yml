@@ -1,0 +1,25 @@
+name: Bilan des collectes par mail
+
+on:
+  workflow_run:
+    workflows: ['Daily Cosmos Monitor', 'Criterion 2 — IBC multichain']
+    types: [completed]
+
+permissions:
+  contents: read
+
+jobs:
+  mail:
+    if: github.event.workflow_run.head_branch == github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+      - name: Send collection summary
+        env:
+          BILAN_GMAIL_ADDRESS: ${{ secrets.BILAN_GMAIL_ADDRESS }}
+          BILAN_GMAIL_APP_PASSWORD: ${{ secrets.BILAN_GMAIL_APP_PASSWORD }}
+        run: python3 send_collection_bilan.py
