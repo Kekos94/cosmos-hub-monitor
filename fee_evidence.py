@@ -3,7 +3,11 @@
 A message failure can preserve the ante transfer but omit post-handler fee_pay.
 Never infer zero fees, and never treat an arbitrary user transfer as a fee.
 """
+import base64
+import hashlib
 import re
+
+from cosmos_tx_decode import decode_tx, fields, repeated, single
 
 
 def coins(value):
@@ -67,3 +71,52 @@ def failed_ante_fee(tx, proof):
     if len(spent) != 1 or coins(spent[0].get('amount', '')) != amounts:
         return None, None
     return amounts.get('uatom', 0), 0
+
+def verified_no_fee(response):
+    """Recognize specific Gaia ante errors that leave no committed fee debit."""
+    code = response.get('code')
+    if (response.get('codespace') != 'sdk' or code not in (5, 30, 32)
+            or response.get('rpc_event_count') != 0 or response.get('events')):
+        return False
+    try:
+        raw = base64.b64decode(response['signed_tx'], validate=True)
+        if hashlib.sha256(raw).hexdigest().upper() != response['txhash']:
+            return False
+        log = response['raw_log']
+        if code == 30:
+            # Gaia checks TxBody.timeout_height before its fee decorator.
+            body = single(raw, 1, required=True)
+            timeout = [(wire, value) for number, wire, value in fields(body) if number == 3]
+            if len(timeout) != 1 or timeout[0][0] != 0:
+                return False
+            height = int(response['height'])
+            expiry = timeout[0][1]
+            return (0 < expiry < height and log ==
+                    f'block height: {height}, timeout height: {expiry}: tx timeout height')
+
+        # BaseApp discards the ante cache when the fee escrow or signature check fails.
+        if code == 5:
+            match = re.fullmatch(
+                r'error escrowing funds: spendable balance ([0-9]+)([a-zA-Z][a-zA-Z0-9/:._-]*) '
+                r'is smaller than ([0-9]+)\2: insufficient funds', log)
+            if not match:
+                return False
+            balance, denom, amount = match.groups()
+            fee = decode_tx(raw)['auth_info']['fee']['amount']
+            return fee == [{'denom': denom, 'amount': amount}] and int(balance) < int(amount)
+
+        match = re.fullmatch(
+            r'account sequence mismatch, expected ([0-9]+), got ([0-9]+): incorrect account sequence', log)
+        if not match:
+            return False
+        expected, got = map(int, match.groups())
+        if expected == got:
+            return False
+        auth = single(raw, 2, required=True)
+        for signer in repeated(auth, 1):
+            sequence = [(wire, value) for number, wire, value in fields(signer) if number == 3]
+            if sequence == [(0, got)] or (not sequence and got == 0):
+                return True
+        return False
+    except (KeyError, TypeError, ValueError):
+        return False

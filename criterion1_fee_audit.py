@@ -12,6 +12,7 @@ from pathlib import Path
 from criterion1_data import ROOT, enrich, number, timestamp, utcnow
 import hub_fee_monitor_v41 as monitor
 from criterion1_rpc_bulk import payloads
+from fee_evidence import verified_no_fee
 
 AUDIT_DIR = ROOT / 'data' / 'criterion1_fee_audits'
 RELEVANT = {'tx', 'fee_pay', 'tip_pay', 'coin_spent', 'coin_received', 'transfer', 'message'}
@@ -68,6 +69,7 @@ def audited_chunk(original, record):
     if len(ordered) != int(original['tx_total']) or len(set(ordered)) != len(ordered):
         raise ValueError('Audit transaction coverage mismatch')
     declared = declared_ibc = actual = actual_ibc = tips = tips_ibc = ibc_count = missing = recovered = initially_unknown = 0
+    verified_zero = 0
     for receipt in receipts:
         tx = receipt['tx']
         response = tx['tx_response']
@@ -85,6 +87,9 @@ def audited_chunk(original, record):
             if proof:
                 paid, tip = monitor.collected_fee_components(tx, collector=proof)
                 recovered += int(paid is not None)
+        if paid is None and verified_no_fee(response):
+            paid, tip = 0, 0
+            verified_zero += 1
         if paid is None:
             missing += 1
         else:
@@ -101,7 +106,7 @@ def audited_chunk(original, record):
     if not missing:
         row.update(collected_fee_atom=str(Decimal(actual)/1000000), collected_ibc_fee_atom=str(Decimal(actual_ibc)/1000000),
                    collected_tip_atom=str(Decimal(tips)/1000000), collected_ibc_tip_atom=str(Decimal(tips_ibc)/1000000))
-    return enrich(row), recovered - int(original.get("fee_ante_transfer_count", 0))
+    return enrich(row), recovered + verified_zero - int(original.get("fee_ante_transfer_count", 0))
 
 
 def apply_fee_audit(state, audit, *, require_complete=True):
@@ -122,14 +127,16 @@ def apply_fee_audit(state, audit, *, require_complete=True):
 
 
 def load_fee_audit(state, directory=AUDIT_DIR):
-    path = Path(directory) / (state['date'] + '.json')
-    if path.with_suffix('.json.gz').exists():
-        path = path.with_suffix('.json.gz')
-    if not path.exists():
-        return None
-    audit = read_audit(path)
-    apply_fee_audit(state, audit, require_complete=False)
-    return audit if audit['complete'] else None
+    for suffix in ('.rejections.json.gz', '.rejections.json', '.json.gz', '.json'):
+        path = Path(directory) / (state['date'] + suffix)
+        if not path.exists():
+            continue
+        audit = read_audit(path)
+        apply_fee_audit(state, audit, require_complete=False)
+        if audit['complete']:
+            apply_fee_audit(state, audit)
+            return audit
+    return None
 
 
 def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
@@ -139,7 +146,7 @@ def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
     validate_day(state)
     if progress(state)['status'] != 'complete':
         raise ValueError('Finish UTC-day block coverage before auditing historical fees')
-    path = Path(audit_directory) / (day + '.json')
+    path = Path(audit_directory) / (day + '.rejections.json')
     existing = path.with_suffix('.json.gz') if path.with_suffix('.json.gz').exists() else path
     audit = read_audit(existing) if existing.exists() else dict(
         schema_version=1, date=day, state_sha256=state_hash(state), observed_at=utcnow(), complete=False, chunks=[])
@@ -154,7 +161,8 @@ def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
     for chunk in affected[len(audit['chunks']):]:
         first, end = int(chunk['start_height']), int(chunk['end_height'])
         record = dict(start_height=first, end_height=end, blocks=[], transactions=[])
-        for height, block, source, txs in payloads(monitor, first, end):
+        for height, block, source, txs in payloads(
+                monitor, first, end, deadline=monitor.REQUEST_DEADLINE.get()):
             hashes = []
             for index, (tx, _) in enumerate(txs):
                 response = tx['tx_response']
@@ -164,7 +172,7 @@ def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
                 tx = dict(tx, tx_response=response)
                 proof = None
                 paid, _ = monitor.collected_fee_components(tx)
-                if paid is None and int(response.get('code', 0)):
+                if paid is None and int(response.get('code', 0)) and not verified_no_fee(response):
                     proof = monitor.collector_proof(height)
                 hashes.append(response['txhash'])
                 record['transactions'].append(dict(height=height, index=index, hash=response['txhash'], tx=tx, collector=proof, source=source))
@@ -196,7 +204,12 @@ def audit_pending(*, budget_seconds, directory=None, audit_directory=AUDIT_DIR):
             if not any(int(chunk['tx_without_fee_event']) for chunk in state['chunks']):
                 continue
             day = state['date']
-            if (Path(audit_directory) / (day + '.json.gz')).exists():
+            audit = load_fee_audit(state, audit_directory)
+            if audit is not None:
+                audited, _ = apply_fee_audit(state, audit)
+                if not any(int(chunk['tx_without_fee_event']) for chunk in audited['chunks']):
+                    continue
+            if (Path(audit_directory) / (day + '.rejections.json.gz')).exists():
                 continue
             if time.monotonic() >= deadline:
                 print('Fee audit time budget reached; saved chunks retained.', flush=True)

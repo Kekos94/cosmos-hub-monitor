@@ -88,6 +88,13 @@ def transactions(height, entry, block_result, execution_result):
         tx_hash = hashlib.sha256(raw).hexdigest().upper()
         tx = {'tx': decode_tx(raw), 'tx_response': {'height': str(height), 'txhash': tx_hash,
               'code': result.get('code', 0), 'events': normalized_events(result.get('events', []))}}
+        if result.get('code', 0):
+            response = tx['tx_response']
+            response['codespace'] = result.get('codespace', '')
+            response['raw_log'] = result.get('log', '')
+            response['rpc_event_count'] = len(result.get('events') or [])
+            if response['codespace'] == 'sdk' and response['code'] in (5, 30, 32):
+                response['signed_tx'] = raw_b64
         # No LCD call: the result corresponds to this transaction's index in the block.
         decoded.append((tx, ''))
     return b, decoded

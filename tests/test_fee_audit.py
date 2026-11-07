@@ -1,3 +1,4 @@
+import base64
 import copy
 import gzip
 import hashlib
@@ -12,6 +13,9 @@ from criterion1_daily import DAY_DIR, daily_summary
 from criterion1_fee_audit import apply_fee_audit, load_fee_audit, state_hash, compress_audit, audit_pending
 from test_daily import plan, chunk, TIMES
 from test_fee_evidence import fixture as failed_fixture
+from test_rpc_bulk import field, tx_raw
+from cosmos_tx_decode import single
+from fee_evidence import verified_no_fee
 
 
 def fixture():
@@ -95,14 +99,52 @@ class FeeAuditTests(unittest.TestCase):
         self.assertEqual(row['tx_without_fee_event'],'1')
 
 
+    def test_expired_signed_transaction_verifies_zero_without_fee_transfer(self):
+        state, audit = fixture()
+        receipt = audit['chunks'][0]['transactions'][0]
+        # TxRaw.body_bytes contains TxBody.timeout_height (field 3).
+        signed = b'\x0a\x02\x18\x0a'
+        tx_hash = hashlib.sha256(signed).hexdigest().upper()
+        receipt['hash'] = tx_hash
+        audit['chunks'][0]['blocks'][0]['tx_hashes'][0] = tx_hash
+        receipt['collector'] = None
+        response = receipt['tx']['tx_response']
+        response.update(code=30, codespace='sdk', txhash=tx_hash, events=[],
+                        rpc_event_count=0, signed_tx=base64.b64encode(signed).decode(),
+                        raw_log='block height: 11, timeout height: 10: tx timeout height')
+        row = daily_summary(state, audit=audit)
+        self.assertEqual(row['collected_fee_atom'], '10.5')
+        self.assertEqual(row['fee_evidence_recovered'], 1)
+        self.assertEqual(row['tx_without_fee_event'], '0')
+        for field, value in [('code', 5), ('codespace', 'ibc'), ('rpc_event_count', 1),
+                             ('signed_tx', 'CgIYCw=='), ('raw_log', 'message failure')]:
+            with self.subTest(field=field), patch.dict(response, {field: value}):
+                self.assertEqual(daily_summary(state, audit=audit)['collected_fee_atom'], '')
+
+    def test_ante_escrow_and_sequence_rejections_need_specific_proof(self):
+        raw = tx_raw(amount='1915')
+        cases = [
+            (5, raw, 'error escrowing funds: spendable balance 3uatom is smaller than 1915uatom: insufficient funds'),
+            (32, field(2, field(1, b'\x18\x25') + single(raw, 2)),
+             'account sequence mismatch, expected 34, got 37: incorrect account sequence'),
+        ]
+        for code, signed, log in cases:
+            response = dict(code=code, codespace='sdk', rpc_event_count=0, events=[],
+                            signed_tx=base64.b64encode(signed).decode(), raw_log=log,
+                            txhash=hashlib.sha256(signed).hexdigest().upper())
+            with self.subTest(code=code):
+                self.assertTrue(verified_no_fee(response))
+                self.assertFalse(verified_no_fee(dict(response, raw_log='failed to execute message: ' + log)))
+                self.assertFalse(verified_no_fee(dict(response, raw_log=log.replace('1915', '2000').replace('got 37', 'got 38'))))
+
     def test_pending_audit_resumes_only_complete_days_with_missing_evidence(self):
         state, audit = fixture()
         partial = dict(state, date='2026-11-06', chunks=[])
         complete = dict(state, date='2026-11-07')
         with tempfile.TemporaryDirectory() as tmp:
             audit_dir = Path(tmp)
-            (audit_dir / (state['date'] + '.json.gz')).touch()
-            (audit_dir / (complete['date'] + '.json')).write_text(json.dumps(audit))
+            (audit_dir / (state['date'] + '.json.gz')).write_bytes(gzip.compress(json.dumps(audit).encode()))
+            (audit_dir / (complete['date'] + '.rejections.json')).write_text(json.dumps(dict(audit, date=complete['date'], state_sha256=state_hash(complete), complete=False)))
             with patch('criterion1_daily.load_days', return_value=[state, partial, complete]), \
                  patch('criterion1_daily.progress', side_effect=[{'status': 'complete'}, {'status': 'incomplete'}, {'status': 'complete'}]), \
                  patch('criterion1_fee_audit.audit_day') as run:
