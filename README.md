@@ -1,4 +1,6 @@
-# Cosmos Hub Monitor — critère 1
+# Cosmos Hub Monitor
+
+Le [référentiel 2026](REFERENTIEL.md) définit les cinq critères et rattache les deux pipelines actuels au critère 1.
 
 ## Collecte de journées UTC complètes
 
@@ -17,7 +19,7 @@ Python 3.11+ :
 ```sh
 python -m pip install -r requirements.txt
 python -m unittest discover -s tests -v
-python run_criteria1_pipeline.py
+python run_criterion1_economy_pipeline.py
 python generate_dashboard_html.py
 ```
 
@@ -29,7 +31,7 @@ La collecte réelle utilise les nœuds RPC/LCD publics et CoinGecko.
 
 - Au premier lancement, la première journée visée est **hier en UTC**.
   Pour commencer plus tôt sur un historique vide :
-  `START_DATE=2026-11-01 python run_criteria1_pipeline.py`.
+  `START_DATE=2026-11-01 python run_criterion1_economy_pipeline.py`.
   Cela exige des nœuds qui conservent les blocs, transactions et états requis.
 - Les mesures et leurs snapshots sont sauvegardés dans
   `data/criterion1_days/YYYY-MM-DD.json` après chaque lot entièrement validé.
@@ -95,7 +97,7 @@ de signaler l'échec ; le déploiement est bloqué. Une limite de temps normale
 produit simplement une journée en cours, jamais un faux total complet.
 Les exécutions sont sérialisées pour une même branche et repartent de son
 état le plus récent. Les checkpoints, l'export et les copies publiées sont
-commités ensemble. Le pipeline du critère 2 n'est pas modifié.
+commités ensemble. La collecte 1B dispose de son propre workflow.
 
 ## Périodes des ratios et calculs économiques
 
@@ -225,7 +227,7 @@ ajouté. Si les trois tentatives échouent, le workflow reste en échec.
 Pour republier sans refaire la collecte :
 
 1. Envoyer ce correctif sur GitHub.
-2. Dans **Actions → Daily Cosmos Monitor → Run workflow**, choisir `main`.
+2. Dans **Actions → Criterion 1A, 1C, 1D — Hub economy → Run workflow**, choisir `main`.
 3. Cocher **publish_only**, laisser `start_date` vide et lancer le workflow.
 
 Les checkpoints existants sont validés puis le tableau de bord est régénéré
@@ -295,15 +297,14 @@ Ces résultats sont exportés avec `fee_audit_status=verified` et
 planifiés GitHub Actions ont repris : ce point doit être confirmé par un
 événement `schedule` après publication du correctif.
 
-## Critère 2 — flux IBC multichaînes
+## Sous-critère 1B — centralité des flux IBC
 
 Le pipeline séparé compare Cosmos Hub, Osmosis, Noble et Injective.
 Sa configuration, ses limites de couverture, les unités par actif, les prix
 historiques et les instructions sont décrits dans [CRITERION2.md](CRITERION2.md).
-La page dédiée est `site/criterion2.html`. Aucun script de collecte du critère 1
-n'est remplacé par ce nouveau pipeline.
+Le pipeline se lance avec `python run_criteria1b_pipeline.py`. Sa page dédiée est `site/criterion2.html`.
 # Dashboard web
 
-L'accueil réunit désormais les deux critères avec graphiques, filtres de période,
+L'accueil réunit désormais les sous-critères du critère 1 avec graphiques, filtres de période,
 état des collectes et téléchargements. Les détails et la préparation du domaine
 personnalisé sont documentés dans [DASHBOARD.md](DASHBOARD.md).

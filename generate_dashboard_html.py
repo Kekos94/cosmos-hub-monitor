@@ -41,7 +41,9 @@ def main():
     day_progress = [progress(state) for state in states]
     daily_fields = [('date', 'Journée UTC'), ('block_count', 'Blocs analysés'),
                     ('block_coverage_pct', 'Couverture des blocs (%)'), ('tx_total', 'Transactions'),
+                    ('tx_ibc', 'Transactions IBC'),
                     ('collected_fee_atom', 'Frais collectés (ATOM, tips inclus)'),
+                    ('collected_ibc_fee_atom', 'Frais IBC collectés (ATOM)'),
                     ('collected_tip_atom', 'Dont tips (ATOM)'), ('fee_collection_status', 'Couverture des preuves de frais'),
                     ('fee_evidence_recovered', 'Frais attestés par transfert ante'),
                     ('estimated_emission_atom', 'Émission estimée sur les mêmes blocs (ATOM)'),
@@ -59,8 +61,8 @@ def main():
     document = f'''<!doctype html>
 <html lang="fr"><head><meta charset="utf-8"><title>Cosmos Hub Monitor</title>
 <style>body{{font-family:Arial,sans-serif;margin:30px;line-height:1.5}}.scroll{{overflow-x:auto}}table{{border-collapse:collapse}}th,td{{border:1px solid #ddd;padding:8px;text-align:left}}.notice{{background:#fff5d6;padding:16px}}</style></head><body>
-<p><a href="index.html">Retour au dashboard</a></p><h1>Cosmos Hub Monitor</h1><p>Généré : {html.escape(utcnow())}</p>
-<h2>Critère 1 — journées UTC complètes</h2>
+<p><a href="index.html">Retour au dashboard</a></p><h1>Critère 1 — Revenus opérationnels du Cosmos Hub</h1><p>Généré : {html.escape(utcnow())}</p>
+<h2>1A, 1C et 1D — Journées UTC complètes</h2>
 <p>Une journée comprend tous les blocs horodatés entre 00:00 UTC inclus et le minuit suivant exclu.
 Les blocs précédant et suivant cet intervalle sont vérifiés. Une collecte partielle ne produit aucun total journalier.</p>
 <p>Les ratios comparent les frais aux états de supply et aux estimations d'émission sur les mêmes blocs.
@@ -70,7 +72,7 @@ Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisati
 {table(complete_days, daily_fields) if complete_days else '<p>Aucune journée complète collectée pour le moment.</p>'}
 <h3>Avancement de la collecte exhaustive</h3>
 {table(day_progress, [('date','Journée UTC'), ('status','État'), ('scanned_blocks','Blocs traités'), ('expected_blocks','Blocs attendus'), ('block_coverage_pct','Couverture des blocs (%)')]) if day_progress else '<p>La première collecte visera la dernière journée UTC terminée.</p>'}
-<h2>Critère 1 — anciennes fenêtres mesurées</h2>
+<h2>1A, 1C et 1D — Anciennes fenêtres mesurées</h2>
 <p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
 La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
 Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
@@ -89,11 +91,11 @@ Les frais archivés sont des montants déclarés dans les transactions, sans pre
 '''
     volume = ROOT / 'ecosystem_out_usd_daily.csv'
     if (out / 'criterion2.html').exists():
-        html_link = '<h2>Critère 2 — flux IBC multichaînes</h2><p><a href="criterion2.html">Consulter les transferts, la couverture et les comparaisons</a></p>'
+        html_link = '<h2>1B — Centralité des flux IBC</h2><p><a href="criterion2.html">Consulter les transferts, la couverture et les comparaisons</a></p>'
         document += html_link
     elif volume.exists():
         rows = read_rows(volume)
-        document += '<h2>Critère 2 — données existantes</h2>' + table(rows, [(k, k) for k in rows[0]] if rows else [])
+        document += '<h2>1B — Données IBC disponibles</h2>' + table(rows, [(k, k) for k in rows[0]] if rows else [])
     document += '</body></html>'
     (out / 'criterion1.html').write_text(document, encoding='utf-8')
     from build_web_dashboard import main as build_dashboard

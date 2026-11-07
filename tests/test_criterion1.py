@@ -255,7 +255,7 @@ class CollectionTests(unittest.TestCase):
             self.assertEqual(path.read_bytes(), before)
 
     def test_pipeline_propagates_failure(self):
-        import run_criteria1_pipeline as pipeline
+        import run_criterion1_economy_pipeline as pipeline
         with patch.object(pipeline.subprocess, 'run', side_effect=subprocess.CalledProcessError(1, 'collector')):
             with self.assertRaises(subprocess.CalledProcessError):
                 pipeline.main()

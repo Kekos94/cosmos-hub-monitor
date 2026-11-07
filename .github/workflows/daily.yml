@@ -1,4 +1,4 @@
-name: Daily Cosmos Monitor
+name: Criterion 1A, 1C, 1D — Hub economy
 
 on:
   schedule:
@@ -141,7 +141,7 @@ jobs:
           COLLECT_WORKERS: "2"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
           START_DATE: ${{ inputs.start_date }}
-        run: python run_criteria1_pipeline.py
+        run: python run_criterion1_economy_pipeline.py
 
       - name: Audit fees for complete UTC days
         id: fee_audit

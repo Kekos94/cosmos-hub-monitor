@@ -2,7 +2,7 @@ name: Bilan des collectes par mail
 
 on:
   workflow_run:
-    workflows: ['Daily Cosmos Monitor', 'Criterion 2 — IBC multichain']
+    workflows: ['Criterion 1A, 1C, 1D — Hub economy', 'Criterion 1B — Multichain IBC flows']
     types: [completed]
 
 permissions:

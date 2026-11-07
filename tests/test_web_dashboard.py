@@ -71,13 +71,18 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('href="criterion1-en.html"',en)
             self.assertIn('href="criterion2-en.html"',en)
             self.assertIn('ATOM issuance coverage by collected fees',en)
-            self.assertIn('Les faits, à découvert.',fr)
+            self.assertIn('Revenus opérationnels du Cosmos Hub', fr)
+            self.assertIn('CRITÈRE 1 · SOUS-CRITÈRE 1B', fr)
+            self.assertIn('CRITERION 1 · SUBCRITERION 1B', en)
+            self.assertIn('1A — IBC activity on the Hub', en)
+            self.assertIn('href="criterion2-en.html#transit"', en)
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
         catalog=json.loads((dashboard.ROOT/'web/en.json').read_text())
-        source='<html lang="fr"><a href="index.html">Retour au dashboard</a><h1>Critère 2 — flux IBC sortants</h1><table><tr><th>Paquets non valorisés</th><td>376</td></tr></table></html>'
+        source='<html lang="fr"><a href="index.html">Retour au dashboard</a><h1>1B — Centralité des flux IBC</h1><table><tr><th>Paquets non valorisés</th><td>376</td></tr></table></html>'
         result=dashboard.english(source,catalog)
         self.assertIn('href="index-en.html"',result)
+        self.assertIn('1B — IBC flow centrality', result)
         self.assertIn('Unvalued packets',result)
         self.assertIn('<td>376</td>',result)
         self.assertIn('6,457,369.77',dashboard.english('<td>6 457 369,77</td>',catalog))

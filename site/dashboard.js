@@ -114,8 +114,14 @@ function startDashboard() {
     const a=Monitor.latest(c1),b=Monitor.latest(c2);
     $("c1-date").textContent=a ? day(a.date)+" · UTC" : t("Aucune journée dans la période");
     $("c2-date").textContent=b ? day(b.date)+t(" · UTC commun") : t("Aucune journée commune");
+    const totalTx = Monitor.number(a?.tx_total);
+    const ibcTx = Monitor.number(a?.tx_ibc);
+    $("activity-cards").innerHTML =
+      card(t("Transactions du Hub"), fmt(totalTx, 0), "", t("Journée UTC complète")) +
+      card(t("Transactions IBC"), fmt(ibcTx, 0), "", t("Journée UTC complète")) +
+      card(t("Part des transactions IBC"), fmt(totalTx > 0 && ibcTx !== null ? ibcTx / totalTx * 100 : null), "%", t("Parmi les transactions du Hub"));
     const feesKnown=a && a.fee_collection_status==="complete";
-    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
+    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"))+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
     const metric=$("economy-metric").value;
     lineChart($("economy-chart"),c1.map(r=>({...r,[metric]:metric!=="estimated_emission_atom" && r.fee_collection_status!=="complete"?"":r[metric]})),metric,metric.endsWith("pct")?"%":"ATOM");
     $("c1-chart-caption").textContent=t("Journées UTC complètes · ")+$("economy-metric").selectedOptions[0].textContent;
@@ -270,12 +276,12 @@ function startDashboard() {
       return `<div class="status-row"><div><b>${esc(label)}</b><small>${esc(detail)}</small></div><div class="status-value${late?" late":""}">${esc(day(latest))}<small>${latest ? late?t("Dernier jour publié · retard"):t("Dernier jour publié"):t("En attente de données")}</small></div></div>`;
     };
     const current1=Monitor.latest(data.criterion1_progress),incomplete1=current1?.status==="incomplete";
-    let html=status(t("Critère 1 · Cosmos Hub"),Monitor.latest(data.criterion1)?.date,incomplete1?t("{date} en cours : {saved} / {expected} blocs",{date:day(current1.date),saved:fmt(current1.scanned_blocks,0),expected:fmt(current1.expected_blocks,0)}) : t("Couverture exhaustive des blocs du jour"));
+    let html=status(t("1A, 1C et 1D · Cosmos Hub"),Monitor.latest(data.criterion1)?.date,incomplete1?t("{date} en cours : {saved} / {expected} blocs",{date:day(current1.date),saved:fmt(current1.scanned_blocks,0),expected:fmt(current1.expected_blocks,0)}) : t("Couverture exhaustive des blocs du jour"));
     for(const chain of data.members) {
       const latest=Monitor.latest(data.criterion2_progress.filter(r=>r.chain===chain));
       const done=Monitor.latest(data.chains.filter(r=>r.chain===chain));
       const detail=latest && latest.coverage_status!=="indexed_complete" ? t("{date} en cours · {count} transactions enregistrées",{date:day(latest.date),count:fmt(latest.indexed_transactions_saved,0)}) : t("Couverture selon l’index d’événements");
-      html+=status(t("Critère 2 · ")+(names[chain]||chain),done?.date,detail);
+      html+=status(t("1B · ")+(names[chain]||chain),done?.date,detail);
     }
     for(const chain of data.members) {
       const latest=Monitor.latest((data.incoming_progress||[]).filter(r=>r.chain===chain));

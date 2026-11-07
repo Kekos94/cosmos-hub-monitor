@@ -1,4 +1,6 @@
-# Critère 2 — activité relative des flux IBC
+# Sous-critère 1B — centralité des flux IBC
+
+Ce suivi relève du [critère 1 du référentiel 2026](REFERENTIEL.md).
 
 Ce critère compare **Cosmos Hub, Osmosis, Noble et Injective**.
 La configuration est dans `config/criterion2_chains.json`. Un identifiant de
@@ -182,11 +184,11 @@ Aucun ratio à dénominateur nul n'est remplacé par un faux zéro.
 
 ```sh
 python -m unittest discover -s tests -p 'test_criterion2*.py' -v
-python run_criteria2_pipeline.py
+python run_criteria1b_pipeline.py
 ```
 
 La première exécution vise hier en UTC. Pour initialiser un autre début sur
-un historique vide : `START_DATE=2026-11-05 python run_criteria2_pipeline.py`.
+un historique vide : `START_DATE=2026-11-05 python run_criteria1b_pipeline.py`.
 Les exécutions suivantes terminent d'abord la journée incomplète, puis les
 jours suivants. Changer `START_DATE` ne peut pas remplacer l'historique.
 
@@ -207,7 +209,7 @@ Exports racine, puis copies dans `site/` :
 | `ecosystem_out_usd_daily.csv` | Comparaisons sur les journées communes du périmètre |
 | `site/criterion2.html` | Page dédiée avec limites méthodologiques visibles |
 
-`.github/workflows/daily_criteria2.yml` est indépendant du pipeline du critère 1.
+`.github/workflows/daily_criteria2.yml` est indépendant du pipeline Économie du Hub.
 Il est programmé chaque heure à la minute 07 et se déclenche aussi sur les
 modifications de ses scripts/configuration/tests. Les heures GitHub Actions
 restent indicatives. Le budget par défaut est de 20 minutes, réparti entre
@@ -216,7 +218,7 @@ L'export de prix dispose de son propre budget limité.
 
 Les deux workflows utilisent le même verrou d'écriture du dépôt pour éviter
 les pushes et publications simultanés. La page du critère 2 est publiée à part ;
-le workflow du critère 2 ne régénère pas les calculs ou CSV du critère 1.
+le workflow 1B publie ses propres calculs et CSV.
 Les erreurs de collecte sont signalées après sauvegarde du progrès vérifié,
 et les publications GitHub Pages disposent de trois tentatives espacées.
 Le mode `publish_only` permet de régénérer l'export et la page sans collecter.
@@ -380,8 +382,8 @@ Deux nouveaux fichiers sont publiés à la racine et dans `site/` :
 
 Ce sont des vues calculées du dernier bilan, pas de nouveaux relevés historiques.
 Les CSV quotidiens, checkpoints et preuves existants ne sont pas modifiés.
-Le workflow du critère 2 recalcule et commit ces vues avec les données quotidiennes,
-sans nouvelles requêtes réseau pour l'agrégation. La publication du critère 1
+Le workflow 1B recalcule et commit ces vues avec les données quotidiennes,
+sans nouvelles requêtes réseau pour l'agrégation. La publication Économie du Hub
 réutilise le dernier bilan disponible et ne dépend pas de son recalcul. Si la
 fenêtre n'atteint plus hier en UTC, le dashboard signale le retard d'actualisation.
 

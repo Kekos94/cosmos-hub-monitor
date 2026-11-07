@@ -7,14 +7,14 @@ Les traductions sont dans `web/en.json` ; les formats de nombres, de dates et
 les messages des graphiques suivent la langue de la page. Les CSV sources
 conservent leurs colonnes et valeurs originales.
 
-Le critère 2 propose désormais un choix **Sorties émises / Entrées avec succès
+Le sous-critère 1B propose désormais un choix **Sorties émises / Entrées avec succès
 confirmé**, avec des dates et historiques indépendants. Les réceptions observées,
 accusés d'erreur et confirmations manquantes sont distingués dans l'avis de
 qualité et dans les tableaux détaillés. Les quatre nouveaux CSV entrants sont
 téléchargeables ; aucune addition entrées + sorties ou soustraction de solde
 net n'est effectuée. Les limites exactes des accusés sont dans `CRITERION2.md`.
 
-La page d'accueil `site/index.html` regroupe les deux critères, leurs graphiques
+La page d'accueil `site/index.html` regroupe les quatre sous-critères du critère 1, leurs graphiques
 et l'état des collectes. `site/criterion1.html` et `site/criterion2.html`
 conservent les tableaux et méthodes détaillés. Le nom de présentation est
 « Cosmos Observatory » ; aucun nom de domaine n'est réservé ou acheté.
@@ -22,12 +22,12 @@ conservent les tableaux et méthodes détaillés. Le nom de présentation est
 ## Actualisation
 
 Les sources de présentation sont dans `web/`. `build_web_dashboard.py` lit
-les exports enregistrés et les checkpoints du critère 1 sans les modifier.
+les exports enregistrés et les checkpoints Économie du Hub sans les modifier.
 Il intègre les données à la page et copie les deux fichiers CSS/JS. Le site
 n'utilise aucun CDN, service d'analytics, compte utilisateur ou API externe
 dans le navigateur. Il peut donc aussi être consulté localement.
 
-Les générateurs des deux critères reconstruisent l'accueil après chaque
+Les générateurs des deux pipelines reconstruisent l'accueil après chaque
 exécution ; chaque workflow sauvegarde l'accueil et ses assets avec ses données.
 Le verrou commun de publication reste en place. Les collectes et leurs
 fréquences restent celles du projet existant.
@@ -49,7 +49,7 @@ L'aperçu local est alors disponible à `http://localhost:8765`.
 - Le filtre de période se termine à la dernière date publiée dans l'un des deux
   critères. Les graphiques représentent les observations disponibles sans
   relier les journées manquantes. Une observation isolée n'est pas une tendance.
-- Le critère 2 utilise seulement le périmètre configuré actuel. Les anciens
+- Le sous-critère 1B utilise seulement le périmètre configuré actuel. Les anciens
   périmètres restent dans les CSV, sans être mélangés aux parts du périmètre actuel.
 - Les sous-totaux USD peuvent être partiels. La couverture de valorisation en
   pourcentage concerne le nombre de paquets, jamais leur valeur économique.

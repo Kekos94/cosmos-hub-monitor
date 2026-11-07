@@ -11,7 +11,9 @@ from zoneinfo import ZoneInfo
 
 WORKFLOWS = {
     'Daily Cosmos Monitor': 'Économie',
+    'Criterion 1A, 1C, 1D — Hub economy': 'Économie',
     'Criterion 2 — IBC multichain': 'IBC',
+    'Criterion 1B — Multichain IBC flows': 'IBC',
 }
 OUTCOMES = {
     'success': 'Réussite',

@@ -1,4 +1,4 @@
-name: Criterion 2 — IBC multichain
+name: Criterion 1B — Multichain IBC flows
 
 on:
   schedule:
@@ -13,7 +13,7 @@ on:
         required: false
         type: string
       publish_only:
-        description: "Régénérer et publier le critère 2 sans collecter de nouveaux transferts"
+        description: "Régénérer et publier le sous-critère 1B sans collecter de nouveaux transferts"
         required: false
         default: false
         type: boolean
@@ -21,7 +21,7 @@ on:
 permissions:
   contents: write
 
-# Same repository writer lock as Criterion 1: never race git pushes or Pages.
+# Same repository writer lock as the Hub economy workflow: never race git pushes or Pages.
 concurrency:
   group: cosmos-monitor-data-${{ github.ref }}
   cancel-in-progress: false
@@ -170,9 +170,9 @@ jobs:
           COINGECKO_DEMO_API_KEY: ${{ secrets.COINGECKO_DEMO_API_KEY }}
           COINGECKO_PRO_API_KEY: ${{ secrets.COINGECKO_PRO_API_KEY }}
         run: python criterion2_export.py --fetch-prices
-      - name: Generate Criterion 2 page
+      - name: Generate Criterion 1B page
         run: python publish_criterion2.py
-      - name: Commit Criterion 2 data and progress
+      - name: Commit Criterion 1B data and progress
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -205,7 +205,7 @@ jobs:
             git add data/criterion2_lifecycle
           fi
           if ! git diff --cached --quiet; then
-            git commit -m "Update Criterion 2 indexed IBC transfers and historical valuations"
+            git commit -m "Update Criterion 1B indexed IBC transfers and historical valuations"
             git push
           fi
       - name: Report collection errors after preserving checked pages

@@ -1,4 +1,4 @@
-# Critère 2 — identification des RWA
+# Sous-critère 1B — identification des RWA
 
 Revue initiale du 7 novembre 2026 (Europe/Paris). Le registre est volontairement
 non exhaustif. Il alimente le filtre RWA du tableau de bord IBC.

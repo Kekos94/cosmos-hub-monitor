@@ -32,7 +32,7 @@ def english(document, catalog):
     document=re.sub(r'>([^<>]*)<',translate,document)
     document=document.replace('<html lang="fr">','<html lang="en">').replace('Navigation principale','Main navigation')
     for name in ('index','criterion1','criterion2'):
-        document=document.replace(f'href="{name}.html"',f'href="{name}-en.html"')
+        document=re.sub(rf'href="{name}\.html(?=["#])', f'href="{name}-en.html', document)
     document=document.replace('href="index-en.html" lang="fr"','href="index.html" lang="fr"')
     document=document.replace('href="index-en.html" lang="en"','href="index-en.html" lang="en" aria-current="page"')
     document=document.replace('lang="fr" aria-current="page"','lang="fr"')
