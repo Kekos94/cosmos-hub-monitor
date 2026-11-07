@@ -122,9 +122,43 @@ function startDashboard() {
       card(t("Part des transactions IBC"), fmt(totalTx > 0 && ibcTx !== null ? ibcTx / totalTx * 100 : null), "%", t("Parmi les transactions du Hub"));
     const feesKnown=a && a.fee_collection_status==="complete";
     $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"))+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
+    const audits = new Map((data.emission || []).map(row => [row.date, row]));
     const metric=$("economy-metric").value;
-    lineChart($("economy-chart"),c1.map(r=>({...r,[metric]:metric!=="estimated_emission_atom" && r.fee_collection_status!=="complete"?"":r[metric]})),metric,metric.endsWith("pct")?"%":"ATOM");
+    const economy = c1.map(row => {
+      const audit = audits.get(row.date);
+      const matched = audit?.status === "reconciled" &&
+        audit.start_height === row.start_height && audit.end_height === row.end_height;
+      const emission = Monitor.number(audit?.monetary_emission_atom);
+      const fees = Monitor.number(row.collected_fee_atom);
+      const ratio = matched && emission > 0 && fees !== null ? 100 * fees / emission : null;
+      const measured = {
+        monetary_emission_atom: audit?.monetary_emission_atom,
+        annualized_monetary_inflation_pct: audit?.annualized_monetary_inflation_pct,
+        monetary_inflation_365d_pct: audit?.monetary_inflation_365d_pct,
+      };
+      if (metric in measured) return {...row, [metric]: matched ? measured[metric] : null};
+      if (metric === "estimated_emission_atom") return row;
+      return {...row, [metric]: row.fee_collection_status === "complete" ?
+        (metric === "fee_to_measured_emission_pct" ? ratio : row[metric]) : null};
+    });
+    lineChart($("economy-chart"), economy, metric, metric.endsWith("pct") ? "%" : "ATOM");
     $("c1-chart-caption").textContent=t("Journées UTC complètes · ")+$("economy-metric").selectedOptions[0].textContent;
+    const audit = audits.get(a?.date);
+    const observed = audit?.status === "reconciled";
+    $("emission-status").textContent = observed
+      ? t("Émission et destructions réconciliées avec l’offre")
+      : audit?.status === "unreconciled"
+        ? t("Écart avec l’offre observée · {gap} ATOM", {gap: fmt(audit.reconciliation_gap_atom, 6)})
+        : audit ? t("Audit en cours · {count} / {total} blocs", {
+          count: fmt(audit.blocks_audited, 0), total: fmt(audit.block_count, 0),
+        }) : t("Audit en attente ou incomplet");
+    $("emission-cards").innerHTML =
+      card(t("Émission monétaire mesurée"), fmt(audit?.monetary_emission_atom, 6), "ATOM", t("Créations du module monétaire")) +
+      card(t("Burn effectif mesuré"), fmt(audit?.effective_burn_atom, 6), "ATOM", t("Destructions d’ATOM observées")) +
+      card(t("Inflation monétaire annualisée"), fmt(audit?.annualized_monetary_inflation_pct, 4), "%", t("Rythme de la journée")) +
+      card(t("Inflation monétaire sur 365 jours"), fmt(audit?.monetary_inflation_365d_pct, 4), "%",
+        audit?.criterion3_status === "below_5_pct" ? t("Critère 3 · seuil atteint") :
+          audit?.criterion3_status === "at_or_above_5_pct" ? t("Critère 3 · seuil non atteint") : t("Critère 3 · données insuffisantes"));
     const n=b ? Monitor.number(b.sent_packets):null,p=b ? Monitor.number(b.priced_packets):null;
     const coverage=n>0 && p!==null ? p/n*100:null;
     $("c2-cards").innerHTML=card(incoming?t("Part du Hub · entrées confirmées"):t("Part du Hub · paquets"),fmt(b?.hub_share_packet_count_pct,2),"%",t("Dans les quatre chaînes"),true)+card(t("Part du Hub · USD valorisés"),fmt(b?.hub_share_valued_usd_pct,2),"%",t("Part du sous-ensemble valorisé"))+card(incoming?t("Entrées valorisées · quatre chaînes"):t("Flux valorisés · quatre chaînes"),fmt(b?.valued_out_usd,0),"USD",t("Sous-total, pas volume économique net"))+card(t("Paquets avec valorisation"),fmt(coverage,1),"%",b?fmt(b.unpriced_packets,0)+t(" paquets non valorisés"):t("Couverture en nombre, pas en valeur"));

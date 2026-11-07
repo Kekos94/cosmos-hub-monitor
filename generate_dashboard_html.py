@@ -89,6 +89,10 @@ Les frais archivés sont des montants déclarés dans les transactions, sans pre
 {table(legacy, [('date','Date archive'), ('tx_total','Transactions observées'), ('tx_ibc','Transactions IBC'), ('total_fee_atom','Frais déclarés observées (ATOM)')])}
 <h2>Fichiers</h2><ul>{''.join(published)}</ul>
 '''
+    if (ROOT / 'hub_criterion1_emission_daily.csv').is_file():
+        document += ('<h2>1D — Émission monétaire mesurée</h2>'
+                     '<p><a href="index.html#emission">Consulter l’audit et les taux d’inflation</a> · '
+                     '<a href="hub_criterion1_emission_daily.csv">Audit de l’émission · CSV ↓</a></p>')
     volume = ROOT / 'ecosystem_out_usd_daily.csv'
     if (out / 'criterion2.html').exists():
         html_link = '<h2>1B — Centralité des flux IBC</h2><p><a href="criterion2.html">Consulter les transferts, la couverture et les comparaisons</a></p>'

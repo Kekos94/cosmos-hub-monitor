@@ -23,7 +23,7 @@ avec les preuves associées.
 | **1A — Activité IBC** | Transactions du Hub, transactions IBC et leur proportion sur les journées UTC dont tous les blocs sont couverts. | [Économie du Hub](run_criterion1_economy_pipeline.py) |
 | **1B — Centralité des flux IBC** | Flux sortants et part relative du Hub face à Osmosis et Noble, avec Injective dans le périmètre actuel. Comparaison sur les mêmes journées UTC. La part USD porte sur le sous-ensemble valorisé quand des prix manquent. Les entrées, règlements, flux nets, transits et encours RWA complètent ce suivi. | [Flux IBC multichaînes](run_criteria1b_pipeline.py) |
 | **1C — Revenus** | Frais du Hub et frais IBC collectés, avec audit des preuves de paiement. L’attribution d’une recette supplémentaire exige un paiement vérifiable, son origine et sa destination. | [Économie du Hub](run_criterion1_economy_pipeline.py) |
-| **1D — Émission et couverture économique** | Inflation horodatée, variation de l’offre et ratios entre frais et émission estimée sur les mêmes blocs. Le burn effectif reste non mesuré. | [Économie du Hub](run_criterion1_economy_pipeline.py) |
+| **1D — Émission et couverture économique** | Inflation horodatée, variation de l’offre et comparaison des frais avec l’émission sur les mêmes blocs. L’audit réconcilie les créations et destructions d’ATOM avec l’offre et alimente le taux du critère 3. [Méthode de l’audit](EMISSION.md) | [Économie du Hub](run_criterion1_economy_pipeline.py) |
 
 ## Pistes de suivi reportées
 

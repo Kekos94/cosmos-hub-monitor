@@ -1,0 +1,4 @@
+date,status,start_height,end_height,blocks_audited,block_count,interval_seconds,opening_supply_atom,closing_supply_atom,monetary_emission_atom,gross_mint_atom,effective_burn_atom,net_supply_change_atom,reconciliation_gap_atom,annualized_monetary_inflation_pct,annualized_net_supply_growth_pct,monetary_inflation_365d_pct,criterion3_status
+2026-11-04,pending,33715159,33730215,0,15057,,,,,,,,,,,,insufficient_data
+2026-11-05,pending,33730216,33745274,0,15059,,,,,,,,,,,,insufficient_data
+2026-11-06,reconciled,33745275,33760384,15110,15110,86402.643403056,540229998.246719,540417252.592479,187254.34576,187254.34576,0,187254.34576,0,12.65123102938546602313602066,12.65123102938546602313602066,,insufficient_data

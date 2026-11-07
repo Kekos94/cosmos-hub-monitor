@@ -90,7 +90,14 @@ jobs:
                           and row['block_coverage_pct'] == '100'
                           for row in rows
                       )
-                  if complete:
+                  emission_request = Request(
+                      export_url.replace('hub_criterion1_daily_complete.csv', 'hub_criterion1_emission_daily.csv'),
+                      headers=export_request.headers,
+                  )
+                  with urlopen(emission_request, timeout=15) as response:
+                      audited = any(row['date'] == day and row['status'] == 'reconciled'
+                                    for row in csv.DictReader(io.TextIOWrapper(response, encoding='utf-8')))
+                  if complete and audited:
                       with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
                           output.write('skip=true\n')
                       print(f"Nightly run {previous['id']} succeeded and {day} is complete.")
@@ -106,7 +113,7 @@ jobs:
     needs: check_night
     if: ${{ !cancelled() && needs.check_night.outputs.skip != 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 200
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -151,6 +158,18 @@ jobs:
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion1_fee_audit.py --pending --budget-seconds 900
 
+      - name: Audit monetary issuance and burns for complete UTC days
+        id: emission_audit
+        continue-on-error: true
+        env:
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: |
+          if test "${{ inputs.publish_only }}" = "true"; then
+            python criterion1_emission.py
+          else
+            python criterion1_emission.py --collect 900
+          fi
+
       # A network failure must not discard already validated chunks.
       - name: Validate checkpoints and build daily export
         run: python inflation_overlay.py
@@ -163,6 +182,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hub_criterion1_daily_complete.csv site/hub_criterion1_daily_complete.csv
+          git add hub_criterion1_emission_daily.csv site/hub_criterion1_emission_daily.csv
+          if test -d data/criterion1_emission; then
+            git add data/criterion1_emission
+          fi
           if test -d data/criterion1_fee_audits; then
             git add data/criterion1_fee_audits
           fi
@@ -224,4 +247,10 @@ jobs:
         if: steps.fee_audit.outcome == 'failure'
         run: |
           echo "Fee audit interrupted. Validated chunks were saved for the next run."
+          exit 1
+
+      - name: Report emission audit failure after publishing checkpoints
+        if: steps.emission_audit.outcome == 'failure'
+        run: |
+          echo "Emission audit interrupted. Validated checkpoints were retained."
           exit 1
