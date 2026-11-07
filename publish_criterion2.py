@@ -10,6 +10,7 @@ from criterion2_lifecycle_export import exports as lifecycle_exports
 from criterion2_net import exports as net_exports,config as net_config
 from criterion2_windows import exports as window_exports
 from criterion2_transit_export import exports as transit_exports
+from criterion2_rwa_view import export as rwa_export
 
 
 def table(rows,fields):
@@ -33,6 +34,7 @@ def main():
     net_chains=[r for r in net_chains if r['universe_id']==net_config()[-1]]
     window_chains,window_assets=window_exports()
     transit,transit_assets,transit_routes=transit_exports()
+    rwa_export()
     cfg,uid=load_config();site=ROOT/'site';site.mkdir(exist_ok=True)
     files=['criterion2_progress.csv','ibc_out_chains_daily.csv','ibc_out_assets_daily.csv','ecosystem_out_usd_daily.csv']
     files+=['criterion2_incoming_progress.csv','ibc_in_chains_daily.csv','ibc_in_assets_daily.csv','ecosystem_in_usd_daily.csv']
@@ -40,6 +42,7 @@ def main():
     files+=['ibc_net_chains_daily.csv','ibc_net_assets_daily.csv']
     files+=['ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv']
     files+=['ibc_transit_daily.csv','ibc_transit_assets_daily.csv','ibc_transit_routes_daily.csv','ibc_transit_packets.csv']
+    files.append('ibc_rwa_daily.csv')
     for name in files:shutil.copy2(ROOT/name,site/name)
     links=''.join(f'<li><a href="{name}">{name}</a></li>' for name in files)
     document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Critère 2</title>

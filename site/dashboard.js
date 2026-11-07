@@ -187,6 +187,48 @@ function startDashboard() {
     if(netHistory.some(r=>Monitor.number(r.net_amount)!==null))lineChart($("net-chart"),netHistory,'net_amount',unit);
     else empty($("net-chart"),t("Le solde n’est pas disponible pour cet actif sur cette période."));
   }
+  function renderRwa() {
+    const all = data.rwa || [];
+    const assetSelect = $("rwa-asset");
+    const daySelect = $("rwa-day");
+    const selectedAsset = assetSelect.value;
+    const selectedDay = daySelect.value;
+    const products = new Map(all.map(row => [row.product_id, row.symbol]));
+    assetSelect.innerHTML = [...products].map(([id, symbol]) =>
+      `<option value="${esc(id)}">${esc(symbol)}</option>`).join('');
+    if (products.has(selectedAsset)) assetSelect.value = selectedAsset;
+    const dates = [...new Set([...(data.net_chains || []), ...all].map(row => row.date))].sort().reverse();
+    daySelect.innerHTML = dates.map(date => `<option value="${esc(date)}">${esc(day(date))}</option>`).join('');
+    if (dates.includes(selectedDay)) daySelect.value = selectedDay;
+    else {
+      const observedDay = dates.find(date => all.some(row => row.date === date && row.product_id === assetSelect.value));
+      if (observedDay) daySelect.value = observedDay;
+    }
+    const rows = all.filter(row => row.product_id === assetSelect.value && row.date === daySelect.value);
+    const transit = rows.reduce((sum, row) => sum + Number(row.transit_packets), 0);
+    $("rwa-transit").textContent = transit
+      ? t("{count} transits PFM confirmés pour cet actif.", {count: fmt(transit, 0)})
+      : t("Aucun transit PFM RWA vérifié pour cette sélection.");
+    if (!rows.length) {
+      empty($("rwa-results"), t("Aucune observation RWA identifiée pour cette sélection."));
+      return;
+    }
+    const amount = (value, symbol) => {
+      const displayed = Monitor.amount(value, locale);
+      return displayed === null ? t("Indisponible") : `${displayed} ${symbol}`;
+    };
+    const headers = ["Chaîne", "Montant entrant confirmé", "Montant sortant confirmé", "Solde vérifié", "Identités en attente", "Règlements en attente"];
+    const chainIds = {"cosmoshub-4": "Cosmos Hub", "osmosis-1": "Osmosis", "noble-1": "Noble", "injective-1": "Injective"};
+    const cells = rows.map(row => [
+      chainIds[row.chain_id] || row.chain_id, amount(row.confirmed_in, row.symbol),
+      amount(row.confirmed_out, row.symbol), amount(row.net_amount, row.symbol),
+      fmt(row.pending_identity, 0), fmt(row.unsettled, 0),
+    ]);
+    $("rwa-results").innerHTML = '<div class="lifecycle-scroll"><table><thead><tr>' +
+      headers.map(label => `<th>${esc(t(label))}</th>`).join('') + '</tr></thead><tbody>' +
+      cells.map(row => '<tr>' + row.map(value => `<td>${esc(value)}</td>`).join('') + '</tr>').join('') +
+      '</tbody></table></div>';
+  }
   function renderTransit() {
     const all=data.transit||[],latest=Monitor.latest(all);
     const rows=Monitor.filter(all,$("period").value,latest?.date).sort((a,b)=>b.date.localeCompare(a.date));
@@ -234,7 +276,8 @@ function startDashboard() {
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window"].forEach(id=>$(id).addEventListener("change",renderNet));
   ["period","transit-day"].forEach(id=>$(id).addEventListener("change",renderTransit));
-  render();renderNet();renderTransit();statuses();
+  ["rwa-asset","rwa-day"].forEach(id=>$(id).addEventListener("change",renderRwa));
+  render();renderNet();renderRwa();renderTransit();statuses();
 }
 if (typeof document !== "undefined") {
   try { startDashboard(); } catch(error) {

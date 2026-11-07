@@ -468,6 +468,6 @@ Un premier registre daté, non exhaustif et séparant produits tokenisés et
 stablecoins est documenté dans [RWA_REGISTRY.md](RWA_REGISTRY.md).
 L'audit hors ligne identifie USDY par origine exacte et preuves de canaux
 historiques. USYC reste candidat tant que son identité mainnet n'est pas établie.
-Cette brique ne modifie pas les séries économiques et n'est pas encore le filtre
-RWA du dashboard ; elle prépare ce filtre sans assimiler les tokens homonymes,
-les stablecoins ou les actifs non revus à des RWA vérifiés.
+Le filtre RWA du dashboard affiche les montants confirmés et le solde par
+produit et par journée, ainsi que les transits PFM identifiés. Les identités
+en attente sont signalées et les montants restent en unités du produit.

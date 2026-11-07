@@ -1,8 +1,7 @@
 # Critère 2 — identification des RWA
 
 Revue initiale du 7 novembre 2026 (Europe/Paris). Le registre est volontairement
-non exhaustif. Il prépare le filtre RWA ; il ne modifie pas les indicateurs déjà
-publiés et n'ajoute pas encore un panneau RWA au dashboard.
+non exhaustif. Il alimente le filtre RWA du tableau de bord IBC.
 
 ## Règle d'identification
 
@@ -88,10 +87,12 @@ Une nouvelle chaîne, un nouveau canal ou un chemin multi-saut ne sont pas admis
 par analogie avec ceux déjà validés. Cet audit initial est daté et n'est pas
 encore exécuté automatiquement par les workflows économiques.
 
-La brique suivante pourra réutiliser ces identités pour filtrer séparément les
-entrées/sorties réussies, nets et transits prouvés. Elle devra conserver les
-règles de règlement, les prix historiques, les cas non identifiés et les limites
-de couverture ; aucune rétroapplication du spot ni parité USD arbitraire.
+Le panneau **Filtre RWA vérifiés** présente les montants confirmés en unités
+du produit, le solde lorsqu'une borne commune de confirmations est disponible
+et les transits PFM identifiés. Le CSV `ibc_rwa_daily.csv` conserve les montants
+exacts. Le workflow vérifie les nouveaux canaux historiques des représentations
+déjà inscrites au registre. Une preuve absente ou contradictoire laisse
+l'identité en attente.
 Les encours demandent un collecteur de soldes/supply et une déduplication des
 escrows et représentations, distincts de cet audit de flux.
 

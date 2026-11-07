@@ -385,5 +385,17 @@
   "Couverture des preuves": "Evidence coverage",
   "Borne des preuves UTC": "Evidence cutoff UTC",
   "Dénomination locale": "Local denomination",
-  "Actif": "Asset"
+  "Actif": "Asset",
+  "Filtre RWA vérifiés": "Verified RWA filter",
+  "Activité IBC des produits identifiés dans le registre": "IBC activity for products identified in the registry",
+  "Données RWA · CSV ↓": "RWA data · CSV ↓",
+  "Périmètre strict du registre. Les stablecoins sont suivis séparément. Les identités et confirmations manquantes limitent les chiffres disponibles.": "Strict registry scope. Stablecoins are tracked separately. Missing identities and confirmations limit the available figures.",
+  "Solde vérifié": "Verified net flow",
+  "Identités en attente": "Pending identities",
+  "Règlements en attente": "Pending settlements",
+  "{count} transits PFM confirmés pour cet actif.": "{count} confirmed PFM transits for this asset.",
+  "Aucun transit PFM RWA vérifié pour cette sélection.": "No verified RWA PFM transit for this selection.",
+  "Aucune observation RWA identifiée pour cette sélection.": "No identified RWA observations for this selection.",
+  "Montant entrant confirmé": "Confirmed incoming amount",
+  "Montant sortant confirmé": "Confirmed outgoing amount"
 }

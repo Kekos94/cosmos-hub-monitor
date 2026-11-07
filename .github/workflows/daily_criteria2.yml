@@ -155,6 +155,11 @@ jobs:
           TRANSIT_BUDGET_SECONDS: "300"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_transit_collect.py
+      - name: Verify historical routes for registered RWA
+        if: inputs.publish_only != true
+        env:
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: python criterion2_rwa_view.py --collect-routes 60
       - name: Validate and export historical valuations
         env:
           COINGECKO_DEMO_API_KEY: ${{ secrets.COINGECKO_DEMO_API_KEY }}
@@ -166,6 +171,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add ibc_rwa_daily.csv site/ibc_rwa_daily.csv data/criterion2_rwa_registry
           git add ibc_transit_*.csv site/ibc_transit_*.csv
           if test -d data/criterion2_transit; then
             git add data/criterion2_transit
