@@ -1,9 +1,10 @@
 """Bounded RPC batches; never infer activity from a sampled block range."""
 import base64
 import hashlib
+import re
 
-from criterion1_data import CHAIN, timestamp
-from cosmos_tx_decode import decode_tx
+from criterion1_data import CHAIN, timestamp, utcnow
+from cosmos_tx_decode import decode_tx, single
 
 # CometBFT /blockchain returns at most 20 metadata entries.
 METADATA_BATCH = 20
@@ -100,7 +101,45 @@ def transactions(height, entry, block_result, execution_result):
     return b, decoded
 
 
-def payloads(api, start, end, *, deadline=None):
+COLLECTOR_NAME = 'feemarket-fee-collector'
+COLLECTOR_TYPE = '/cosmos.auth.v1beta1.ModuleAccount'
+COLLECTOR_QUERY = '/cosmos.auth.v1beta1.Query/ModuleAccountByName'
+
+
+def collector_batch(api, heights, preferred):
+    # QueryModuleAccountByNameRequest.name is protobuf string field 1.
+    name = COLLECTOR_NAME.encode()
+    data = (bytes([10, len(name)]) + name).hex()
+    calls = [
+        dict(jsonrpc='2.0', id=str(height), method='abci_query',
+             params=dict(path=COLLECTOR_QUERY, data=data, height=str(height), prove=False))
+        for height in heights
+    ]
+    results, source = rpc_results(api, calls, preferred)
+    proofs = {}
+    for height in heights:
+        response = results[str(height)]['response']
+        if int(response['code']) != 0 or int(response['height']) != height:
+            raise ValueError('Collector query failed or returned a different height')
+        wrapped = single(base64.b64decode(response['value'], validate=True), 1, required=True)
+        if single(wrapped, 1, required=True).decode() != COLLECTOR_TYPE:
+            raise ValueError('Collector is not a module account')
+        account = single(wrapped, 2, required=True)
+        if single(account, 2, required=True).decode() != COLLECTOR_NAME:
+            raise ValueError('Unexpected collector name')
+        base_account = single(account, 1, required=True)
+        address = single(base_account, 1, required=True).decode()
+        if not re.fullmatch(r'cosmos1[023456789acdefghjklmnpqrstuvwxyz]{38}', address):
+            raise ValueError('Invalid collector address')
+        proofs[height] = dict(
+            height=height, source=source, observed_at=utcnow(),
+            account={'@type': COLLECTOR_TYPE, 'name': COLLECTOR_NAME,
+                     'base_account': {'address': address}},
+        )
+    return proofs
+
+
+def payloads(api, start, end, *, deadline=None, prefetch_fees=False):
     for first in range(start, end+1, METADATA_BATCH):
         last = min(end, first+METADATA_BATCH-1)
         try:
@@ -124,6 +163,7 @@ def payloads(api, start, end, *, deadline=None):
             for height in range(first, last+1):
                 yield api.block_payload(height, deadline=deadline)
             continue
+        validated = []
         for height in range(first, last+1):
             entry = entries[height]
             if int(entry['num_txs']) == 0:
@@ -133,4 +173,7 @@ def payloads(api, start, end, *, deadline=None):
                 b, txs = {'header': entry['header'], 'data': {'txs': []}}, []
             else:
                 b, txs = transactions(height, entry, values[f'block:{height}'], values[f'block_results:{height}'])
-            yield height, b, ';'.join(sorted(sources)), txs
+            validated.append((height, b, ';'.join(sorted(sources)), txs))
+        if prefetch_fees:
+            api.prefetch_collector_proofs(validated, meta_source)
+        yield from validated

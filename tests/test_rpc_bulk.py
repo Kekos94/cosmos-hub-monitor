@@ -153,5 +153,32 @@ class BatchTests(unittest.TestCase):
         self.assertEqual(api.block_payload.call_count, 2)
 
 
+class CollectorBatchTests(unittest.TestCase):
+    def test_exact_historical_height_and_module_required(self):
+        address = 'cosmos13pxn9n3qw79e03844rdadagmg0nshmwf7qvuye'
+
+        def response(height, name=bulk.COLLECTOR_NAME):
+            account = field(1, field(1, address.encode())) + field(2, name.encode())
+            wrapped = field(1, bulk.COLLECTOR_TYPE.encode()) + field(2, account)
+            value = base64.b64encode(field(1, wrapped)).decode()
+            return {'response': dict(code=0, height=str(height), value=value)}
+
+        def api_for(second):
+            results = [
+                {'id': '12', 'result': second},
+                {'id': '11', 'result': response(11)},
+            ]
+            return SimpleNamespace(RPCS=['rpc'], get_any=Mock(return_value=(results, 'rpc')))
+
+        api = api_for(response(12))
+        proofs = bulk.collector_batch(api, [11, 12], 'rpc')
+        self.assertEqual({h: p['height'] for h, p in proofs.items()}, {11: 11, 12: 12})
+        self.assertEqual(proofs[12]['account']['base_account']['address'], address)
+        api.get_any.assert_called_once()
+        for invalid in (response(11), response(12, 'gov')):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                bulk.collector_batch(api_for(invalid), [11, 12], 'rpc')
+
+
 if __name__ == '__main__':
     unittest.main()

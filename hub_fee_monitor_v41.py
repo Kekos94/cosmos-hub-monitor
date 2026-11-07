@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 import time
 import math
 import threading
@@ -200,6 +201,28 @@ def collector_proof(height):
     return _collector_proofs[height]
 
 
+def prefetch_collector_proofs(payloads, preferred):
+    from criterion1_rpc_bulk import RPC_BATCH_CALLS, collector_batch
+
+    heights = [
+        height for height, _, _, transactions in payloads
+        if height not in _collector_proofs and any(
+            int(tx['tx_response'].get('code', 0)) and
+            collected_fee_components(tx)[0] is None
+            for tx, _ in transactions
+        )
+    ]
+    for offset in range(0, len(heights), RPC_BATCH_CALLS):
+        try:
+            proofs = collector_batch(
+                sys.modules[__name__], heights[offset:offset + RPC_BATCH_CALLS], preferred,
+            )
+        except (RuntimeError, ValueError, KeyError, TypeError) as exc:
+            print(f'Collector batch unavailable; using individual historical checks: {exc}', flush=True)
+            continue
+        _collector_proofs.update(proofs)
+
+
 def collected_fee(tx):
     return collected_fee_components(tx)[0]
 
@@ -294,9 +317,8 @@ def _collect(start, end, *, deadline=None, workers=1, bulk=False):
     previous_time = timestamp(start_time)
     fetch = partial(block_payload, deadline=deadline)
     if bulk:
-        import sys
         from criterion1_rpc_bulk import payloads as bulk_payloads
-        payloads = bulk_payloads(sys.modules[__name__], start, end, deadline=deadline)
+        payloads = bulk_payloads(sys.modules[__name__], start, end, deadline=deadline, prefetch_fees=True)
     elif workers > 1:
         with ThreadPoolExecutor(max_workers=workers) as pool:
             payloads = list(pool.map(fetch, range(start, end + 1)))

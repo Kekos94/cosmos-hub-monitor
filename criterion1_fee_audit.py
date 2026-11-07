@@ -162,7 +162,7 @@ def audit_day(day, *, directory=None, audit_directory=AUDIT_DIR):
         first, end = int(chunk['start_height']), int(chunk['end_height'])
         record = dict(start_height=first, end_height=end, blocks=[], transactions=[])
         for height, block, source, txs in payloads(
-                monitor, first, end, deadline=monitor.REQUEST_DEADLINE.get()):
+                monitor, first, end, deadline=monitor.REQUEST_DEADLINE.get(), prefetch_fees=True):
             hashes = []
             for index, (tx, _) in enumerate(txs):
                 response = tx['tx_response']
