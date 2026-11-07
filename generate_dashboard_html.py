@@ -25,14 +25,14 @@ def main():
                      ('end_time', 'Fin UTC (incluse)'), ('duration_seconds', 'Durée (s)'),
                      ('utc_day_coverage_pct', '% du temps par journée UTC'),
                      ('tx_total', 'Transactions observées'), ('tx_ibc', 'Transactions IBC'),
-                     ('collected_fee_atom', 'Fees collectées (ATOM)'),
-                     ('fee_collection_status', 'Complétude des fees'),
-                     ('collected_tip_atom', 'Tips inclus dans les fees (ATOM)'),
+                     ('collected_fee_atom', 'Frais collectés (ATOM)'),
+                     ('fee_collection_status', 'Couverture des preuves de frais'),
+                     ('collected_tip_atom', 'Tips inclus dans les frais (ATOM)'),
                      ('unprocessed_blocks_seen', 'Blocs restant à analyser'),
                      ('estimated_window_emission_atom', 'Émission estimée sur la fenêtre (ATOM)'),
-                     ('fee_to_estimated_emission_pct', 'Fees / émission estimée (%)'),
+                     ('fee_to_estimated_emission_pct', 'Frais / émission estimée (%)'),
                      ('net_supply_change_atom', 'Variation nette supply sur la fenêtre (ATOM)'),
-                     ('fee_to_net_supply_increase_pct', 'Fees / hausse nette supply (%)'),
+                     ('fee_to_net_supply_increase_pct', 'Frais / hausse nette supply (%)'),
                      ('burn_status', 'Burn effectif'), ('atom_price_usd', 'Prix USD à la collecte'),
                      ('price_source_updated_at', 'Prix : timestamp source UTC')]
     states = load_days(ROOT / 'data' / 'criterion1_days')
@@ -41,13 +41,13 @@ def main():
     day_progress = [progress(state) for state in states]
     daily_fields = [('date', 'Journée UTC'), ('block_count', 'Blocs analysés'),
                     ('block_coverage_pct', 'Couverture des blocs (%)'), ('tx_total', 'Transactions'),
-                    ('collected_fee_atom', 'Fees collectées (ATOM, tips inclus)'),
-                    ('collected_tip_atom', 'Dont tips (ATOM)'), ('fee_collection_status', 'Complétude des fees'),
+                    ('collected_fee_atom', 'Frais collectés (ATOM, tips inclus)'),
+                    ('collected_tip_atom', 'Dont tips (ATOM)'), ('fee_collection_status', 'Couverture des preuves de frais'),
                     ('fee_evidence_recovered', 'Frais attestés par transfert ante'),
                     ('estimated_emission_atom', 'Émission estimée sur les mêmes blocs (ATOM)'),
-                    ('fee_to_estimated_emission_pct', 'Fees / émission estimée (%)'),
+                    ('fee_to_estimated_emission_pct', 'Frais / émission estimée (%)'),
                     ('net_supply_change_atom', 'Variation nette supply sur les mêmes blocs (ATOM)'),
-                    ('fee_to_net_supply_increase_pct', 'Fees / hausse nette supply (%)'),
+                    ('fee_to_net_supply_increase_pct', 'Frais / hausse nette supply (%)'),
                     ('measured_block_interval_seconds', 'Durée entre états de blocs (s)'), ('burn_status', 'Burn effectif')]
     legacy = read_rows(ROOT / 'hub_revenue_daily.csv')
     published = []
@@ -63,7 +63,7 @@ def main():
 <h2>Critère 1 — journées UTC complètes</h2>
 <p>Une journée comprend tous les blocs horodatés entre 00:00 UTC inclus et le minuit suivant exclu.
 Les blocs précédant et suivant cet intervalle sont vérifiés. Une collecte partielle ne produit aucun total journalier.</p>
-<p>Les ratios comparent les fees aux états de supply et aux estimations d'émission sur les mêmes blocs.
+<p>Les ratios comparent les frais aux états de supply et aux estimations d'émission sur les mêmes blocs.
 L'intervalle entre ces états diffère de quelques secondes des 86 400 secondes civiles ; sa durée réelle est affichée.
 L'émission estimée est la somme des estimations de chaque lot, sans extrapoler les frais.
 Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisations USD journalières restent indisponibles.</p>
@@ -74,7 +74,7 @@ Aucun prix spot n'est utilisé comme prix historique journalier ; les valorisati
 <p>Chaque ligne représente les blocs indiqués, jamais un total journalier extrapolé.
 La durée va du timestamp du bloc précédent au timestamp du dernier bloc.
 Le pourcentage par jour mesure une couverture temporelle, pas une part de transactions ou de revenus journaliers.</p>
-<p>Les fees collectées sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Pour certaines transactions échouées, un transfert ante au module historique de frais, corroboré par les événements de débit et de crédit, atteste le paiement. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les fees collectées et ratios sont indisponibles.
+<p>Les frais collectés sont attestées par les événements tx/fee ou fee_pay/fee et tip_pay/tip. Pour certaines transactions échouées, un transfert ante au module historique de frais, corroboré par les événements de débit et de crédit, atteste le paiement. Les tips sont inclus une seule fois dans le total et présentés séparément. Si un événement manque, les frais collectés et ratios sont indisponibles.
 L'émission estimée applique le taux et la supply observés au début de la fenêtre à sa durée, sur une base de 365 jours ; elle n'est pas une émission brute mesurée.
 La variation de supply est nette et ne permet pas d'isoler le burn. Les frais ne sont jamais soustraits de la dilution.</p>
 <p>Le prix affiché est le spot horodaté à la collecte. Sa valorisation éventuelle est une valorisation à la collecte, pas un prix historique de la fenêtre.
@@ -83,8 +83,8 @@ Les snapshots de supply et d'inflation sont acceptés uniquement si la hauteur h
 <h2>Archives historiques — {len(legacy)} observations</h2>
 <p class="notice">Les deux CSV historiques sont conservés à l'identique. La couverture des blocs et les timestamps des snapshots y sont inconnus.
 Les anciens prix USD, taux d'inflation, ratios de couverture et calculs de dilution sont non validés ; ils ne sont pas affichés comme indicateurs fiables.
-Les fees archivées sont des montants déclarés dans les transactions, sans preuve de burn.</p>
-{table(legacy, [('date','Date archive'), ('tx_total','Transactions observées'), ('tx_ibc','Transactions IBC'), ('total_fee_atom','Fees déclarées observées (ATOM)')])}
+Les frais archivés sont des montants déclarés dans les transactions, sans preuve de burn.</p>
+{table(legacy, [('date','Date archive'), ('tx_total','Transactions observées'), ('tx_ibc','Transactions IBC'), ('total_fee_atom','Frais déclarés observées (ATOM)')])}
 <h2>Fichiers</h2><ul>{''.join(published)}</ul>
 '''
     volume = ROOT / 'ecosystem_out_usd_daily.csv'

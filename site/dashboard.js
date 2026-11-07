@@ -115,7 +115,7 @@ function startDashboard() {
     $("c1-date").textContent=a ? day(a.date)+" · UTC" : t("Aucune journée dans la période");
     $("c2-date").textContent=b ? day(b.date)+t(" · UTC commun") : t("Aucune journée commune");
     const feesKnown=a && a.fee_collection_status==="complete";
-    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Fees / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
+    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
     const metric=$("economy-metric").value;
     lineChart($("economy-chart"),c1.map(r=>({...r,[metric]:metric!=="estimated_emission_atom" && r.fee_collection_status!=="complete"?"":r[metric]})),metric,metric.endsWith("pct")?"%":"ATOM");
     $("c1-chart-caption").textContent=t("Journées UTC complètes · ")+$("economy-metric").selectedOptions[0].textContent;
