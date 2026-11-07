@@ -201,8 +201,6 @@ def audit_pending(*, budget_seconds, directory=None, audit_directory=AUDIT_DIR):
         for state in load_days(directory):
             if progress(state)['status'] != 'complete':
                 continue
-            if not any(int(chunk['tx_without_fee_event']) for chunk in state['chunks']):
-                continue
             day = state['date']
             audit = load_fee_audit(state, audit_directory)
             if audit is not None:
@@ -214,7 +212,7 @@ def audit_pending(*, budget_seconds, directory=None, audit_directory=AUDIT_DIR):
             if time.monotonic() >= deadline:
                 print('Fee audit time budget reached; saved chunks retained.', flush=True)
                 break
-            print(f'Auditing missing fee evidence for {day}', flush=True)
+            print(f'Auditing daily fee evidence for {day}', flush=True)
             try:
                 audit_day(day, directory=directory, audit_directory=audit_directory)
             except TimeoutError:

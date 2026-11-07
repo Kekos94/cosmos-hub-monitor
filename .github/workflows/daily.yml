@@ -70,7 +70,7 @@ jobs:
           START_DATE: ${{ inputs.start_date }}
         run: python run_criteria1_pipeline.py
 
-      - name: Audit missing fee evidence for complete days
+      - name: Audit fees for complete UTC days
         id: fee_audit
         if: inputs.publish_only != true
         continue-on-error: true

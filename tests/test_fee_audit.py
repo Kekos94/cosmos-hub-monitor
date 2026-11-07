@@ -137,6 +137,25 @@ class FeeAuditTests(unittest.TestCase):
                 self.assertFalse(verified_no_fee(dict(response, raw_log='failed to execute message: ' + log)))
                 self.assertFalse(verified_no_fee(dict(response, raw_log=log.replace('1915', '2000').replace('got 37', 'got 38'))))
 
+    def test_complete_day_with_all_fee_evidence_gets_one_audit_without_rpc(self):
+        state = plan()
+        state['chunks'] = [enrich(chunk(11, 14))]
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp) / 'days'
+            directory.mkdir()
+            audit_dir = Path(tmp) / 'audits'
+            (directory / (state['date'] + '.json')).write_text(json.dumps(state))
+            with patch('criterion1_fee_audit.payloads') as fetch:
+                self.assertFalse(audit_pending(budget_seconds=30, directory=directory, audit_directory=audit_dir))
+                audit = load_fee_audit(state, audit_dir)
+                self.assertTrue(audit['complete'])
+                self.assertEqual(audit['chunks'], [])
+                self.assertEqual(daily_summary(state, audit=audit)['fee_audit_status'], 'verified')
+                with patch('criterion1_fee_audit.audit_day') as audit_again:
+                    self.assertFalse(audit_pending(budget_seconds=30, directory=directory, audit_directory=audit_dir))
+                    audit_again.assert_not_called()
+                fetch.assert_not_called()
+
     def test_pending_audit_resumes_only_complete_days_with_missing_evidence(self):
         state, audit = fixture()
         partial = dict(state, date='2026-11-06', chunks=[])
