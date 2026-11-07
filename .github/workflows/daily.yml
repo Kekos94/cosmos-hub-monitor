@@ -33,7 +33,7 @@ concurrency:
 jobs:
   run:
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 60
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
@@ -63,7 +63,7 @@ jobs:
         if: inputs.publish_only != true
         continue-on-error: true
         env:
-          COLLECT_BUDGET_SECONDS: "1200"
+          COLLECT_BUDGET_SECONDS: "1800"
           CHUNK_BLOCKS: "120"
           COLLECT_WORKERS: "2"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
