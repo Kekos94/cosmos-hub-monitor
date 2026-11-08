@@ -56,8 +56,9 @@ Le dashboard français et anglais propose un choix de sens des flux ; les
 tableaux détaillés décrivent également les réceptions rejetées ou non confirmées.
 La rubrique de qualité suit séparément l'avancement entrant de chaque chaîne.
 
-Le collecteur exécute les deux sens par défaut avec un budget total réparti
-(un quart pour les sorties, trois quarts pour les entrées). `--direction in`
+Le collecteur exécute les deux sens par défaut avec un budget total de
+40 minutes, réparti à parts égales entre les sorties et les entrées. Chaque
+sens dispose de 20 minutes, soit jusqu’à 5 minutes par chaîne avec quatre chaînes. `--direction in`
 ou `--direction out` permet une reprise indépendante. Une erreur d'un sens
 n'empêche pas la tentative de l'autre ; elle reste signalée en fin d'exécution.
 Les plages vérifiées sont conservées pour l'exécution suivante.
@@ -210,14 +211,14 @@ Exports racine, puis copies dans `site/` :
 | `site/criterion2.html` | Page dédiée avec limites méthodologiques visibles |
 
 `.github/workflows/daily_criteria2.yml` est indépendant du pipeline Économie du Hub.
-Il est programmé chaque heure à la minute 07 et se déclenche aussi sur les
-modifications de ses scripts/configuration/tests. Les heures GitHub Actions
-restent indicatives. Le budget par défaut est de 20 minutes, réparti entre
-les chaînes ; les pages/plages terminées sont conservées après un échec.
-L'export de prix dispose de son propre budget limité.
+Il est programmé à 6 h 17, heure de Paris, avec un rattrapage à 12 h 17
+en cas d’échec ou de couverture incomplète. Les heures GitHub Actions restent
+indicatives. Le workflow dispose de 90 minutes au maximum pour la collecte,
+les confirmations, les transits, les contrôles RWA et la publication. Les
+plages terminées sont conservées pour la reprise.
 
 Les deux workflows utilisent le même verrou d'écriture du dépôt pour éviter
-les pushes et publications simultanés. La page du critère 2 est publiée à part ;
+les pushes et publications simultanés. La page 1B est publiée à part ;
 le workflow 1B publie ses propres calculs et CSV.
 Les erreurs de collecte sont signalées après sauvegarde du progrès vérifié,
 et les publications GitHub Pages disposent de trois tentatives espacées.

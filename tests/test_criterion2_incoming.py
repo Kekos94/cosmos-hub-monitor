@@ -96,6 +96,7 @@ class IncomingTests(unittest.TestCase):
         with patch('sys.argv',['collector','--budget','100']),patch.object(pipeline,'run_collection',side_effect=[RuntimeError('outgoing unavailable'),None]) as collect:
             with self.assertRaises(RuntimeError):pipeline.main()
         self.assertEqual(collect.call_count,2)
+        self.assertEqual([call.kwargs['budget'] for call in collect.call_args_list], [50, 50])
         self.assertNotEqual(collect.call_args_list[0].kwargs['root'],collect.call_args_list[1].kwargs['root'])
     def test_four_chain_exports_exclude_errors_and_unknowns_from_value(self):
         with tempfile.TemporaryDirectory() as tmp:

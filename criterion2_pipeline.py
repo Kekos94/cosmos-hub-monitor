@@ -345,14 +345,17 @@ def run_collection(cfg,uid,*,budget=1200,start_date=None,root=DATA):
 
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--budget',type=int,default=int(os.environ.get('CRITERION2_BUDGET_SECONDS','1200')))
+    parser=argparse.ArgumentParser();parser.add_argument('--budget',type=int,default=int(os.environ.get('CRITERION2_BUDGET_SECONDS','2400')))
     parser.add_argument('--start-date',default=os.environ.get('START_DATE') or None)
     parser.add_argument('--direction',choices=['out','in','both'],default='both')
     args=parser.parse_args();cfg,uid=load_config()
     errors=[]
     for direction in (['out','in'] if args.direction=='both' else [args.direction]):
         selected,selected_uid=(cfg,uid) if direction=='out' else incoming_config()
-        budget=args.budget if args.direction!='both' else max(1,args.budget//4 if direction=='out' else args.budget*3//4)
+        budget = args.budget
+        if args.direction == 'both':
+            incoming_budget = args.budget // 2
+            budget = max(1, args.budget - incoming_budget if direction == 'out' else incoming_budget)
         try:
             run_collection(selected,selected_uid,budget=budget,start_date=args.start_date,root=DATA if direction=='out' else IN_DATA)
         except Exception as exc:
