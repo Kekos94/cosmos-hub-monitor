@@ -1,9 +1,13 @@
 universe_id,date,chain,chain_id,coverage_status,indexed_transactions_saved,indexed_transactions_total,observed_packets_saved,source
 a531449b14fe390e,2026-11-05,cosmoshub,cosmoshub-4,indexed_complete,2101,2101,2106,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,cosmoshub,cosmoshub-4,indexed_complete,1783,1783,1783,https://cosmos-rpc.polkachu.com
+a531449b14fe390e,2026-11-07,cosmoshub,cosmoshub-4,indexed_complete,1821,1821,1822,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,injective,injective-1,indexed_complete,739,739,744,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,injective,injective-1,indexed_complete,585,585,590,https://injective-rpc.polkachu.com
+a531449b14fe390e,2026-11-07,injective,injective-1,indexed_complete,619,619,620,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,noble,noble-1,indexed_complete,1177,1177,1182,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,noble,noble-1,indexed_complete,734,734,736,https://noble-rpc.polkachu.com
+a531449b14fe390e,2026-11-07,noble,noble-1,indexed_complete,509,509,509,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,osmosis,osmosis-1,indexed_complete,3551,3551,3626,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,osmosis,osmosis-1,indexed_complete,2627,2627,2652,https://osmosis-rpc.polkachu.com
+a531449b14fe390e,2026-11-07,osmosis,osmosis-1,indexed_complete,2423,2423,2455,https://osmosis-rpc.polkachu.com

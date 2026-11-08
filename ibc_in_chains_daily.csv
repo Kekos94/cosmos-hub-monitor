@@ -1,9 +1,13 @@
 universe_id,date,chain,chain_id,coverage_status,scope,observed_packets,received_packets,error_ack_packets,unconfirmed_packets,priced_packets,unpriced_packets,valued_in_usd,total_in_usd,receipt_evidence_status
 a531449b14fe390e,2026-11-05,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,2106,1733,3,370,580,1153,165764.92031861435200121868754480,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1783,1586,1,196,440,1146,78574.6556122547634118991438,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-07,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1822,1703,0,119,531,1172,90429.1508508069958649394095,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,744,491,3,250,451,40,2400809.020200820416306598143633449678756,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,590,409,4,177,387,22,532978.012830697214894211795766297279558,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-07,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,620,469,2,149,382,87,203157.61582064988125930028289196305736,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,1182,456,1,725,455,1,1008427.9809264113789817787488,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,736,328,1,407,326,2,2470640.7791493571221381684752,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-07,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,509,253,0,256,249,4,1259067.082423584292920598047,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,3626,1840,75,1711,1469,371,1238083.025396857355124063793736337492651966,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2652,1244,29,1379,1144,100,1125919.08698797442896433358249629006650122,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-07,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2455,792,28,1635,493,299,413977.31346367105064886114646971051688,,receive_transaction_ack_only
