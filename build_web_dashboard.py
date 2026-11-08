@@ -31,7 +31,7 @@ def english(document, catalog):
         return '>'+html.escape(translated,quote=False)+'<'
     document=re.sub(r'>([^<>]*)<',translate,document)
     document=document.replace('<html lang="fr">','<html lang="en">').replace('Navigation principale','Main navigation')
-    for name in ('index','criterion1','criterion2'):
+    for name in ('index','criterion1','criterion2','community-pool'):
         document=re.sub(rf'href="{name}\.html(?=["#])', f'href="{name}-en.html', document)
     document=document.replace('href="index-en.html" lang="fr"','href="index.html" lang="fr"')
     document=document.replace('href="index-en.html" lang="en"','href="index-en.html" lang="en" aria-current="page"')
@@ -90,7 +90,7 @@ def payload(root=ROOT):
 
 def main(root=ROOT):
     root = Path(root); site = root / 'site'; site.mkdir(exist_ok=True)
-    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv','hub_criterion1_emission_daily.csv','hub_criterion1_eureka_daily.csv'):
+    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv','hub_criterion1_emission_daily.csv','hub_criterion1_eureka_daily.csv','hub_community_pool_deposits.csv'):
         if (root/name).exists():shutil.copy2(root/name,site/name)
     data = payload(root)
     encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')
@@ -111,6 +111,8 @@ def main(root=ROOT):
             (site/(name+'-en.html')).write_text(page,encoding='utf-8')
     for name in ('dashboard.css', 'dashboard.js'):
         shutil.copy2(root / 'web' / name, site / name)
+    from community_pool_page import build as build_community_pool
+    build_community_pool(root)
     print('Public dashboard generated from saved data; measurements unchanged.')
 
 

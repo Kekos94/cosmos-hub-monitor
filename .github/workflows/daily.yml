@@ -184,6 +184,16 @@ jobs:
             python criterion1_eureka.py --collect 120
           fi
 
+      - name: Refresh the community-pool deposit register
+        env:
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: |
+          if test "${{ inputs.publish_only }}" = "true"; then
+            python community_pool_deposits.py
+          else
+            python community_pool_deposits.py --collect 75
+          fi
+
       - name: Generate HTML dashboard
         run: python generate_dashboard_html.py
 
@@ -192,6 +202,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hub_criterion1_daily_complete.csv site/hub_criterion1_daily_complete.csv
+          git add hub_community_pool_deposits.csv site/hub_community_pool_deposits.csv
+          git add site/community-pool.html site/community-pool-en.html
+          if test -f data/criterion1_community_pool.json; then
+            git add data/criterion1_community_pool.json
+          fi
           git add hub_criterion1_eureka_daily.csv site/hub_criterion1_eureka_daily.csv
           if test -d data/criterion1_eureka_ethereum; then
             git add data/criterion1_eureka_ethereum

@@ -83,6 +83,8 @@ class DashboardTests(unittest.TestCase):
             self.assertNotIn('critère 3', fr.casefold())
             self.assertNotIn('criterion 3', en.casefold())
             self.assertIn('href="criterion2-en.html#transit"', en)
+            self.assertIn('href="community-pool-en.html"', en)
+            self.assertIn('href="index-en.html#eureka"', (root/'site/community-pool-en.html').read_text())
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
         catalog=json.loads((dashboard.ROOT/'web/en.json').read_text())

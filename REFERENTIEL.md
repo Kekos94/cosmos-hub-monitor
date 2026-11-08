@@ -39,6 +39,14 @@ dans l’index RPC. Une transaction mixte est comptée une seule fois avec ses
 frais complets. Les frais de relais sont hors du périmètre. La route initiale
 est définie dans le [registre de déploiement Eureka](https://github.com/cosmos/eureka-ops/blob/main/deployments/mainnet/1.json).
 
+## Versements au fonds communautaire
+
+La page `community-pool.html` présente les transferts explicites vers le fonds,
+tous actifs confondus, avec transaction et attribution. Le registre dépend de
+l’index RPC et affiche ses bornes. Les crédits automatiques restent hors de son
+périmètre. Le workflow Économie actualise le relevé et conserve le dernier
+instantané si le fournisseur ne reproduit pas les versements déjà vérifiés.
+
 ## Pistes de suivi reportées
 
 - **1B** — Veille des nouvelles émissions RWA et des premiers passages par Cosmos Hub.
