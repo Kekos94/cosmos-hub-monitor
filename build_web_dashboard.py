@@ -64,6 +64,7 @@ def payload(root=ROOT):
     return dict(generated_at=datetime.now(timezone.utc).isoformat(), universe_id=uid,
                 members=[c['name'] for c in cfg['chains']],
                 criterion1=sorted(c1, key=lambda r:r['date']),
+                eureka=rows(root, 'hub_criterion1_eureka_daily.csv'),
                 emission=[{key: value for key, value in row.items() if key != 'criterion3_status'}
                           for row in rows(root, 'hub_criterion1_emission_daily.csv')],
                 criterion1_progress=[progress(s) for s in load_days(root / 'data/criterion1_days')],
@@ -89,7 +90,7 @@ def payload(root=ROOT):
 
 def main(root=ROOT):
     root = Path(root); site = root / 'site'; site.mkdir(exist_ok=True)
-    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv','hub_criterion1_emission_daily.csv'):
+    for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv','hub_criterion1_emission_daily.csv','hub_criterion1_eureka_daily.csv'):
         if (root/name).exists():shutil.copy2(root/name,site/name)
     data = payload(root)
     encoded = json.dumps(data, ensure_ascii=False).replace('<', '\\u003c').replace('>', '\\u003e').replace('&', '\\u0026')

@@ -25,10 +25,23 @@ avec les preuves associées.
 | **1C — Revenus** | Frais du Hub et frais IBC collectés, avec audit des preuves de paiement. L’attribution d’une recette supplémentaire exige un paiement vérifiable, son origine et sa destination. | [Économie du Hub](run_criterion1_economy_pipeline.py) |
 | **1D — Émission et couverture économique** | Inflation horodatée, variation de l’offre et comparaison des frais avec l’émission sur les mêmes blocs. L’audit réconcilie les créations et destructions d’ATOM avec l’offre et alimente le taux du critère 3. [Méthode de l’audit](EMISSION.md) | [Économie du Hub](run_criterion1_economy_pipeline.py) |
 
+## Ventilation Eureka du sous-critère 1C
+
+Le workflow Économie publie les frais payés au Hub par les transactions réussies
+associées à la route Eureka Ethereum. Le collecteur parcourt les événements de
+paquets indexés, vérifie le couple de clients du Hub et d’Ethereum, puis
+déduplique par identifiant de transaction. Les preuves de frais existantes
+servent au calcul. Si une preuve manque, le total de la journée reste indisponible.
+La part utilise les frais du Hub vérifiés sur les mêmes blocs.
+
+Le CSV `hub_criterion1_eureka_daily.csv` couvre le sous-ensemble identifiable
+dans l’index RPC. Une transaction mixte est comptée une seule fois avec ses
+frais complets. Les frais de relais sont hors du périmètre. La route initiale
+est définie dans le [registre de déploiement Eureka](https://github.com/cosmos/eureka-ops/blob/main/deployments/mainnet/1.json).
+
 ## Pistes de suivi reportées
 
 - **1B** — Veille des nouvelles émissions RWA et des premiers passages par Cosmos Hub.
-- **1C** — Ventiler les frais de transaction Eureka déjà inclus dans les frais du Hub. Suivre séparément les frais de relais.
 - **1C** — Vérifier les versements liés à l’accord Injective USDC, puis documenter les éventuels rachats d’ATOM et leur transfert au fonds communautaire.
 
 ## Noms et compatibilité

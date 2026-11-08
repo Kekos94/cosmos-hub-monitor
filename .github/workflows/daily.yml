@@ -174,6 +174,16 @@ jobs:
       - name: Validate checkpoints and build daily export
         run: python inflation_overlay.py
 
+      - name: Attribute Hub transaction fees to Ethereum Eureka
+        env:
+          HTTP_MIN_INTERVAL_SECONDS: "1.0"
+        run: |
+          if test "${{ inputs.publish_only }}" = "true"; then
+            python criterion1_eureka.py
+          else
+            python criterion1_eureka.py --collect 120
+          fi
+
       - name: Generate HTML dashboard
         run: python generate_dashboard_html.py
 
@@ -182,6 +192,10 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add hub_criterion1_daily_complete.csv site/hub_criterion1_daily_complete.csv
+          git add hub_criterion1_eureka_daily.csv site/hub_criterion1_eureka_daily.csv
+          if test -d data/criterion1_eureka_ethereum; then
+            git add data/criterion1_eureka_ethereum
+          fi
           git add hub_criterion1_emission_daily.csv site/hub_criterion1_emission_daily.csv
           if test -d data/criterion1_emission; then
             git add data/criterion1_emission

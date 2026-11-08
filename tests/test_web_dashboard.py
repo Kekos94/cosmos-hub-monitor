@@ -76,6 +76,8 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('CRITERION 1 · SUBCRITERION 1B', en)
             self.assertIn('1A — IBC activity on the Hub', en)
             self.assertIn('1D — Measured monetary issuance', en)
+            self.assertIn('1C — Hub fees from Ethereum Eureka transactions', en)
+            self.assertIn('href="hub_criterion1_eureka_daily.csv"', en)
             self.assertIn('href="hub_criterion1_emission_daily.csv"', en)
             self.assertIn('365-day monetary inflation', en)
             self.assertNotIn('critère 3', fr.casefold())

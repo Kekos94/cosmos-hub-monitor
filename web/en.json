@@ -440,5 +440,15 @@
   "Écart avec l’offre observée · {gap} ATOM": "Discrepancy with observed supply · {gap} ATOM",
   "Audit en cours · {count} / {total} blocs": "Audit in progress · {count} / {total} blocks",
   "Le taux annualisé projette le rythme de la journée. Le taux sur 365 jours repose sur 365 journées consécutives dont les mouvements ont été réconciliés avec l’offre.": "The annualised rate projects the daily pace. The 365-day rate requires 365 consecutive days of supply reconciliation.",
-  "Historique de 365 jours réconciliés requis": "365 reconciled days required"
+  "Historique de 365 jours réconciliés requis": "365 reconciled days required",
+  "1C — Frais du Hub liés à Eureka Ethereum": "1C — Hub fees from Ethereum Eureka transactions",
+  "Transactions réussies identifiées par les événements de paquets. Les montants font déjà partie des frais du Hub.": "Successful transactions identified by packet events. These amounts are included in Hub fees.",
+  "Frais Eureka · CSV ↓": "Eureka fees · CSV ↓",
+  "Périmètre de l’index du fournisseur. Les frais de relais sont exclus.": "Coverage depends on the provider index. Relay fees are excluded.",
+  "Transactions Eureka identifiées": "Identified Eureka transactions",
+  "Route Ethereum": "Ethereum route",
+  "Frais collectés sur le Hub": "Fees collected on the Hub",
+  "Frais des transactions identifiées": "Fees on identified transactions",
+  "Part des frais du Hub": "Share of Hub fees",
+  "Même journée UTC": "Same UTC day"
 }
