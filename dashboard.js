@@ -122,6 +122,11 @@ function startDashboard() {
       card(t("Part des transactions IBC"), fmt(totalTx > 0 && ibcTx !== null ? ibcTx / totalTx * 100 : null), "%", t("Parmi les transactions du Hub"));
     const feesKnown=a && a.fee_collection_status==="complete";
     $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"))+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
+    const eureka = (data.eureka || []).find(row => row.date === a?.date);
+    $("eureka-cards").innerHTML =
+      card(t("Transactions Eureka identifiées"), fmt(eureka?.indexed_transactions, 0), "", t("Route Ethereum")) +
+      card(t("Frais collectés sur le Hub"), fmt(eureka?.collected_fee_atom, 6), "ATOM", t("Frais des transactions identifiées")) +
+      card(t("Part des frais du Hub"), fmt(eureka?.share_of_hub_fees_pct, 4), "%", t("Même journée UTC"));
     const audits = new Map((data.emission || []).map(row => [row.date, row]));
     const metric=$("economy-metric").value;
     const economy = c1.map(row => {
