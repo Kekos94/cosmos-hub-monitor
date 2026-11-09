@@ -1,11 +1,9 @@
 name: Criterion 1B — Multichain IBC flows
 
 on:
-  schedule:
-    - cron: "17 6 * * *"
-      timezone: "Europe/Paris"
-    - cron: "17 12 * * *"
-      timezone: "Europe/Paris"
+  workflow_run:
+    workflows: ['Criterion 1A, 1C, 1D — Hub economy']
+    types: [completed]
   workflow_dispatch:
     inputs:
       start_date:
@@ -27,21 +25,25 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  check_morning:
-    if: github.event_name == 'schedule' && github.event.schedule == '17 12 * * *'
+  check_economy:
+    if: >-
+      github.event_name == 'workflow_run' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.head_branch == github.event.repository.default_branch &&
+      github.event.workflow_run.head_repository.full_name == github.repository
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       actions: read
       contents: read
     outputs:
-      skip: ${{ steps.check.outputs.skip }}
+      ready: ${{ steps.check.outputs.ready }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ github.ref_name }}
+          ref: ${{ github.event.repository.default_branch }}
           persist-credentials: false
-      - name: Check the morning run and UTC day coverage
+      - name: Verify the completed Economy collection
         id: check
         env:
           GH_TOKEN: ${{ github.token }}
@@ -52,65 +54,43 @@ jobs:
           import os
           from datetime import datetime, timedelta, timezone
           from pathlib import Path
-          from urllib.parse import urlencode
           from urllib.request import Request, urlopen
-          from zoneinfo import ZoneInfo
 
-          query = urlencode({
-              'event': 'schedule', 'branch': os.environ['GITHUB_REF_NAME'], 'per_page': 30,
-          })
+          event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
+          run = event['workflow_run']
           url = (f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
-                 f"/actions/workflows/daily_criteria2.yml/runs?{query}")
+                 f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs")
           request = Request(url, headers={
               'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
               'Accept': 'application/vnd.github+json',
           })
-          paris = ZoneInfo('Europe/Paris')
-
-          def created(run):
-              return datetime.fromisoformat(run['created_at'].replace('Z', '+00:00')).astimezone(paris)
-
-          def rows_for(path, day):
-              with open(path, newline='', encoding='utf-8') as stream:
-                  return [row for row in csv.DictReader(stream) if row['date'] == day]
-
-          try:
-              with urlopen(request, timeout=15) as response:
-                  runs = json.load(response)['workflow_runs']
-              current = next(run for run in runs if str(run['id']) == os.environ['GITHUB_RUN_ID'])
-              cutoff = created(current)
-              morning = max(
-                  (run for run in runs if created(run).date() == cutoff.date() and created(run) < cutoff),
-                  key=created, default=None,
+          with urlopen(request, timeout=15) as response:
+              jobs = json.load(response)['jobs']
+          collected = any(
+              job['name'] == 'run' and job['conclusion'] == 'success' and
+              any(step['name'] == 'Collect complete UTC days with checkpoints' and
+                  step['conclusion'] == 'success' for step in job.get('steps') or [])
+              for job in jobs
+          )
+          started = datetime.fromisoformat(run['run_started_at'].replace('Z', '+00:00'))
+          day = (started.astimezone(timezone.utc).date() - timedelta(days=1)).isoformat()
+          with open('hub_criterion1_daily_complete.csv', newline='', encoding='utf-8') as stream:
+              complete = any(
+                  row['date'] == day and row['chain_id'] == 'cosmoshub-4' and
+                  row['coverage_status'] == 'complete_utc_day_blocks' and row['block_coverage_pct'] == '100'
+                  for row in csv.DictReader(stream)
               )
-              if morning and morning['conclusion'] == 'success':
-                  day = (cutoff.astimezone(timezone.utc).date() - timedelta(days=1)).isoformat()
-                  config = json.loads(Path('config/criterion2_chains.json').read_text())
-                  expected = {chain['chain_id'] for chain in config['chains']}
-                  net = rows_for('site/ibc_net_chains_daily.csv', day)
-                  transit = rows_for('site/ibc_transit_daily.csv', day)
-                  # A common indexed day requires both directions and all lifecycle streams.
-                  complete = (
-                      {row['chain_id'] for row in net} == expected
-                      and all(row['coverage_status'] == 'common_indexed_day' for row in net)
-                      and bool(transit)
-                      and all(row['collection_status'] == 'candidate_proofs_complete' for row in transit)
-                  )
-                  if complete:
-                      with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
-                          output.write('skip=true\n')
-                      print(f"Morning run {morning['id']} succeeded and IBC coverage for {day} is complete.")
-                  else:
-                      print(f'IBC coverage for {day} is missing or incomplete. Starting recovery.')
-              else:
-                  print('No successful morning run found. Starting recovery.')
-          except (OSError, ValueError, KeyError, StopIteration) as exc:
-              print(f'Could not check morning run or coverage ({exc}). Starting recovery.')
+          if collected and complete:
+              with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
+                  output.write('ready=true\n')
+              print(f'Economy collection for {day} is complete. Starting IBC.')
+          else:
+              print(f'No completed Economy collection for {day} in this attempt. IBC skipped.')
           PYTHON
 
   criterion2:
-    needs: check_morning
-    if: ${{ !cancelled() && needs.check_morning.outputs.skip != 'true' }}
+    needs: check_economy
+    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.check_economy.outputs.ready == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
