@@ -75,6 +75,8 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('CRITÈRE 1 · SOUS-CRITÈRE 1B', fr)
             self.assertIn('CRITERION 1 · SUBCRITERION 1B', en)
             self.assertIn('1A — IBC activity on the Hub', en)
+            self.assertIn('Inflows and outflows for the selected asset', en)
+            self.assertIn('id="net-flow-bars"', fr)
             self.assertIn('1D — Measured monetary issuance', en)
             self.assertIn('1C — Hub fees from Ethereum Eureka transactions', en)
             self.assertIn('href="hub_criterion1_eureka_daily.csv"', en)
