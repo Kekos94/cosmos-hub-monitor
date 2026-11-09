@@ -107,6 +107,22 @@ class WindowTests(unittest.TestCase):
         cc,aa=self.repeat(dates);chains,assets=self.result(cc,aa)
         for length in [7,30,90]:
             r=self.asset(assets,length);self.assertEqual(r['covered_days'],length);self.assertEqual(Decimal(r['net_amount']),Decimal(2*length));self.assertEqual(Decimal(self.chain(chains,length)['total_net_usd']),Decimal(4*length))
+    def test_calendar_totals_split_week_month_and_year_boundaries(self):
+        cc, aa = self.repeat(['2026-10-31', '2026-11-01', '2026-11-02', END])
+        chains, assets = calculate(cc, aa, self.cfg, UID, end_date=END, lengths=(), calendar=True)
+        periods = {(r['period_kind'], r['end_date']): r for r in chains if r['chain'] == 'cosmoshub'}
+        self.assertEqual(periods['week', '2026-11-01']['start_date'], '2026-10-26')
+        self.assertEqual(periods['week', END]['start_date'], '2026-11-02')
+        self.assertEqual(periods['month', '2026-10-31']['covered_days'], 1)
+        self.assertEqual(periods['month', END]['start_date'], '2026-11-01')
+        self.assertEqual(periods['month', END]['covered_days'], 3)
+        self.assertEqual(periods['year', END]['start_date'], '2026-01-01')
+        self.assertEqual(periods['year', END]['covered_days'], 4)
+        self.assertEqual(periods['year', END]['total_net_usd'], '')
+        year_atom = next(r for r in assets if r['period_kind'] == 'year' and r['chain'] == 'cosmoshub')
+        self.assertEqual(year_atom['observed_net_amount'], '8')
+        self.assertEqual(year_atom['net_amount'], '')
+
     def test_wrong_daily_price_reference_is_rejected(self):
         cc,aa=self.repeat(DAYS);aa[0]['reference_time_utc']='2026-01-01T00:00:00Z'
         with self.assertRaisesRegex(ValueError,'reference date'):self.result(cc,aa)

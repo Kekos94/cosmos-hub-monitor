@@ -1,4 +1,4 @@
-"""Rolling calendar windows from validated daily nets; missing days are not zero."""
+"""Rolling and calendar periods from validated daily nets."""
 import csv
 from collections import defaultdict
 from datetime import date,datetime,timedelta,timezone
@@ -11,7 +11,7 @@ from criterion2_export import write_csv
 from criterion2_net import config
 
 LENGTHS=(7,30,90)
-BASE='universe_id outgoing_universe_id incoming_universe_id date start_date end_date window_days chain chain_id covered_days missing_days covered_dates missing_dates coverage_status evidence_through_utc evidence_status'.split()
+BASE='universe_id outgoing_universe_id incoming_universe_id date start_date end_date window_days period_kind chain chain_id covered_days missing_days covered_dates missing_dates coverage_status evidence_through_utc evidence_status'.split()
 ASSET=BASE+'''denom symbol decimals coingecko_id metadata_status incoming_success_packets outgoing_success_packets excluded_packets unresolved_packets confirmed_in_raw confirmed_out_raw known_net_raw observed_net_raw net_raw confirmed_in_amount confirmed_out_amount observed_net_amount net_amount observed_net_usd net_usd observed_settlement_status valuation_status'''.split()
 CHAIN=BASE+'''observed_packets incoming_success_packets outgoing_success_packets excluded_packets unresolved_packets unknown_payload_packets assets valued_assets unpriced_assets valued_in_usd valued_out_usd valued_net_usd total_in_usd total_out_usd total_net_usd net_status'''.split()
 
@@ -40,7 +40,31 @@ def sum_values(values):
         return sum((number(v) for v in values),Decimal(0))
 
 
-def calculate(chain_rows,asset_rows,cfg,uid,*,end_date,lengths=LENGTHS):
+def calendar_bounds(day, kind):
+    if kind == 'week':
+        first = day - timedelta(days=day.weekday())
+        return first, first + timedelta(days=6)
+    if kind == 'month':
+        first = day.replace(day=1)
+        following = (first.replace(day=28) + timedelta(days=4)).replace(day=1)
+        return first, following - timedelta(days=1)
+    return day.replace(month=1, day=1), day.replace(month=12, day=31)
+
+
+def periods(end, dates, lengths, calendar):
+    for length in lengths:
+        if length not in LENGTHS:
+            raise ValueError('Unsupported rolling window')
+        yield 'rolling', end - timedelta(days=length-1), end
+    if calendar:
+        for kind in ('week', 'month', 'year'):
+            bounds = {calendar_bounds(day, kind) for day in dates if day <= end}
+            bounds.add(calendar_bounds(end, kind))
+            for first, last in sorted(bounds):
+                yield kind, first, min(last, end)
+
+
+def calculate(chain_rows,asset_rows,cfg,uid,*,end_date,lengths=LENGTHS,calendar=False):
     end=date.fromisoformat(end_date);members={c['name']:c['chain_id'] for c in cfg['chains']}
     days={};assets={};by_chain_day=defaultdict(dict)
     for r in chain_rows:
@@ -85,9 +109,10 @@ def calculate(chain_rows,asset_rows,cfg,uid,*,end_date,lengths=LENGTHS):
         if sum(integer(a,'incoming_success_packets') for a in children.values())!=integer(r,'incoming_success_packets') or sum(integer(a,'outgoing_success_packets') for a in children.values())!=integer(r,'outgoing_success_packets'):
             raise ValueError('Daily successful packet counts do not reconcile')
     chain_output=[];asset_output=[]
-    for length in lengths:
-        if length not in LENGTHS:raise ValueError('Unsupported calendar window')
-        first=end-timedelta(days=length-1);wanted=[str(first+timedelta(days=i)) for i in range(length)];covered=[];cutoffs=set()
+    dates = {date.fromisoformat(day) for day, _ in days}
+    for kind, first, last in periods(end, dates, lengths, calendar):
+        length = (last - first).days + 1
+        wanted=[str(first+timedelta(days=i)) for i in range(length)];covered=[];cutoffs=set()
         for day in wanted:
             selected=[days.get((day,c)) for c in members]
             if all(r and r['coverage_status']=='common_indexed_day' for r in selected):
@@ -100,8 +125,8 @@ def calculate(chain_rows,asset_rows,cfg,uid,*,end_date,lengths=LENGTHS):
             selected=[days[(d,chain)] for d in covered]
             out_ids={r['outgoing_universe_id'] for r in selected};in_ids={r['incoming_universe_id'] for r in selected}
             if len(out_ids)>1 or len(in_ids)>1:raise ValueError('Window input universe changed within period')
-            base=dict(universe_id=uid,outgoing_universe_id=next(iter(out_ids),'') ,incoming_universe_id=next(iter(in_ids),''),date=str(end),start_date=str(first),end_date=str(end),
-              window_days=length,chain=chain,chain_id=chain_id,covered_days=len(covered),missing_days=len(missing),covered_dates=';'.join(covered),missing_dates=';'.join(missing),
+            base=dict(universe_id=uid,outgoing_universe_id=next(iter(out_ids),'') ,incoming_universe_id=next(iter(in_ids),''),date=str(last),start_date=str(first),end_date=str(last),
+              window_days=length,period_kind=kind,chain=chain,chain_id=chain_id,covered_days=len(covered),missing_days=len(missing),covered_dates=';'.join(covered),missing_dates=';'.join(missing),
               coverage_status=status,evidence_through_utc=next(iter(cutoffs)) if consistent else '',evidence_status='common_cutoff' if consistent else 'mixed_cutoffs' if cutoffs else 'unavailable')
             sums={f:sum(integer(r,f) for r in selected) for f in ('observed_packets','incoming_success_packets','outgoing_success_packets','excluded_packets','unresolved_packets','unknown_payload_packets')}
             denoms=sorted({denom for d in covered for denom in by_chain_day[(d,chain)]})
@@ -155,7 +180,7 @@ def exports(root=ROOT,*,end_date=None):
     root=Path(root);cfg,_,_,uid=config(root/'config/criterion2_chains.json')
     end_date=end_date or str(datetime.now(timezone.utc).date()-timedelta(days=1))
     if date.fromisoformat(end_date)>=datetime.now(timezone.utc).date():raise ValueError('Rolling window must end on a closed UTC day')
-    chains,assets=calculate(rows(root/'ibc_net_chains_daily.csv'),rows(root/'ibc_net_assets_daily.csv'),cfg,uid,end_date=end_date)
+    chains,assets=calculate(rows(root/'ibc_net_chains_daily.csv'),rows(root/'ibc_net_assets_daily.csv'),cfg,uid,end_date=end_date,calendar=True)
     write_csv(root/'ibc_net_windows_chains_latest.csv',chains,CHAIN);write_csv(root/'ibc_net_windows_assets_latest.csv',assets,ASSET)
     return chains,assets
 

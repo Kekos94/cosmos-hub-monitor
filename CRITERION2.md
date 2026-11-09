@@ -478,3 +478,17 @@ historiques. USYC reste candidat tant que son identité mainnet n'est pas établ
 Le filtre RWA du dashboard affiche les montants confirmés et le solde par
 produit et par journée, ainsi que les transits PFM identifiés. Les identités
 en attente sont signalées et les montants restent en unités du produit.
+
+### Cumuls civils des flux nets
+
+Le sélecteur 1B propose les semaines civiles du lundi au dimanche, les mois
+civils et les années civiles, en UTC. Il permet de choisir une période
+historique disponible. La période qui contient la dernière journée UTC
+terminée s’arrête à cette journée. Les fenêtres glissantes 7, 30 et 90 jours
+restent disponibles.
+
+Les exports des cumuls distinguent les types de période dans `period_kind`.
+Chaque cumul additionne les entrées et sorties réussies des jours communs
+aux quatre chaînes. Les actifs restent séparés. La valorisation USD reprend
+la référence historique de chaque journée. Les jours manquants, les preuves
+incompatibles et les prix absents limitent le total publié.
