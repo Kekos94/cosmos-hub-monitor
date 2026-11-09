@@ -184,6 +184,38 @@ function startDashboard() {
     $("lifecycle-note").textContent=t("Les cas sans conclusion restent inconnus. Les répétitions sans effet sont exclues ; un remboursement vérifié exige un mouvement bancaire correspondant. Une recherche complète ne signifie pas que tous les paquets sont résolus. Les séries brutes restent inchangées ; les flux nets sont présentés séparément ci-dessous.");
 
   }
+  function renderNetBars(asset) {
+    const el = $("net-flow-bars");
+    const series = [
+      {label: t("Entrées réussies"), value: asset?.confirmed_in_amount, color: "#315cf4"},
+      {label: t("Sorties réussies"), value: asset?.confirmed_out_amount, color: "#c72f46"},
+    ];
+    const values = series.map(row => Monitor.number(row.value));
+    if (values.every(value => value === null)) {
+      return empty(el, t("Aucun flux disponible pour cet actif sur la période."));
+    }
+    const max = Math.max(...values.filter(value => value !== null)) || 1;
+    const unit = asset.symbol || t("unités inconnues");
+    const svg = svgEl("svg", {viewBox: "0 0 520 220", role: "img",
+      "aria-label": t("Entrées et sorties de l’actif sélectionné")});
+    svg.append(svgEl("line", {x1: 50, x2: 470, y1: 170, y2: 170, stroke: "#9ba8ba"}));
+    series.forEach((row, index) => {
+      const x = 155 + index * 210;
+      const value = values[index];
+      const label = value === null ? t("Indisponible") : `${Monitor.amount(row.value, locale)} ${unit}`;
+      const height = value === null ? 0 : 116 * (value / max);
+      if (value !== null) {
+        const rect = svgEl("rect", {x: x - 46, y: 170 - height, width: 92, height,
+          fill: row.color, tabindex: 0, "aria-label": `${row.label} · ${label}`});
+        rect.append(svgEl("title", {}, `${row.label} · ${label}`));
+        svg.append(rect);
+      }
+      svg.append(svgEl("text", {x, y: 155 - height, "text-anchor": "middle"}, label),
+        svgEl("text", {x, y: 198, "text-anchor": "middle", fill: row.color}, row.label));
+    });
+    el.replaceChildren(svg);
+  }
+
   function renderNet() {
     const mode=$("net-window").value,rolling=mode!=='1';
     const dailyChains=Monitor.filter(data.net_chains||[],$("period").value,last);
@@ -216,6 +248,7 @@ function startDashboard() {
     const native=choices.find(r=>r.metadata_status==='known'&&!r.denom.startsWith('ibc/')&&!r.denom.includes('/'));
     if(choices.some(r=>r.denom===old))$("net-asset").value=old;else if(native)$("net-asset").value=native.denom;
     const asset=choices.find(r=>r.denom===$("net-asset").value);
+    renderNetBars(asset);
     const unit=asset?.symbol||t("unités inconnues");
     const amount=(v,signed=false)=>Monitor.amount(v,locale,signed)??t("Indisponible");
     const cutoff=latestNet?.evidence_through_utc?.replace('T',' ').replace('Z',' UTC')||t("Indisponible");
