@@ -214,8 +214,9 @@ Exports racine, puis copies dans `site/` :
 Le lancement automatique exige une collecte Économie effectivement exécutée
 avec succès sur la branche principale et une journée UTC complète enregistrée.
 Un contrôle Économie qui ignore la collecte, ou une publication seule, ne
-déclenche pas de collecte IBC. Le lancement manuel permet de reprendre
-les plages IBC qui restent incomplètes.
+déclenche pas de collecte IBC. Le lancement manuel peut reprendre les plages
+incomplètes après une collecte Économie réussie et complète. La publication
+seule peut être relancée indépendamment, sans collecte.
 Le workflow dispose de 90 minutes au maximum pour la collecte,
 les confirmations, les transits, les contrôles RWA et la publication. Les
 plages terminées sont conservées pour la reprise.

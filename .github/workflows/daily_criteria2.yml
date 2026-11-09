@@ -27,10 +27,12 @@ concurrency:
 jobs:
   check_economy:
     if: >-
-      github.event_name == 'workflow_run' &&
+      (github.event_name == 'workflow_dispatch' && inputs.publish_only != true &&
+      github.ref_name == github.event.repository.default_branch) ||
+      (github.event_name == 'workflow_run' &&
       github.event.workflow_run.conclusion == 'success' &&
       github.event.workflow_run.head_branch == github.event.repository.default_branch &&
-      github.event.workflow_run.head_repository.full_name == github.repository
+      github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
@@ -57,23 +59,51 @@ jobs:
           from urllib.request import Request, urlopen
 
           event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text())
-          run = event['workflow_run']
-          url = (f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}"
-                 f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}/jobs")
-          request = Request(url, headers={
+          base = f"{os.environ['GITHUB_API_URL']}/repos/{os.environ['GITHUB_REPOSITORY']}/actions"
+          headers = {
               'Authorization': 'Bearer ' + os.environ['GH_TOKEN'],
               'Accept': 'application/vnd.github+json',
-          })
-          with urlopen(request, timeout=15) as response:
-              jobs = json.load(response)['jobs']
-          collected = any(
-              job['name'] == 'run' and job['conclusion'] == 'success' and
-              any(step['name'] == 'Collect complete UTC days with checkpoints' and
-                  step['conclusion'] == 'success' for step in job.get('steps') or [])
-              for job in jobs
-          )
-          started = datetime.fromisoformat(run['run_started_at'].replace('Z', '+00:00'))
-          day = (started.astimezone(timezone.utc).date() - timedelta(days=1)).isoformat()
+          }
+
+          def get(path):
+              with urlopen(Request(base + path, headers=headers), timeout=15) as response:
+                  return json.load(response)
+
+          def start(run):
+              return datetime.fromisoformat(run['run_started_at'].replace('Z', '+00:00')).astimezone(timezone.utc)
+
+          def collection_outcome(run):
+              jobs = get(f"/runs/{run['id']}/attempts/{run['run_attempt']}/jobs")['jobs']
+              for job in jobs:
+                  if job['name'] != 'run' or job['conclusion'] == 'skipped':
+                      continue
+                  for step in job.get('steps') or []:
+                      if step['name'] == 'Collect complete UTC days with checkpoints':
+                          if step['conclusion'] == 'skipped':
+                              return None
+                          return (
+                              run['conclusion'] == 'success' and job['conclusion'] == 'success' and
+                              step['conclusion'] == 'success'
+                          )
+                  return False
+              return None
+
+          if 'workflow_run' in event:
+              run = event['workflow_run']
+              collected = collection_outcome(run)
+              target = start(run).date()
+          else:
+              target = datetime.now(timezone.utc).date()
+              runs = get('/workflows/daily.yml/runs?status=completed&per_page=30')['workflow_runs']
+              collected = False
+              for run in sorted(runs, key=start, reverse=True):
+                  if run['head_branch'] != event['repository']['default_branch'] or start(run).date() != target:
+                      continue
+                  outcome = collection_outcome(run)
+                  if outcome is not None:
+                      collected = outcome
+                      break
+          day = (target - timedelta(days=1)).isoformat()
           with open('hub_criterion1_daily_complete.csv', newline='', encoding='utf-8') as stream:
               complete = any(
                   row['date'] == day and row['chain_id'] == 'cosmoshub-4' and
@@ -90,7 +120,7 @@ jobs:
 
   criterion2:
     needs: check_economy
-    if: ${{ !cancelled() && (github.event_name == 'workflow_dispatch' || needs.check_economy.outputs.ready == 'true') }}
+    if: ${{ !cancelled() && ((github.event_name == 'workflow_dispatch' && inputs.publish_only == true) || needs.check_economy.outputs.ready == 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 90
     steps:
