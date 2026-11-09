@@ -28,3 +28,17 @@ test('net amounts distinguish missing values, measured zero and one INJ base uni
   assert.equal(monitor.amount('-0.000000000000000001', 'en-GB'), '-1E-18');
   assert.equal(monitor.amount('6249.251203','en-GB',true),'+6,249.251203');
 });
+
+test('the weekly net chart keeps seven dates, signs, measured zero and gaps', () => {
+  const rows = [
+    {date: '2026-11-02', net_amount: '2.25'},
+    {date: '2026-11-04', net_amount: '-1'},
+    {date: '2026-11-06', net_amount: '0'},
+    {date: '2026-11-08', net_amount: ''},
+    {date: '2026-11-09', net_amount: '8'},
+  ];
+  const points = monitor.netWeek(rows, '2026-11-08');
+  assert.equal(points[0].date, '2026-11-02');
+  assert.equal(points[6].date, '2026-11-08');
+  assert.deepEqual(points.map(point => point.value), [2.25, null, -1, null, 0, null, null]);
+});

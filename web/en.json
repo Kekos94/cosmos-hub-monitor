@@ -292,8 +292,6 @@
   "Cumul 30 jours": "30-day cumulative",
   "Cumul 90 jours": "90-day cumulative",
   "Jours couverts et manquants": "Covered and missing days",
-  "Évolution quotidienne du solde de cet actif": "Daily net flow of this asset",
-  "Le filtre d’historique règle le graphique quotidien ; le sélecteur de bilan règle le cumul.": "The history filter controls the daily chart; the summary selector controls the cumulative period.",
   "Cumuls par chaîne · CSV ↓": "Cumulative flows by chain · CSV ↓",
   "Cumuls par actif · CSV ↓": "Cumulative flows by asset · CSV ↓",
   "Aucun": "None",
@@ -462,5 +460,7 @@
   "Cumuls civils et fenêtres glissantes": "Calendar totals and rolling windows",
   "Les semaines civiles vont du lundi au dimanche. Les mois et années suivent le calendrier UTC. Les périodes en cours et les fenêtres glissantes de 7, 30 et 90 jours s’arrêtent à la dernière journée UTC close. Les jours couverts sont les journées communes indexées complètes des quatre chaînes dans les deux sens. Les jours manquants ne sont jamais remplacés par zéro. Le cumul observé porte uniquement sur ces jours ; le bilan complet exige tous les jours de la fenêtre et des états de confirmation compatibles.": "Calendar weeks run from Monday through Sunday. Months and years follow the UTC calendar. Current periods and rolling windows of 7, 30 and 90 days end on the last closed UTC day. Covered days require complete indexed coverage in both directions across the four chains. Missing days are never replaced by zero. The observed cumulative amount covers those days only. A full result requires coverage of all days in the period and compatible settlement evidence.",
   "Entrées et sorties de l’actif sélectionné": "Inflows and outflows for the selected asset",
-  "Aucun flux disponible pour cet actif sur la période.": "No flows are available for this asset in this period."
+  "Aucun flux disponible pour cet actif sur la période.": "No flows are available for this asset in this period.",
+  "Solde quotidien sur sept jours": "Daily net flow over seven days",
+  "Sept jours jusqu’à la fin de la période sélectionnée. Bleu au-dessus de zéro pour un solde positif, rouge en dessous pour un solde négatif. Un tiret indique une donnée indisponible.": "Seven days ending on the last day of the selected period. Positive net flows are blue above zero, negative net flows are red below zero. A dash indicates unavailable data."
 }

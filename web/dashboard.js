@@ -12,6 +12,17 @@ const Monitor = {
     const n=Monitor.number(value);if(n===null)return null;
     return new Intl.NumberFormat(locale,{maximumFractionDigits:6,notation:n!==0&&Math.abs(n)<0.000001?'scientific':'standard',signDisplay:signed?'exceptZero':'auto'}).format(value);
   },
+  netWeek(rows, end) {
+    const byDay = new Map(rows.map(row => [row.date, row]));
+    const day = new Date(end + "T00:00:00Z");
+    day.setUTCDate(day.getUTCDate() - 6);
+    return Array.from({length: 7}, () => {
+      const date = day.toISOString().slice(0, 10);
+      day.setUTCDate(day.getUTCDate() + 1);
+      const raw = byDay.get(date)?.net_amount;
+      return {date, raw, value: Monitor.number(raw)};
+    });
+  },
   latest(rows) { return rows.length ? [...rows].sort((a,b) => a.date.localeCompare(b.date)).at(-1) : null; },
   series(rows, key) {
     return [...rows].sort((a,b) => a.date.localeCompare(b.date)).map(r => ({date:r.date, value:Monitor.number(r[key])}));
@@ -216,6 +227,50 @@ function startDashboard() {
     el.replaceChildren(svg);
   }
 
+  function renderDailyNetBars(rows, end, unit) {
+    const el = $("net-chart");
+    if (!end) return empty(el, t("Le solde n’est pas disponible pour cet actif sur cette période."));
+    const points = Monitor.netWeek(rows, end);
+    const known = points.filter(point => point.value !== null);
+    const limit = Math.max(0, ...known.map(point => Math.abs(point.value))) || 1;
+    const width = Math.max(340, el.clientWidth || 660);
+    const left = 57, step = (width - left - 16) / 7, zero = 105;
+    const svg = svgEl("svg", {viewBox: `0 0 ${width} 226`, role: "img",
+      "aria-label": t("Solde quotidien sur sept jours")});
+    svg.append(svgEl("line", {x1: left, x2: width - 16, y1: zero, y2: zero, stroke: "#64748b"}));
+    svg.append(svgEl("text", {x: left - 8, y: zero + 4, "text-anchor": "end"}, "0"));
+    if (known.some(point => point.value !== 0)) {
+      const ticks = new Intl.NumberFormat(locale, {notation: "compact", maximumFractionDigits: 2});
+      for (const sign of [1, -1]) {
+        const y = zero - sign * 78;
+        svg.append(svgEl("line", {x1: left, x2: width - 16, y1: y, y2: y, stroke: "#dce2eb", "stroke-dasharray": "3 5"}),
+          svgEl("text", {x: left - 8, y: y + 4, "text-anchor": "end"}, ticks.format(sign * limit)));
+      }
+    }
+    const shortDate = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
+    points.forEach((point, index) => {
+      const x = left + (index + 0.5) * step;
+      const value = point.value;
+      const label = value === null ? t("Indisponible") : `${Monitor.amount(point.raw, locale, true)} ${unit}`;
+      const description = `${day(point.date)} · ${label}`;
+      if (value !== null && value !== 0) {
+        const height = Math.abs(value) / limit * 78;
+        const barWidth = Math.min(step * 0.56, 42);
+        const bar = svgEl("rect", {x: x - barWidth / 2, y: value > 0 ? zero - height : zero,
+          width: barWidth, height, fill: value > 0 ? "#315cf4" : "#c72f46", tabindex: 0, "aria-label": description});
+        bar.append(svgEl("title", {}, description));
+        svg.append(bar);
+      } else {
+        const mark = svgEl("text", {x, y: zero - 7, "text-anchor": "middle", tabindex: 0,
+          "aria-label": description}, value === 0 ? "0" : "—");
+        mark.append(svgEl("title", {}, description));
+        svg.append(mark);
+      }
+      svg.append(svgEl("text", {x, y: 209, "text-anchor": "middle"}, shortDate.format(new Date(point.date + "T00:00:00Z"))));
+    });
+    el.replaceChildren(svg);
+  }
+
   function renderNet() {
     const mode=$("net-window").value,rolling=mode!=='1';
     const dailyChains=Monitor.filter(data.net_chains||[],$("period").value,last);
@@ -275,9 +330,8 @@ function startDashboard() {
     if(asset?.metadata_status==='unknown')$("net-asset-note").textContent+=' '+t("Unités non identifiées : les montants bruts exacts restent disponibles dans le CSV.");
     if(asset?.metadata_status==='conflict')$("net-asset-note").textContent+=' '+t("Métadonnées contradictoires : conversion indisponible.");
     if(Number(rows.find(r=>r.chain===chain)?.unknown_payload_packets)>0)$("net-asset-note").textContent+=' '+t("Des paquets incertains sans actif identifié empêchent un solde complet.");
-    const netHistory=asset?.metadata_status==='known'?dailyAssets.filter(r=>r.chain===chain&&r.denom===asset.denom&&String(r.decimals)===String(asset.decimals)&&r.coingecko_id===asset.coingecko_id):[];
-    if(netHistory.some(r=>Monitor.number(r.net_amount)!==null))lineChart($("net-chart"),netHistory,'net_amount',unit);
-    else empty($("net-chart"),t("Le solde n’est pas disponible pour cet actif sur cette période."));
+    const netHistory=asset?.metadata_status==='known'?(data.net_assets||[]).filter(r=>r.chain===chain&&r.denom===asset.denom&&String(r.decimals)===String(asset.decimals)&&r.coingecko_id===asset.coingecko_id):[];
+    renderDailyNetBars(netHistory, latestNet?.end_date ?? latestNet?.date, unit);
   }
   function renderRwa() {
     const all = data.rwa || [];
