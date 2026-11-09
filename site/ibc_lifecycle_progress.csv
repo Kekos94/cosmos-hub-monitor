@@ -11,6 +11,10 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-07,cosmoshub,cosmoshub-4,ics20_v1_timeout,indexed_complete,15105,15105,34,https://cosmos-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,cosmoshub,cosmoshub-4,ics20_v1_timeout_close,indexed_complete,15105,15105,0,https://cosmos-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,cosmoshub,cosmoshub-4,ics20_v1_write_ack,indexed_complete,15105,15105,1821,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,cosmoshub,cosmoshub-4,ics20_v1_source_ack,indexed_complete,15119,15119,675,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,cosmoshub,cosmoshub-4,ics20_v1_timeout,indexed_complete,15119,15119,0,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,cosmoshub,cosmoshub-4,ics20_v1_timeout_close,indexed_complete,15119,15119,0,https://cosmos-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,cosmoshub,cosmoshub-4,ics20_v1_write_ack,indexed_complete,15119,15119,1795,https://cosmos-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_source_ack,indexed_complete,142609,142609,607,https://injective-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_timeout,indexed_complete,142609,142609,1,https://injective-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,injective,injective-1,ics20_v1_timeout_close,indexed_complete,142609,142609,0,https://injective-rpc.polkachu.com
@@ -23,6 +27,10 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-07,injective,injective-1,ics20_v1_timeout,indexed_complete,143473,143473,13,https://injective-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,injective,injective-1,ics20_v1_timeout_close,indexed_complete,143473,143473,0,https://injective-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,injective,injective-1,ics20_v1_write_ack,indexed_complete,143473,143473,617,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,injective,injective-1,ics20_v1_source_ack,indexed_complete,143018,143018,511,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,injective,injective-1,ics20_v1_timeout,indexed_complete,143018,143018,4,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,injective,injective-1,ics20_v1_timeout_close,indexed_complete,143018,143018,0,https://injective-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,injective,injective-1,ics20_v1_write_ack,indexed_complete,143018,143018,575,https://injective-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_source_ack,indexed_complete,76712,76712,1116,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout,indexed_complete,76712,76712,2,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout_close,indexed_complete,76712,76712,0,https://noble-rpc.polkachu.com
@@ -35,6 +43,10 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-07,noble,noble-1,ics20_v1_timeout,indexed_complete,78110,78110,0,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,noble,noble-1,ics20_v1_timeout_close,indexed_complete,78110,78110,0,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,noble,noble-1,ics20_v1_write_ack,indexed_complete,78110,78110,509,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,noble,noble-1,ics20_v1_source_ack,indexed_complete,77872,77872,447,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,noble,noble-1,ics20_v1_timeout,indexed_complete,77872,77872,0,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,noble,noble-1,ics20_v1_timeout_close,indexed_complete,77872,77872,0,https://noble-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,noble,noble-1,ics20_v1_write_ack,indexed_complete,77872,77872,505,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,104443,104443,4379,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,104443,104443,15,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,104443,104443,0,https://osmosis-rpc.polkachu.com
@@ -47,3 +59,7 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-07,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,104077,104077,9,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,104077,104077,0,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-07,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,104077,104077,2455,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,103422,103422,3296,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,103422,103422,22,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,103422,103422,0,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-08,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,103422,103422,2723,https://osmosis-rpc.polkachu.com
