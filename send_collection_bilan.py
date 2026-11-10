@@ -103,9 +103,13 @@ def main():
         return
     event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
     message = message_for(event['workflow_run'], address)
-    with smtplib.SMTP_SSL('smtp.gmail.com', 465, timeout=30, context=ssl.create_default_context()) as smtp:
+    with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as smtp:
+        smtp.starttls(context=ssl.create_default_context())
+        print('Connexion SMTP chiffrée établie sur le port 587.', flush=True)
         smtp.login(address, password)
+        print('Authentification Gmail réussie.', flush=True)
         smtp.send_message(message)
+        print('Bilan accepté par le serveur SMTP Gmail.', flush=True)
 
 
 if __name__ == '__main__':
