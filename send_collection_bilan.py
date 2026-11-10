@@ -96,17 +96,29 @@ def message_for(run, address):
 
 
 def main():
-    address = os.environ.get('BILAN_GMAIL_ADDRESS', '')
-    password = os.environ.get('BILAN_GMAIL_APP_PASSWORD', '').replace(' ', '')
+    address = os.environ.get('BILAN_GMAIL_ADDRESS', '').strip()
+    password = ''.join(os.environ.get('BILAN_GMAIL_APP_PASSWORD', '').split())
     if not address or not password:
         print('Envoi en attente de configuration des deux secrets BILAN_GMAIL.')
         return
+    if len(password) != 16 or not password.isascii() or not password.isalnum():
+        raise SystemExit('Le secret BILAN_GMAIL_APP_PASSWORD doit contenir un mot de passe d’application Google de 16 caractères.')
+    print('Format du mot de passe d’application vérifié.', flush=True)
     event = json.loads(Path(os.environ['GITHUB_EVENT_PATH']).read_text(encoding='utf-8'))
     message = message_for(event['workflow_run'], address)
     with smtplib.SMTP('smtp.gmail.com', 587, timeout=30) as smtp:
         smtp.starttls(context=ssl.create_default_context())
         print('Connexion SMTP chiffrée établie sur le port 587.', flush=True)
-        smtp.login(address, password)
+        smtp.ehlo()
+        if 'LOGIN' not in smtp.esmtp_features.get('auth', '').upper().split():
+            raise SystemExit('Le serveur SMTP ne propose pas AUTH LOGIN.')
+        smtp.user, smtp.password = address, password
+
+        def answer_challenge(challenge):
+            print('Défi AUTH LOGIN reçu du serveur SMTP.', flush=True)
+            return smtp.auth_login(challenge)
+
+        smtp.auth('LOGIN', answer_challenge, initial_response_ok=False)
         print('Authentification Gmail réussie.', flush=True)
         smtp.send_message(message)
         print('Bilan accepté par le serveur SMTP Gmail.', flush=True)
