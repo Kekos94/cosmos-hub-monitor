@@ -32,6 +32,8 @@
   "Aucune journée commune": "No common day available",
   "Comparaison des paquets ICS20 v1 émis par les quatre chaînes, sur une même journée. Les montants sont bruts ; les remboursements ne sont pas réconciliés.": "Compare ICS20 v1 packets sent by the four chains on the same day. Amounts are gross; refunds are not reconciled.",
   "La valorisation dépend des actifs reconnus et des prix historiques disponibles.": "Valuation depends on recognised assets and available historical prices.",
+  "Flux par chaîne sur sept jours": "Flows by chain over seven days",
+  "Seules les journées communes sont comparées. Un tiret indique une journée indisponible.": "Only common days are compared. A dash indicates an unavailable day.",
   "Flux sortants par chaîne": "Outgoing flows by chain",
   "Dernière journée commune sélectionnée": "Latest selected common day",
   "Unité": "Unit",

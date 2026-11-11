@@ -19,13 +19,18 @@ const Monitor = {
   },
   netWeek(rows, end) {
     const byDay = new Map(rows.map(row => [row.date, row]));
+    return Monitor.weekDates(end).map(date => {
+      const raw = byDay.get(date)?.net_amount;
+      return {date, raw, value: Monitor.number(raw)};
+    });
+  },
+  weekDates(end) {
     const day = new Date(end + "T00:00:00Z");
     day.setUTCDate(day.getUTCDate() - 6);
     return Array.from({length: 7}, () => {
       const date = day.toISOString().slice(0, 10);
       day.setUTCDate(day.getUTCDate() + 1);
-      const raw = byDay.get(date)?.net_amount;
-      return {date, raw, value: Monitor.number(raw)};
+      return date;
     });
   },
   weekSunday(date) {
@@ -118,6 +123,52 @@ function startDashboard() {
     note.textContent=key==="sent_packets"?t("Un paquet n’est ni un utilisateur distinct, ni un montant en dollars."):t("Sous-totaux historiques valorisés ; les actifs sans prix sont exclus, jamais comptés à zéro.");
     el.append(note);
   }
+  function chainHistory(rows, commonDays, key, incoming) {
+    const el = $("chain-history-chart");
+    const latest = Monitor.latest(commonDays);
+    $("chain-history-caption").textContent = incoming ? t("Entrées avec succès confirmé") : t("Sorties émises");
+    if (!latest) return empty(el);
+    const days = Monitor.weekDates(latest.date);
+    const comparable = new Map(commonDays.map(row => [row.date, row.universe_id]));
+    const members = Object.keys(names).filter(chain => data.members.includes(names[chain]) || data.members.includes(chain));
+    const grouped = days.map(date => members.map(chain => {
+      const row = rows.find(row => row.date === date && row.chain === chain &&
+        row.coverage_status === "indexed_complete" && row.universe_id === comparable.get(date));
+      return Monitor.number(row?.[key]);
+    }));
+    const maximum = Math.max(1, ...grouped.flat().filter(value => value !== null));
+    const width = Math.max(320, el.clientWidth || 680), left = 55, right = 12, base = 155;
+    const step = (width - left - right) / days.length;
+    const barWidth = Math.min(20, step * 0.78 / Math.max(1, members.length));
+    const unit = key === "sent_packets" ? t("paquets") : t("USD valorisés");
+    const svg = svgEl("svg", {viewBox: `0 0 ${width} 190`, role: "img",
+      "aria-label": t("Flux par chaîne sur sept jours") + " · " + unit});
+    const ticks = new Intl.NumberFormat(locale, {notation: "compact", maximumFractionDigits: 2});
+    for (const fraction of [0, 0.5, 1]) {
+      const y = base - 120 * fraction;
+      svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: "#dce2eb"}),
+        svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * fraction)));
+    }
+    const dateLabel = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
+    days.forEach((date, index) => {
+      const center = left + (index + 0.5) * step;
+      grouped[index].forEach((value, i) => {
+        const x = center + (i - (members.length - 1) / 2) * barWidth;
+        const height = value > 0 ? 120 * value / maximum : 0;
+        const label = `${day(date)} · ${names[members[i]]} · ${value === null ? t("Indisponible") : fmt(value, key === "sent_packets" ? 0 : 2) + " " + unit}`;
+        const mark = height > 0
+          ? svgEl("rect", {x: x - barWidth / 2, y: base - height, width: barWidth - 1, height, fill: colors[members[i]], tabindex: 0, "aria-label": label})
+          : svgEl("text", {x, y: base - 4, "text-anchor": "middle", tabindex: 0, "aria-label": label}, value === null ? "–" : "0");
+        mark.append(svgEl("title", {}, label));
+        svg.append(mark);
+      });
+      svg.append(svgEl("text", {x: center, y: 178, "text-anchor": "middle"}, dateLabel.format(new Date(date + "T00:00:00Z"))));
+    });
+    const legend = document.createElement("p");
+    legend.className = "chart-note";
+    legend.innerHTML = members.map(chain => `<span style="color:${colors[chain]}" aria-hidden="true">■</span> ${esc(names[chain])}`).join(" &nbsp; ");
+    el.replaceChildren(svg, legend);
+  }
   const dates=[...data.criterion1,...data.criterion2,...(data.incoming||[]),...(data.net_chains||[])].map(r=>r.date).sort();
   const last=dates.at(-1);
   $("build-stamp").textContent=t("Page générée le ")+new Date(data.generated_at).toLocaleString(locale,{timeZone:"UTC",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})+" UTC";
@@ -201,6 +252,7 @@ function startDashboard() {
     $("chains-caption").textContent=b?day(b.date)+t(" UTC · Même journée pour les quatre chaînes"):t("Dernière journée commune sélectionnée");
     if(incoming && b) $("valuation-note").textContent=t("Entrées : {observed} réceptions observées, {confirmed} avec succès confirmé, {errors} avec accusé d’erreur et {unknown} sans confirmation interprétable dans la transaction de réception. {unpriced} entrées confirmées sans valorisation. Les parts portent sur le sous-ensemble confirmé ; aucun rapprochement de transit ou de solde net.",{observed:fmt(b.observed_packets,0),confirmed:fmt(b.received_packets,0),errors:fmt(b.error_ack_packets,0),unknown:fmt(b.unconfirmed_packets,0),unpriced:fmt(b.unpriced_packets,0)});
     barChart($("chains-chart"),chains,$("flow-metric").value,incoming);
+    chainHistory(chainData,c2,$("flow-metric").value,incoming);
     lineChart($("share-chart"),c2,$("share-metric").value,"%");
     const life=Monitor.filter((data.lifecycle||[]).filter(r=>r.direction===(incoming?'in':'out')),$("period").value,last);
     const latestLife=Monitor.latest(life),cohort=latestLife?life.filter(r=>r.date===latestLife.date):[];

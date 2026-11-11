@@ -46,6 +46,11 @@
     <div class="notice" id="valuation-note">La valorisation dépend des actifs reconnus et des prix historiques disponibles.</div>
     <div class="chart-grid"><div class="panel"><div class="panel-head"><div><h3 id="flow-title">Flux sortants par chaîne</h3><p id="chains-caption">Dernière journée commune sélectionnée</p></div><label class="chart-select">Unité <select id="flow-metric"><option value="sent_packets">Paquets émis</option><option value="valued_out_usd">Sous-total valorisé (USD)</option></select></label></div><div id="chains-chart" class="chart" aria-live="polite"></div></div>
     <div class="panel"><div class="panel-head"><div><h3>Part du Cosmos Hub</h3><p>Dans le périmètre des quatre chaînes</p></div><label class="chart-select">Mesure <select id="share-metric"><option value="hub_share_packet_count_pct">Part des paquets (%)</option><option value="hub_share_valued_usd_pct">Part du sous-ensemble USD (%)</option></select></label></div><div id="share-chart" class="chart" aria-live="polite"></div></div></div>
+    <div class="panel lifecycle" id="chain-flow-history">
+      <div class="panel-head"><div><h3>Flux par chaîne sur sept jours</h3><p id="chain-history-caption"></p></div></div>
+      <div id="chain-history-chart" class="chart" aria-live="polite"></div>
+      <p class="chart-note">Seules les journées communes sont comparées. Un tiret indique une journée indisponible.</p>
+    </div>
     <div class="panel lifecycle" id="lifecycle"><div class="panel-head"><div><h3>Confirmations et remboursements</h3><p id="lifecycle-caption">Suivi des cohortes de paquets</p></div><a href="criterion2.html#lifecycle" id="lifecycle-details">Preuves & méthode ↗</a></div>
     <p class="muted">Les preuves ultérieures complètent les paquets de leur journée d’origine. Un accusé d’erreur ou un timeout ne prouve pas à lui seul un remboursement.</p>
     <div id="lifecycle-table" aria-live="polite"></div><p class="chart-note" id="lifecycle-note"></p></div>
