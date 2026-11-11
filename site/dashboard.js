@@ -297,7 +297,7 @@ function startDashboard() {
         sign: 1, label: t("Entrées avec succès confirmé")},
       {rows: data.chains, commonDays: outgoingDays,
         sign: -1, label: t("Sorties émises")},
-    ], $("chain-history-metric").value);
+    ], flowMetric);
     const life=Monitor.filter((data.lifecycle||[]).filter(r=>r.direction===(incoming?'in':'out')),$("period").value,last);
     const latestLife=Monitor.latest(life),cohort=latestLife?life.filter(r=>r.date===latestLife.date):[];
     $("lifecycle-caption").textContent=latestLife?t("Cohorte du {date} UTC · {direction}",{date:day(latestLife.date),direction:incoming?t("Entrées observées"):t("Sorties émises")}):t("Aucune cohorte complète disponible");
@@ -574,7 +574,7 @@ function startDashboard() {
     }
     $("collection-status").innerHTML=html;
   }
-  ["period","activity-metric","economy-metric","flow-direction","flow-metric","chain-history-metric"].forEach(id=>$(id).addEventListener("change",render));
+  ["period","activity-metric","economy-metric","flow-direction","flow-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window","net-period","net-chart-range"].forEach(id=>$(id).addEventListener("change",renderNet));

@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cosmos Hub observatory: economic coverage, IBC activity and public data quality.">
   <meta name="theme-color" content="#111d36"><title>Cosmos Observatory — Economics &amp; IBC activity</title>
-  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=4d295d2670a5"></script>
+  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=d57832cd5b27"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -51,7 +51,6 @@
     <div class="panel lifecycle" id="chain-flow-history">
       <div class="panel-head">
         <div><h3>Flows by chain over seven days</h3><p>Confirmed inflows above zero · Sent outflows below</p></div>
-        <label class="chart-select">Unit<select id="chain-history-metric"><option value="sent_packets">Packet count</option><option value="valued_out_usd">Valued subtotal (USD)</option></select></label>
       </div>
       <div id="chain-history-chart" class="chart" aria-live="polite"></div>
       <p class="chart-note">Only common days are compared. A dash indicates an unavailable day.</p>
