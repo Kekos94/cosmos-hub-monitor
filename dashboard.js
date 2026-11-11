@@ -129,6 +129,7 @@ function startDashboard() {
     $("ibc-details").href='criterion2'+(language==='en'?'-en':'')+'.html'+(incoming?'#incoming':'');
     const a=Monitor.latest(c1),b=Monitor.latest(c2);
     $("c1-date").textContent=a ? day(a.date)+" · UTC" : t("Aucune journée dans la période");
+    $("activity-date").textContent=$("c1-date").textContent;
     $("c2-date").textContent=b ? day(b.date)+t(" · UTC commun") : t("Aucune journée commune");
     const totalTx = Monitor.number(a?.tx_total);
     const ibcTx = Monitor.number(a?.tx_ibc);
