@@ -142,6 +142,10 @@ function startDashboard() {
     const barWidth = Math.min(20, step * 0.78 / Math.max(1, members.length));
     const unit = key === "sent_packets" ? t("paquets") : t("USD valorisés");
     const shareKey = key === "sent_packets" ? "hub_share_packet_count_pct" : "hub_share_valued_usd_pct";
+    const shares = days.map(date => Monitor.number(comparable.get(date)?.[shareKey]));
+    const maxShare = Math.max(0, ...shares.filter(share => share !== null));
+    const shareStep = maxShare <= 10 ? 1 : 5;
+    const shareCeiling = Math.max(shareStep, Math.ceil(maxShare / shareStep) * shareStep);
     const shareColor = "#a54f12";
     const shareLabel = t("Part du Cosmos Hub · axe de droite");
     const svg = svgEl("svg", {viewBox: `0 0 ${width} 190`, role: "img",
@@ -151,7 +155,8 @@ function startDashboard() {
       const y = base - 120 * fraction;
       svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: "#dce2eb"}),
         svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * fraction)),
-        svgEl("text", {x: width - right + 5, y: y + 4, style: `fill:${shareColor}`}, fmt(100 * fraction, 0) + " %"));
+        svgEl("text", {x: width - right + 5, y: y + 4, style: `fill:${shareColor}`},
+          ticks.format(shareCeiling * fraction) + " %"));
     }
     const dateLabel = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
     days.forEach((date, index) => {
@@ -171,12 +176,12 @@ function startDashboard() {
     let path = "", previous = false;
     const dots = [];
     days.forEach((date, index) => {
-      const share = Monitor.number(comparable.get(date)?.[shareKey]);
+      const share = shares[index];
       if (share === null) {
         previous = false;
         return;
       }
-      const x = left + (index + 0.5) * step, y = base - 120 * share / 100;
+      const x = left + (index + 0.5) * step, y = base - 120 * share / shareCeiling;
       path += `${previous ? " L " : " M "}${x} ${y}`;
       previous = true;
       const label = `${day(date)} · ${t("Part du Cosmos Hub")} · ${fmt(share, 2)} %`;
