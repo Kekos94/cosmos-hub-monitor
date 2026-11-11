@@ -70,23 +70,30 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('href="index-en.html" lang="en" aria-current="page"',en)
             self.assertIn('href="criterion1-en.html"',en)
             self.assertIn('href="criterion2-en.html"',en)
-            self.assertIn('ATOM issuance coverage by collected fees',en)
-            self.assertIn('Revenus opérationnels du Cosmos Hub', fr)
-            self.assertIn('CRITÈRE 1 · SOUS-CRITÈRE 1B', fr)
-            self.assertIn('CRITERION 1 · SUBCRITERION 1B', en)
-            self.assertIn('1A — IBC activity on the Hub', en)
+            self.assertIn('1.3 — Transaction fees and issuance coverage',en)
+            self.assertIn('<h1>Activité du Hub</h1>', fr)
+            self.assertIn('1.2 — Flux, soldes et transits IBC', fr)
+            self.assertIn('1.2 — IBC flows, balances and transit', en)
+            self.assertIn('1.1 — Transactions and IBC activity', en)
+            self.assertIn('Hub transaction fees', en)
             self.assertIn('Inflows and outflows for the selected asset', en)
             self.assertIn('id="net-flow-bars"', fr)
-            self.assertIn('1D — Measured monetary issuance', en)
-            self.assertIn('1C — Hub fees from Ethereum Eureka transactions', en)
-            self.assertIn('href="hub_criterion1_eureka_daily.csv"', en)
+            self.assertIn('ATOM issuance and fee coverage', en)
+            self.assertNotIn('id="eureka"', en)
+            services = (root/'site/criterion1-services-en.html').read_text()
+            self.assertIn('1.4 — Live services and verified payments', services)
+            self.assertIn('href="index-en.html#activity"', services)
+            self.assertIn('Network fees from Eureka transactions', services)
+            self.assertIn('href="hub_criterion1_eureka_daily.csv"', services)
             self.assertIn('href="hub_criterion1_emission_daily.csv"', en)
             self.assertIn('365-day monetary inflation', en)
             self.assertNotIn('critère 3', fr.casefold())
             self.assertNotIn('criterion 3', en.casefold())
             self.assertIn('href="criterion2-en.html#transit"', en)
             self.assertIn('href="community-pool-en.html"', en)
-            self.assertIn('href="index-en.html#eureka"', (root/'site/community-pool-en.html').read_text())
+            self.assertIn('href="criterion1-services.html"', fr)
+            self.assertIn('href="criterion1-services-en.html"', en)
+            self.assertIn('href="criterion1-services-en.html#services"', (root/'site/community-pool-en.html').read_text())
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
         catalog=json.loads((dashboard.ROOT/'web/en.json').read_text())
@@ -97,6 +104,30 @@ class DashboardTests(unittest.TestCase):
         self.assertIn('Unvalued packets',result)
         self.assertIn('<td>376</td>',result)
         self.assertIn('6,457,369.77',dashboard.english('<td>6 457 369,77</td>',catalog))
+
+    def test_services_show_only_matching_eureka_fees_and_link_to_coverage(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            self.setup_root(root)
+            day = dict(date='2026-11-10', fee_collection_status='complete',
+                       collected_fee_atom='5', start_height='1', end_height='10')
+            eureka = dict(date=day['date'], status='indexed_fee_verified',
+                          collected_fee_atom='1', share_of_hub_fees_pct='20',
+                          start_height='1', end_height='9')
+            data = dict(criterion1=[day], eureka=[eureka])
+            catalog = json.loads((root / 'web/en.json').read_text())
+            page_path = root / 'criterion1-services-en.html'
+            dashboard.build_services_page(root, root, data, catalog)
+            self.assertNotIn('1.000000 <small>ATOM</small>', page_path.read_text())
+
+            eureka['end_height'] = '10'
+            dashboard.build_services_page(root, root, data, catalog)
+            page = page_path.read_text()
+            self.assertIn('1.000000 <small>ATOM</small>', page)
+            self.assertNotIn('5.000000 <small>ATOM</small>', page)
+            self.assertIn('href="index-en.html#coverage-cards"', page)
+            self.assertIn('Service revenue / issuance</h2>', page)
+            self.assertIn('<span>Unavailable</span> · <span>Service payment unverified</span>', page)
 
 
 if __name__=='__main__': unittest.main()

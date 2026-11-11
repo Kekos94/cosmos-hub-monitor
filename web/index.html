@@ -10,40 +10,23 @@
 <a class="skip" href="#main">Aller au contenu</a>
 <header class="topbar"><div class="shell top-inner">
   <a class="brand" href="#"><span class="orbit" aria-hidden="true">✳</span><span>COSMOS <b>OBSERVATORY</b></span></a>
-  <nav aria-label="Navigation principale"><a href="#economy">1A, 1C et 1D · Économie du Hub</a><a href="#ibc">1B · Flux IBC</a><a href="#transit">Transit</a><a href="#quality">Données</a></nav>
+  <nav aria-label="Navigation principale"><a href="#activity">1.1 · Transactions</a><a href="#ibc">1.2 · Flux IBC</a><a href="#economy">1.3 · Économie</a><a href="#quality">Données</a></nav>
   <div class="language-switch" aria-label="Language"><a href="index.html" lang="fr" hreflang="fr" aria-current="page">Français</a><a href="index-en.html" lang="en" hreflang="en">English</a></div>
 </div></header>
 <main class="shell" id="main">
   <section class="intro"><div><p class="eyebrow">COSMOS HUB · MESURER AVANT DE CONCLURE</p>
-  <h1>Critère 1<br><span>Revenus opérationnels du Cosmos Hub</span></h1>
+  <h1>Activité du Hub</h1>
   <p class="lede">Suivre la couverture économique du Hub et sa place dans les échanges IBC, avec une lecture explicite des données disponibles.</p></div>
   <aside class="intro-note"><span class="eyebrow">PÉRIMÈTRE OBSERVÉ</span><p>Cosmos Hub <span>↔</span> Osmosis<br>Noble <span>↔</span> Injective</p><small>Journées UTC · Sources publiques<br>Mesures publiées, sans score automatique</small></aside></section>
   <div class="toolbar"><div class="data-stamp"><span class="status-dot"></span><span id="build-stamp">Chargement des données…</span></div><label for="period">Historique affiché <select id="period"><option value="7">7 jours</option><option value="30" selected>30 jours</option><option value="90">90 jours</option><option value="all">Tout l’historique</option></select></label></div>
   <div id="error" class="notice" role="alert" hidden></div>
-  <noscript><p class="notice">Active JavaScript pour les graphiques interactifs. Les <a href="criterion1.html">tableaux du critère 1</a> et du <a href="criterion2.html">sous-critère 1B</a> restent accessibles.</p></noscript>
-  <section id="economy" class="criterion">
-    <div class="section-heading"><div><p class="eyebrow">CRITÈRE 1 · SOUS-CRITÈRES 1A, 1C ET 1D</p><h2>Couverture de l’émission d’ATOM par les frais collectés</h2></div><span id="c1-date" class="badge">Aucune journée disponible</span></div>
-    <p class="section-copy">Les ratios rapprochent les frais collectés et l’émission des mêmes blocs. Les estimations historiques et les mesures réconciliées sont affichées séparément.</p>
-    <h3>1A — Activité IBC sur le Hub</h3>
+  <noscript><p class="notice">Active JavaScript pour les graphiques interactifs. Les <a href="criterion1.html">tableaux du critère 1</a> et du <a href="criterion2.html">sous-critère 1.2</a> restent accessibles.</p></noscript>
+  <section id="activity" class="criterion">
+    <h2>1.1 — Transactions et activité IBC</h2>
     <div class="cards" id="activity-cards" aria-live="polite"></div>
-    <h3>1C — Revenus et 1D — Émission et couverture économique</h3>
-    <p><a href="community-pool.html">Versements au fonds communautaire ↗</a></p>
-    <div class="cards" id="c1-cards" aria-live="polite"></div>
-    <div class="panel"><div class="panel-head"><div><h3>Évolution de l’émission et de la couverture économique</h3><p id="c1-chart-caption">Journées complètes uniquement</p></div><label class="chart-select">Mesure <select id="economy-metric"><option value="fee_to_measured_emission_pct">Frais / émission mesurée (%)</option><option value="fee_to_estimated_emission_pct">Frais / émission estimée (%)</option><option value="collected_fee_atom">Frais collectés (ATOM)</option><option value="collected_ibc_fee_atom">Frais IBC collectés (ATOM)</option><option value="estimated_emission_atom">Émission estimée (ATOM)</option><option value="monetary_emission_atom">Émission monétaire mesurée (ATOM)</option><option value="annualized_monetary_inflation_pct">Inflation monétaire annualisée (%)</option><option value="monetary_inflation_365d_pct">Inflation monétaire sur 365 jours (%)</option></select></label></div><div id="economy-chart" class="chart" aria-live="polite"></div></div>
-    <div class="section-foot"><span>Frais collectés et destructions d’ATOM sont deux mesures distinctes.</span><a href="criterion1.html">Méthode & tableaux détaillés <span aria-hidden="true">↗</span></a></div>
-    <div class="panel" id="eureka">
-      <div class="panel-head"><div><h3>1C — Frais du Hub liés à Eureka Ethereum</h3><p>Transactions réussies identifiées par les événements de paquets. Les montants font déjà partie des frais du Hub.</p></div><a href="hub_criterion1_eureka_daily.csv" download>Frais Eureka · CSV ↓</a></div>
-      <div class="cards" id="eureka-cards" aria-live="polite"></div>
-      <p class="chart-note">Périmètre de l’index du fournisseur. Les frais de relais sont exclus.</p>
-    </div>
-    <div class="panel" id="emission">
-      <div class="panel-head"><div><h3>1D — Émission monétaire mesurée</h3><p id="emission-status" aria-live="polite"></p></div><a href="hub_criterion1_emission_daily.csv" download>Audit de l’émission · CSV ↓</a></div>
-      <div class="cards" id="emission-cards"></div>
-      <p class="chart-note">Le taux annualisé projette le rythme de la journée. Le taux sur 365 jours repose sur 365 journées consécutives dont les mouvements ont été réconciliés avec l’offre.</p>
-    </div>
   </section>
   <section id="ibc" class="criterion">
-    <div class="section-heading"><div><p class="eyebrow">CRITÈRE 1 · SOUS-CRITÈRE 1B</p><h2>Centralité des flux IBC</h2></div><span id="c2-date" class="badge">Aucune journée commune</span></div>
+    <div class="section-heading"><div><h2>1.2 — Flux, soldes et transits IBC</h2></div><span id="c2-date" class="badge">Aucune journée commune</span></div>
     <p class="section-copy" id="ibc-description">Comparaison des paquets ICS20 v1 émis par les quatre chaînes, sur une même journée. Les montants sont bruts ; le suivi des confirmations et remboursements est présenté séparément.</p>
     <div class="toolbar direction-toolbar"><label for="flow-direction">Sens des flux <select id="flow-direction"><option value="out">Sorties émises</option><option value="in">Entrées avec succès confirmé</option></select></label><span class="data-stamp">Entrées et sorties sont mesurées séparément.</span></div>
     <div class="cards" id="c2-cards" aria-live="polite"></div>
@@ -60,7 +43,7 @@
     <div class="notice" id="net-coverage-note" hidden></div><details id="net-days" hidden><summary>Jours couverts et manquants</summary><p id="net-days-detail" class="chart-note"></p></details>
     <div class="cards" id="net-cards" aria-live="polite"></div><p class="chart-note" id="net-asset-note"></p>
     <h4>Entrées et sorties de l’actif sélectionné</h4><div id="net-flow-bars" class="chart" aria-live="polite"></div>
-    <div class="notice" id="net-valuation-note">Les valeurs manquantes restent indisponibles.</div><div id="net-summary" aria-live="polite"></div><h4>Solde quotidien sur sept jours</h4><p class="chart-note">Sept jours jusqu’à la fin de la période sélectionnée. Bleu au-dessus de zéro pour un solde positif, rouge en dessous pour un solde négatif. Un tiret indique une donnée indisponible.</p><div id="net-chart" class="chart" aria-live="polite"></div></div>
+    <div class="notice" id="net-valuation-note">Les valeurs manquantes restent indisponibles.</div><div id="net-summary" aria-live="polite"></div><h4>Solde quotidien sur sept jours</h4><label id="net-chart-range-label" for="net-chart-range">Période du graphique <select id="net-chart-range"><option value="rolling">Sept jours glissants</option><option value="calendar">Lundi au dimanche UTC</option></select></label><p class="chart-note">Les sept jours glissants se terminent à la dernière date du bilan sélectionné. Bleu au-dessus de zéro pour un solde positif, rouge en dessous pour un solde négatif. Un point signale une barre trop petite pour être visible. Un tiret indique une donnée indisponible.</p><div id="net-chart" class="chart" aria-live="polite"></div><div id="net-daily-values" class="lifecycle-scroll" aria-live="polite"></div></div>
     <div class="panel net-panel" id="rwa">
       <div class="panel-head"><div><h3>Filtre RWA vérifiés</h3><p>Activité IBC des produits identifiés dans le registre</p></div><a href="ibc_rwa_daily.csv" download>Données RWA · CSV ↓</a></div>
       <p class="muted">Périmètre strict du registre. Les stablecoins sont suivis séparément. Les identités et confirmations manquantes limitent les chiffres disponibles.</p>
@@ -80,8 +63,25 @@
     <div class="section-foot"><a href="ibc_transit_packets.csv" download>Liens par paquet · CSV ↓</a><a href="criterion2.html#transit">Méthode du transit ↗</a></div></div>
     <div class="section-foot"><span>Index des fournisseurs · Aucun verdict sur la centralité globale ou les RWA</span><a id="ibc-details" href="criterion2.html">Méthode & tableaux détaillés <span aria-hidden="true">↗</span></a></div>
   </section>
+  <section id="economy" class="criterion">
+    <div class="section-heading"><div><p class="eyebrow">CRITÈRE 1 · ÉCONOMIE DU HUB</p><h2>1.3 — Frais de transaction et couverture de l’émission</h2></div><span id="c1-date" class="badge">Aucune journée disponible</span></div>
+    <p class="section-copy">Les ratios rapprochent les frais collectés et l’émission des mêmes blocs. Les estimations historiques et les mesures réconciliées sont affichées séparément.</p>
+    <p><a href="criterion1-services.html">Services et recettes du Hub ↗</a></p>
+    <h3>Frais de transaction du Hub</h3>
+    <p><a href="community-pool.html">Versements au fonds communautaire ↗</a></p>
+    <div class="cards" id="c1-cards" aria-live="polite"></div>
+    <h3>Émission d’ATOM et couverture par les frais</h3>
+    <div class="cards" id="coverage-cards" aria-live="polite"></div>
+    <div class="panel"><div class="panel-head"><div><h3>Évolution de l’émission et de la couverture économique</h3><p id="c1-chart-caption">Journées complètes uniquement</p></div><label class="chart-select">Mesure <select id="economy-metric"><option value="fee_to_measured_emission_pct">Frais / émission mesurée (%)</option><option value="fee_to_estimated_emission_pct">Frais / émission estimée (%)</option><option value="collected_fee_atom">Frais collectés (ATOM)</option><option value="collected_ibc_fee_atom">Frais IBC collectés (ATOM)</option><option value="estimated_emission_atom">Émission estimée (ATOM)</option><option value="monetary_emission_atom">Émission monétaire mesurée (ATOM)</option><option value="annualized_monetary_inflation_pct">Inflation monétaire annualisée (%)</option><option value="monetary_inflation_365d_pct">Inflation monétaire sur 365 jours (%)</option></select></label></div><div id="economy-chart" class="chart" aria-live="polite"></div></div>
+    <div class="section-foot"><span>Frais collectés et destructions d’ATOM sont deux mesures distinctes.</span><a href="criterion1.html">Méthode & tableaux détaillés <span aria-hidden="true">↗</span></a></div>
+    <div class="panel" id="emission">
+      <div class="panel-head"><div><h3>Émission monétaire mesurée</h3><p id="emission-status" aria-live="polite"></p></div><a href="hub_criterion1_emission_daily.csv" download>Audit de l’émission · CSV ↓</a></div>
+      <div class="cards" id="emission-cards"></div>
+      <p class="chart-note">Le taux annualisé projette le rythme de la journée. Le taux sur 365 jours repose sur 365 journées consécutives dont les mouvements ont été réconciliés avec l’offre.</p>
+    </div>
+  </section>
   <section id="quality" class="criterion quality"><div class="section-heading"><div><p class="eyebrow">LA MESURE A SES LIMITES</p><h2>Des données lisibles. Des limites visibles.</h2></div><span class="badge">État global, hors filtre de période</span></div>
-  <div class="quality-grid"><div class="panel"><h3>État des collectes</h3><p class="muted">Dernier jour publié et reprise des collectes incomplètes.</p><div id="collection-status"></div></div><div class="panel method"><h3>Comment lire les indicateurs</h3><ul><li><b>Sous-critères 1A, 1C et 1D</b> tous les blocs de la journée sont contrôlés. Si les preuves de frais manquent, les frais et les ratios restent indisponibles.</li><li><b>Sous-critère 1B</b> couverture de l’index d’événements ; un index cohérent peut malgré tout omettre des transactions.</li><li><b>Prix :</b> références historiques journalières. Aucune rétroapplication du spot ; les actifs sans prix restent non valorisés.</li><li><b>Historique court :</b> un point est une observation, pas une tendance. Aucune extrapolation des jours manquants.</li></ul></div></div>
+  <div class="quality-grid"><div class="panel"><h3>État des collectes</h3><p class="muted">Dernier jour publié et reprise des collectes incomplètes.</p><div id="collection-status"></div></div><div class="panel method"><h3>Comment lire les indicateurs</h3><ul><li><b>Sous-critères 1.1 et 1.3</b> tous les blocs de la journée sont contrôlés. Si les preuves de frais manquent, les frais et les ratios restent indisponibles.</li><li><b>Sous-critère 1.2</b> couverture de l’index d’événements ; un index cohérent peut malgré tout omettre des transactions.</li><li><b>Prix :</b> références historiques journalières. Aucune rétroapplication du spot ; les actifs sans prix restent non valorisés.</li><li><b>Historique court :</b> un point est une observation, pas une tendance. Aucune extrapolation des jours manquants.</li></ul></div></div>
   <div class="downloads"><div><h3>Explorer les données sources</h3><p>Télécharger les mesures pour examiner les calculs et leurs limites.</p></div><div class="download-links"><a href="ibc_net_windows_chains_latest.csv" download>Cumuls par chaîne · CSV ↓</a><a href="ibc_net_windows_assets_latest.csv" download>Cumuls par actif · CSV ↓</a><a href="ibc_net_chains_daily.csv" download>Flux nets par chaîne · CSV ↓</a><a href="ibc_net_assets_daily.csv" download>Flux nets par actif · CSV ↓</a><a href="ibc_lifecycle_daily.csv" download>Confirmations & remboursements · CSV ↓</a><a href="ibc_packet_lifecycle.csv.gz" download>Détail par paquet · CSV compressé ↓</a><a href="hub_criterion1_daily_complete.csv" download>Économie · CSV ↓</a><a href="ibc_out_chains_daily.csv" download>Sorties par chaîne · CSV ↓</a><a href="ibc_out_assets_daily.csv" download>Sorties par actif · CSV ↓</a><a href="ecosystem_out_usd_daily.csv" download>Comparaison des sorties · CSV ↓</a><a href="ibc_in_chains_daily.csv" download>Entrées par chaîne · CSV ↓</a><a href="ibc_in_assets_daily.csv" download>Entrées par actif · CSV ↓</a><a href="ecosystem_in_usd_daily.csv" download>Comparaison des entrées · CSV ↓</a></div></div>
   </section>
   <footer><a class="brand" href="#">COSMOS <b>OBSERVATORY</b></a><p>Un observatoire indépendant. Aucune affiliation officielle à Cosmos.<br>Les indicateurs documentent l’activité ; ils ne constituent pas un conseil d’investissement.</p><a href="https://github.com/Kekos94/cosmos-hub-monitor" target="_blank" rel="noopener noreferrer">Code & méthodologie ↗</a></footer>

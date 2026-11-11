@@ -42,3 +42,12 @@ test('the weekly net chart keeps seven dates, signs, measured zero and gaps', ()
   assert.equal(points[6].date, '2026-11-08');
   assert.deepEqual(points.map(point => point.value), [2.25, null, -1, null, 0, null, null]);
 });
+
+test('a partial calendar week still ends on Sunday', () => {
+  const end = monitor.weekSunday('2026-11-09');
+  const points = monitor.netWeek([{date: '2026-11-10', net_amount: '-5'}], end);
+  assert.equal(end, '2026-11-15');
+  assert.equal(points[0].date, '2026-11-09');
+  assert.deepEqual(points.map(point => point.value), [null, -5, null, null, null, null, null]);
+  assert.equal(monitor.weekSunday('2026-11-08'), '2026-11-08');
+});

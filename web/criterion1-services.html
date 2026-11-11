@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Critère 1 — Services et recettes du Cosmos Hub</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+<body>
+<a class="skip" href="#main">Aller au contenu</a>
+<header class="topbar"><div class="shell top-inner">
+  <a class="brand" href="index.html">COSMOS OBSERVATORY</a>
+  <nav aria-label="Navigation principale"><a href="index.html#economy">Activité du Hub ↗</a></nav>
+  __LANGUAGE_SWITCH__
+</div></header>
+<main class="shell" id="main">
+  <section class="intro"><div>
+    <p class="eyebrow">CRITÈRE 1</p>
+    <h1>Services et recettes du Cosmos Hub</h1>
+    <p class="lede">Le critère est atteint lorsqu’un service opérationnel du Hub génère un paiement vérifiable au bénéfice du Hub.</p>
+  </div></section>
+  <p class="notice"><strong>Paiement de service non vérifié</strong> · <span>État des preuves documentées</span></p>
+
+  <section class="criterion" aria-labelledby="services">
+    <h2 id="services">1.4 — Services opérationnels et paiements vérifiés</h2>
+    <p class="section-copy">Un paiement vérifié doit relier le service, le montant réglé et le bénéficiaire.</p>
+    <div class="chart-grid">
+      <article class="panel" id="eureka">
+        <h3>IBC Eureka · Ethereum</h3>
+        <p>Service opérationnel. Les frais réseau associés sont compris dans le total du Hub. Paiement de service non vérifié.</p>
+        <dl>
+          <dt>Journée UTC</dt><dd>__DATE__</dd>
+          <dt>Transactions Eureka identifiées</dt><dd>__EUREKA_TXS__</dd>
+          <dt>Frais réseau des transactions Eureka</dt><dd>__EUREKA_FEES__</dd>
+          <dt>Part des frais du Hub</dt><dd>__EUREKA_SHARE__</dd>
+        </dl>
+        <p class="chart-note">Périmètre de l’index du fournisseur. Les frais de relais sont exclus.</p>
+        <a href="hub_criterion1_eureka_daily.csv" download>Frais Eureka · CSV ↓</a><br>
+        <a href="https://cosmos.network/blog/interchain-labs-becomes-cosmos-labs">Source du déploiement ↗</a>
+      </article>
+      <article class="panel">
+        <h3>USDC · Injective</h3>
+        <p>Migration documentée. Versement au titre du partage de revenus non vérifié.</p>
+        <a href="community-pool.html">Registre des dépôts communautaires ↗</a><br>
+        <a href="https://forum.cosmos.network/t/hub-weekly-update-23-november-5-2026/17540">Source de la migration ↗</a>
+      </article>
+    </div>
+  </section>
+
+  <section class="criterion" aria-labelledby="coverage">
+    <h2 id="coverage">Recettes de services / émission</h2>
+    <p class="notice"><span>Indisponible</span> · <span>Paiement de service non vérifié</span></p>
+    <a href="index.html#coverage-cards">Voir le ratio frais / émission mesurée dans le 1.3 ↗</a>
+  </section>
+
+  <section class="criterion" aria-labelledby="activity">
+    <h2 id="activity">Activité du Hub</h2>
+    <p><a href="index.html#activity">1.1 — Transactions et part IBC ↗</a></p>
+    <p><a href="index.html#ibc">1.2 — Flux, soldes et transits IBC ↗</a></p>
+  </section>
+  <footer><a href="index.html">Retour à l’activité du Hub ↗</a></footer>
+</main>
+</body>
+</html>

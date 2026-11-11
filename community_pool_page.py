@@ -68,7 +68,7 @@ def build(root):
 <html lang="{lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>1C — {title}</title><link rel="stylesheet" href="dashboard.css"></head>
 <body><main class="shell">
-<p><a href="index{suffix}.html#eureka">{labels['back']}</a> · <a href="community-pool.html" lang="fr">Français</a> · <a href="community-pool-en.html" lang="en">English</a></p>
+<p><a href="criterion1-services{suffix}.html#services">{labels['back']}</a> · <a href="community-pool.html" lang="fr">Français</a> · <a href="community-pool-en.html" lang="en">English</a></p>
 <section class="criterion"><div class="section-heading"><div><p class="eyebrow">COSMOS HUB · 1C</p><h1>{title}</h1></div><a href="{CSV}" download>CSV ↓</a></div>
 <p>{labels['scope']}</p><p>{labels['revenue']}</p>
 <p><a href="https://www.mintscan.io/cosmos/address/{ADDRESS}">{ADDRESS}</a></p>

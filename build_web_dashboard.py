@@ -31,7 +31,7 @@ def english(document, catalog):
         return '>'+html.escape(translated,quote=False)+'<'
     document=re.sub(r'>([^<>]*)<',translate,document)
     document=document.replace('<html lang="fr">','<html lang="en">').replace('Navigation principale','Main navigation')
-    for name in ('index','criterion1','criterion2','community-pool','ibc-large-movements'):
+    for name in ('index','criterion1','criterion2','community-pool','criterion1-services','ibc-large-movements'):
         document=re.sub(rf'href="{name}\.html(?=["#])', f'href="{name}-en.html', document)
     document=document.replace('href="index-en.html" lang="fr"','href="index.html" lang="fr"')
     document=document.replace('href="index-en.html" lang="en"','href="index-en.html" lang="en" aria-current="page"')
@@ -88,6 +88,45 @@ def payload(root=ROOT):
                 criterion2_progress=[r for r in rows(root, 'criterion2_progress.csv') if r['universe_id'] == uid])
 
 
+def build_services_page(root, site, data, catalog):
+    """Render the services page using the same published observations."""
+    day = data['criterion1'][-1] if data['criterion1'] else {}
+    date = day.get('date')
+    fees = day.get('collected_fee_atom') if day.get('fee_collection_status') == 'complete' else None
+    eureka = next((row for row in data.get('eureka', []) if row['date'] == date
+                   and row['start_height'] == day.get('start_height')
+                   and row['end_height'] == day.get('end_height')), {})
+    eureka_fees_verified = eureka.get('status') == 'indexed_fee_verified'
+    template = (root / 'web/criterion1-services.html').read_text(encoding='utf-8')
+
+    for language, page_name in (('fr', 'criterion1-services.html'), ('en', 'criterion1-services-en.html')):
+        page = english(template, catalog) if language == 'en' else template
+        unavailable = 'Indisponible' if language == 'fr' else 'Unavailable'
+
+        def amount(value, decimals, unit):
+            if value is None or value == '':
+                return unavailable
+            formatted = format(Decimal(value), f',.{decimals}f')
+            if language == 'fr':
+                formatted = formatted.translate(str.maketrans({',': '\u202f', '.': ','}))
+            return f'{formatted} <small>{unit}</small>' if unit else formatted
+
+        language_links = []
+        for code, suffix, label in (('fr', '', 'Français'), ('en', '-en', 'English')):
+            current = ' aria-current="page"' if code == language else ''
+            language_links.append(f'<a href="criterion1-services{suffix}.html" lang="{code}" hreflang="{code}"{current}>{label}</a>')
+        values = {
+            '__LANGUAGE_SWITCH__': '<div class="language-switch" aria-label="Language">' + ''.join(language_links) + '</div>',
+            '__DATE__': html.escape(date or unavailable),
+            '__EUREKA_TXS__': amount(eureka.get('indexed_transactions'), 0, ''),
+            '__EUREKA_FEES__': amount(eureka.get('collected_fee_atom') if eureka_fees_verified else None, 6, 'ATOM'),
+            '__EUREKA_SHARE__': amount(eureka.get('share_of_hub_fees_pct') if eureka_fees_verified and fees else None, 4, '%'),
+        }
+        for placeholder, value in values.items():
+            page = page.replace(placeholder, value)
+        (site / page_name).write_text(page, encoding='utf-8')
+
+
 def main(root=ROOT):
     root = Path(root); site = root / 'site'; site.mkdir(exist_ok=True)
     for name in ('ibc_net_windows_chains_latest.csv','ibc_net_windows_assets_latest.csv','ibc_rwa_daily.csv','ibc_rwa_balances_daily.csv','hub_criterion1_emission_daily.csv','hub_criterion1_eureka_daily.csv','hub_community_pool_deposits.csv'):
@@ -113,6 +152,7 @@ def main(root=ROOT):
         shutil.copy2(root / 'web' / name, site / name)
     from community_pool_page import build as build_community_pool
     build_community_pool(root)
+    build_services_page(root, site, data, catalog)
     from ibc_large_movements import build as build_large_movements
     build_large_movements(root, site, data, catalog, english)
     print('Public dashboard generated from saved data; measurements unchanged.')

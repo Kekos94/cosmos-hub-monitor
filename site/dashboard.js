@@ -23,6 +23,11 @@ const Monitor = {
       return {date, raw, value: Monitor.number(raw)};
     });
   },
+  weekSunday(date) {
+    const day = new Date(date + "T00:00:00Z");
+    day.setUTCDate(day.getUTCDate() + (7 - day.getUTCDay()) % 7);
+    return day.toISOString().slice(0, 10);
+  },
   latest(rows) { return rows.length ? [...rows].sort((a,b) => a.date.localeCompare(b.date)).at(-1) : null; },
   series(rows, key) {
     return [...rows].sort((a,b) => a.date.localeCompare(b.date)).map(r => ({date:r.date, value:Monitor.number(r[key])}));
@@ -132,21 +137,24 @@ function startDashboard() {
       card(t("Transactions IBC"), fmt(ibcTx, 0), "", t("Journée UTC complète")) +
       card(t("Part des transactions IBC"), fmt(totalTx > 0 && ibcTx !== null ? ibcTx / totalTx * 100 : null), "%", t("Parmi les transactions du Hub"));
     const feesKnown=a && a.fee_collection_status==="complete";
-    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"))+card(t("Couverture de l’émission"),fmt(feesKnown?a.fee_to_estimated_emission_pct:null,4),"%",t("Frais / émission estimée"))+card(t("Émission estimée"),fmt(a?.estimated_emission_atom,0),"ATOM",t("Estimation sur les mêmes blocs"))+card(t("Couverture des blocs"),fmt(a?.block_coverage_pct,0),"%",a?fmt(a.block_count,0)+t(" blocs contrôlés"):t("Aucun total partiel extrapolé"));
-    const eureka = (data.eureka || []).find(row => row.date === a?.date);
-    $("eureka-cards").innerHTML =
-      card(t("Transactions Eureka identifiées"), fmt(eureka?.indexed_transactions, 0), "", t("Route Ethereum")) +
-      card(t("Frais collectés sur le Hub"), fmt(eureka?.collected_fee_atom, 6), "ATOM", t("Frais des transactions identifiées")) +
-      card(t("Part des frais du Hub"), fmt(eureka?.share_of_hub_fees_pct, 4), "%", t("Même journée UTC"));
+    $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"));
     const audits = new Map((data.emission || []).map(row => [row.date, row]));
+    const sameReconciledBlocks = (row, audit) => audit?.status === "reconciled" &&
+      row.start_height && row.end_height &&
+      audit.start_height === row.start_height && audit.end_height === row.end_height;
+    const measuredCoverage = (row, audit) => {
+      if (row?.fee_collection_status !== "complete" || !sameReconciledBlocks(row, audit)) return null;
+      const issuance = Monitor.number(audit.monetary_emission_atom);
+      const fees = Monitor.number(row.collected_fee_atom);
+      return issuance > 0 && fees !== null ? 100 * fees / issuance : null;
+    };
+    $("coverage-cards").innerHTML =
+      card(t("Couverture de l’émission"), fmt(measuredCoverage(a, audits.get(a?.date)), 4), "%", t("Frais / émission mesurée")) +
+      card(t("Couverture des blocs"), fmt(a?.block_coverage_pct, 0), "%", a ? fmt(a.block_count, 0) + t(" blocs contrôlés") : t("Aucun total partiel extrapolé"));
     const metric=$("economy-metric").value;
     const economy = c1.map(row => {
       const audit = audits.get(row.date);
-      const matched = audit?.status === "reconciled" &&
-        audit.start_height === row.start_height && audit.end_height === row.end_height;
-      const emission = Monitor.number(audit?.monetary_emission_atom);
-      const fees = Monitor.number(row.collected_fee_atom);
-      const ratio = matched && emission > 0 && fees !== null ? 100 * fees / emission : null;
+      const matched = sameReconciledBlocks(row, audit);
       const measured = {
         monetary_emission_atom: audit?.monetary_emission_atom,
         annualized_monetary_inflation_pct: audit?.annualized_monetary_inflation_pct,
@@ -155,7 +163,7 @@ function startDashboard() {
       if (metric in measured) return {...row, [metric]: matched ? measured[metric] : null};
       if (metric === "estimated_emission_atom") return row;
       return {...row, [metric]: row.fee_collection_status === "complete" ?
-        (metric === "fee_to_measured_emission_pct" ? ratio : row[metric]) : null};
+        (metric === "fee_to_measured_emission_pct" ? measuredCoverage(row, audit) : row[metric]) : null};
     });
     lineChart($("economy-chart"), economy, metric, metric.endsWith("pct") ? "%" : "ATOM");
     $("c1-chart-caption").textContent=t("Journées UTC complètes · ")+$("economy-metric").selectedOptions[0].textContent;
@@ -229,6 +237,8 @@ function startDashboard() {
 
   function renderDailyNetBars(rows, end, unit) {
     const el = $("net-chart");
+    const values = $("net-daily-values");
+    values.replaceChildren();
     if (!end) return empty(el, t("Le solde n’est pas disponible pour cet actif sur cette période."));
     const points = Monitor.netWeek(rows, end);
     const known = points.filter(point => point.value !== null);
@@ -259,10 +269,16 @@ function startDashboard() {
       if (value !== null && value !== 0) {
         const height = Math.abs(value) / limit * 78;
         const barWidth = Math.min(step * 0.56, 42);
+        const color = value > 0 ? "#315cf4" : "#c72f46";
         const bar = svgEl("rect", {x: x - barWidth / 2, y: value > 0 ? zero - height : zero,
-          width: barWidth, height, fill: value > 0 ? "#315cf4" : "#c72f46", tabindex: 0, "aria-label": description});
+          width: barWidth, height, fill: color, tabindex: 0, "aria-label": description});
         bar.append(svgEl("title", {}, description));
         svg.append(bar);
+        if (height < 3) {
+          const marker = svgEl("circle", {cx: x, cy: zero + (value > 0 ? -4 : 4), r: 3, fill: color});
+          marker.append(svgEl("title", {}, description));
+          svg.append(marker);
+        }
         const offset = Math.max(height, 7);
         svg.append(svgEl("text", {
           x, y: value > 0 ? zero - offset - 6 : zero + offset + 13,
@@ -277,6 +293,12 @@ function startDashboard() {
       svg.append(svgEl("text", {x, y: 209, "text-anchor": "middle"}, shortDate.format(new Date(point.date + "T00:00:00Z"))));
     });
     el.replaceChildren(svg);
+    values.innerHTML = '<table><thead><tr><th scope="col">' + esc(t("Journée UTC")) +
+      '</th><th scope="col">' + esc(t("Solde quotidien")) + '</th></tr></thead><tbody>' +
+      points.map(point => {
+        const label = point.value === null ? t("Indisponible") : `${Monitor.amount(point.raw, locale, true)} ${unit}`;
+        return '<tr><th scope="row">' + esc(day(point.date)) + '</th><td>' + esc(label) + '</td></tr>';
+      }).join('') + '</tbody></table>';
   }
 
   function renderNet() {
@@ -294,8 +316,10 @@ function startDashboard() {
       const previous = picker.value;
       const periods = [...new Map(allChains.map(row => [row.end_date, row])).values()]
         .sort((a, b) => b.end_date.localeCompare(a.end_date));
-      picker.innerHTML = periods.map(row =>
-        `<option value="${esc(row.end_date)}">${esc(day(row.start_date))} – ${esc(day(row.end_date))}</option>`).join("");
+      picker.innerHTML = periods.map(row => {
+        const displayEnd = mode === "week" ? Monitor.weekSunday(row.start_date) : row.end_date;
+        return `<option value="${esc(row.end_date)}">${esc(day(row.start_date))} – ${esc(day(displayEnd))}</option>`;
+      }).join("");
       if (periods.some(row => row.end_date === previous)) picker.value = previous;
       latestNet = periods.find(row => row.end_date === picker.value);
     }
@@ -339,7 +363,11 @@ function startDashboard() {
     if(asset?.metadata_status==='conflict')$("net-asset-note").textContent+=' '+t("Métadonnées contradictoires : conversion indisponible.");
     if(Number(rows.find(r=>r.chain===chain)?.unknown_payload_packets)>0)$("net-asset-note").textContent+=' '+t("Des paquets incertains sans actif identifié empêchent un solde complet.");
     const netHistory=asset?.metadata_status==='known'?(data.net_assets||[]).filter(r=>r.chain===chain&&r.denom===asset.denom&&String(r.decimals)===String(asset.decimals)&&r.coingecko_id===asset.coingecko_id):[];
-    renderDailyNetBars(netHistory, latestNet?.end_date ?? latestNet?.date, unit);
+    $("net-chart-range-label").hidden = mode !== "week";
+    const chartEnd = mode === "week" && latestNet && $("net-chart-range").value === "calendar"
+      ? Monitor.weekSunday(latestNet.start_date)
+      : latestNet?.end_date ?? latestNet?.date;
+    renderDailyNetBars(netHistory, chartEnd, unit);
   }
   function renderRwa() {
     const all = data.rwa || [];
@@ -424,12 +452,12 @@ function startDashboard() {
       return `<div class="status-row"><div><b>${esc(label)}</b><small>${esc(detail)}</small></div><div class="status-value${late?" late":""}">${esc(day(latest))}<small>${latest ? late?t("Dernier jour publié · retard"):t("Dernier jour publié"):t("En attente de données")}</small></div></div>`;
     };
     const current1=Monitor.latest(data.criterion1_progress),incomplete1=current1?.status==="incomplete";
-    let html=status(t("1A, 1C et 1D · Cosmos Hub"),Monitor.latest(data.criterion1)?.date,incomplete1?t("{date} en cours : {saved} / {expected} blocs",{date:day(current1.date),saved:fmt(current1.scanned_blocks,0),expected:fmt(current1.expected_blocks,0)}) : t("Couverture exhaustive des blocs du jour"));
+    let html=status(t("1.1 et 1.3 · Cosmos Hub"),Monitor.latest(data.criterion1)?.date,incomplete1?t("{date} en cours : {saved} / {expected} blocs",{date:day(current1.date),saved:fmt(current1.scanned_blocks,0),expected:fmt(current1.expected_blocks,0)}) : t("Couverture exhaustive des blocs du jour"));
     for(const chain of data.members) {
       const latest=Monitor.latest(data.criterion2_progress.filter(r=>r.chain===chain));
       const done=Monitor.latest(data.chains.filter(r=>r.chain===chain));
       const detail=latest && latest.coverage_status!=="indexed_complete" ? t("{date} en cours · {count} transactions enregistrées",{date:day(latest.date),count:fmt(latest.indexed_transactions_saved,0)}) : t("Couverture selon l’index d’événements");
-      html+=status(t("1B · ")+(names[chain]||chain),done?.date,detail);
+      html+=status(t("1.2 · ")+(names[chain]||chain),done?.date,detail);
     }
     for(const chain of data.members) {
       const latest=Monitor.latest((data.incoming_progress||[]).filter(r=>r.chain===chain));
@@ -442,7 +470,7 @@ function startDashboard() {
   ["period","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
-  ["period","net-chain","net-asset","net-window","net-period"].forEach(id=>$(id).addEventListener("change",renderNet));
+  ["period","net-chain","net-asset","net-window","net-period","net-chart-range"].forEach(id=>$(id).addEventListener("change",renderNet));
   ["period","transit-day"].forEach(id=>$(id).addEventListener("change",renderTransit));
   ["rwa-asset","rwa-day"].forEach(id=>$(id).addEventListener("change",renderRwa));
   render();renderNet();renderRwa();renderTransit();statuses();
