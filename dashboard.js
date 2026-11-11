@@ -155,7 +155,7 @@ function startDashboard() {
     const ticks = new Intl.NumberFormat(locale, {notation: "compact", maximumFractionDigits: 2});
     for (const fraction of [-1, -0.5, 0, 0.5, 1]) {
       const y = base - 120 * fraction;
-      svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: fraction === 0 ? "#64748b" : "#dce2eb"}),
+      svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: "#dce2eb"}),
         svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * Math.abs(fraction))),
         svgEl("text", {x: width - right + 5, y: y + 4, style: `fill:${shareColor}`},
           ticks.format(shareCeiling * Math.abs(fraction)) + " %"));
@@ -168,13 +168,15 @@ function startDashboard() {
         const height = value > 0 ? 120 * value / maximum : 0;
         const label = `${day(date)} · ${side.label} · ${names[members[i]]} · ${value === null ? t("Indisponible") : fmt(value, key === "sent_packets" ? 0 : 2) + " " + unit}`;
         const mark = height > 0
-          ? svgEl("rect", {x: x - barWidth / 2, y: side.sign > 0 ? base - height : base, width: barWidth - 1, height, fill: colors[members[i]], tabindex: 0, "aria-label": label})
+          ? svgEl("rect", {x: x - barWidth / 2, y: side.sign > 0 ? base - height : base, width: barWidth - 1, height,
+            fill: colors[members[i]], "fill-opacity": side.sign > 0 ? 1 : 0.55, tabindex: 0, "aria-label": label})
           : svgEl("text", {x, y: base + (side.sign > 0 ? -4 : 12), "text-anchor": "middle", tabindex: 0, "aria-label": label}, value === null ? "–" : "0");
         mark.append(svgEl("title", {}, label));
         svg.append(mark);
       });
       svg.append(svgEl("text", {x: center, y: 298, "text-anchor": "middle"}, dateLabel.format(new Date(date + "T00:00:00Z"))));
     });
+    svg.append(svgEl("line", {x1: left, x2: width - right, y1: base, y2: base, stroke: "#334155", "stroke-width": 2.5}));
     for (const side of series) {
       let path = "", previous = false;
       const dots = [];
