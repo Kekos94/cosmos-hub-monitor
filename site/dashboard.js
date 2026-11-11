@@ -2,6 +2,11 @@
 "use strict";
 const Monitor = {
   number(value) { return value === "" || value == null || !Number.isFinite(Number(value)) ? null : Number(value); },
+  activityShare(row) {
+    const total = Monitor.number(row?.tx_total);
+    const ibc = Monitor.number(row?.tx_ibc);
+    return total > 0 && ibc !== null ? 100 * ibc / total : null;
+  },
   filter(rows, period, last) {
     if (period === "all" || !last) return rows;
     const cutoff = new Date(last + "T00:00:00Z");
@@ -136,7 +141,12 @@ function startDashboard() {
     $("activity-cards").innerHTML =
       card(t("Transactions du Hub"), fmt(totalTx, 0), "", t("Journée UTC complète")) +
       card(t("Transactions IBC"), fmt(ibcTx, 0), "", t("Journée UTC complète")) +
-      card(t("Part des transactions IBC"), fmt(totalTx > 0 && ibcTx !== null ? ibcTx / totalTx * 100 : null), "%", t("Parmi les transactions du Hub"));
+      card(t("Part des transactions IBC"), fmt(Monitor.activityShare(a)), "%", t("Parmi les transactions du Hub"));
+    const activityMetric = $("activity-metric").value;
+    const activitySeries = activityMetric === "ibc_share_pct"
+      ? c1.map(row => ({date: row.date, ibc_share_pct: Monitor.activityShare(row)}))
+      : c1;
+    lineChart($("activity-chart"), activitySeries, activityMetric, activityMetric === "ibc_share_pct" ? "%" : "tx");
     const feesKnown=a && a.fee_collection_status==="complete";
     $("c1-cards").innerHTML=card(t("Frais collectés"),fmt(feesKnown?a.collected_fee_atom:null,3),"ATOM",t("Tips inclus une seule fois"),true)+card(t("Frais IBC collectés"),fmt(feesKnown?a.collected_ibc_fee_atom:null,3),"ATOM",t("Inclus dans les frais collectés"));
     const audits = new Map((data.emission || []).map(row => [row.date, row]));
@@ -468,7 +478,7 @@ function startDashboard() {
     }
     $("collection-status").innerHTML=html;
   }
-  ["period","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
+  ["period","activity-metric","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window","net-period","net-chart-range"].forEach(id=>$(id).addEventListener("change",renderNet));

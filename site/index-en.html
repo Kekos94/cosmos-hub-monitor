@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cosmos Hub observatory: economic coverage, IBC activity and public data quality.">
   <meta name="theme-color" content="#111d36"><title>Cosmos Observatory — Economics &amp; IBC activity</title>
-  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=870c4f4b6ee2"></script>
+  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=756e8b9bacc1"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -24,6 +24,18 @@
   <section id="activity" class="criterion">
     <div class="section-heading"><h2>1.1 — Transactions and IBC activity</h2><span id="activity-date" class="badge">No day available</span></div>
     <div class="cards" id="activity-cards" aria-live="polite"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <div><h3>Hub activity history</h3><p>Complete UTC days only</p></div>
+        <label class="chart-select">Metric<select id="activity-metric">
+            <option value="tx_total">Hub transactions</option>
+            <option value="tx_ibc">IBC transactions</option>
+            <option value="ibc_share_pct">Share of IBC transactions</option>
+          </select>
+        </label>
+      </div>
+      <div id="activity-chart" class="chart" aria-live="polite"></div>
+    </div>
   </section>
   <section id="ibc" class="criterion">
     <div class="section-heading"><div><h2>1.2 — IBC flows, balances and transit</h2></div><span id="c2-date" class="badge">No common day available</span></div>

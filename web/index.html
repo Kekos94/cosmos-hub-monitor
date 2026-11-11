@@ -24,6 +24,19 @@
   <section id="activity" class="criterion">
     <div class="section-heading"><h2>1.1 — Transactions et activité IBC</h2><span id="activity-date" class="badge">Aucune journée disponible</span></div>
     <div class="cards" id="activity-cards" aria-live="polite"></div>
+    <div class="panel">
+      <div class="panel-head">
+        <div><h3>Historique de l’activité du Hub</h3><p>Journées UTC complètes uniquement</p></div>
+        <label class="chart-select">Mesure
+          <select id="activity-metric">
+            <option value="tx_total">Transactions du Hub</option>
+            <option value="tx_ibc">Transactions IBC</option>
+            <option value="ibc_share_pct">Part des transactions IBC</option>
+          </select>
+        </label>
+      </div>
+      <div id="activity-chart" class="chart" aria-live="polite"></div>
+    </div>
   </section>
   <section id="ibc" class="criterion">
     <div class="section-heading"><div><h2>1.2 — Flux, soldes et transits IBC</h2></div><span id="c2-date" class="badge">Aucune journée commune</span></div>

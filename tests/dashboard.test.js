@@ -51,3 +51,10 @@ test('a partial calendar week still ends on Sunday', () => {
   assert.deepEqual(points.map(point => point.value), [null, -5, null, null, null, null, null]);
   assert.equal(monitor.weekSunday('2026-11-08'), '2026-11-08');
 });
+
+test('daily IBC share preserves zero and unavailable data', () => {
+  assert.equal(monitor.activityShare({tx_total: '200', tx_ibc: '50'}), 25);
+  assert.equal(monitor.activityShare({tx_total: '200', tx_ibc: '0'}), 0);
+  assert.equal(monitor.activityShare({tx_total: '200', tx_ibc: ''}), null);
+  assert.equal(monitor.activityShare({tx_total: '0', tx_ibc: '0'}), null);
+});
