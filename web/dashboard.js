@@ -248,6 +248,9 @@ function startDashboard() {
       }
     }
     const shortDate = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
+    const shortAmount = new Intl.NumberFormat(locale, {
+      notation: "compact", maximumSignificantDigits: 2, signDisplay: "exceptZero",
+    });
     points.forEach((point, index) => {
       const x = left + (index + 0.5) * step;
       const value = point.value;
@@ -260,6 +263,11 @@ function startDashboard() {
           width: barWidth, height, fill: value > 0 ? "#315cf4" : "#c72f46", tabindex: 0, "aria-label": description});
         bar.append(svgEl("title", {}, description));
         svg.append(bar);
+        const offset = Math.max(height, 7);
+        svg.append(svgEl("text", {
+          x, y: value > 0 ? zero - offset - 6 : zero + offset + 13,
+          "text-anchor": "middle", "aria-hidden": "true",
+        }, shortAmount.format(value)));
       } else {
         const mark = svgEl("text", {x, y: zero - 7, "text-anchor": "middle", tabindex: 0,
           "aria-label": description}, value === 0 ? "0" : "—");
