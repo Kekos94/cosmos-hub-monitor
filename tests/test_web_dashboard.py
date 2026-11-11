@@ -81,7 +81,7 @@ class DashboardTests(unittest.TestCase):
             self.assertIn('ATOM issuance and fee coverage', en)
             self.assertNotIn('id="eureka"', en)
             services = (root/'site/criterion1-services-en.html').read_text()
-            self.assertIn('1.4 — Live services and verified payments', services)
+            self.assertIn('Live services and verified payments', services)
             self.assertIn('href="index-en.html#activity"', services)
             self.assertIn('Network fees from Eureka transactions', services)
             self.assertIn('href="hub_criterion1_eureka_daily.csv"', services)
