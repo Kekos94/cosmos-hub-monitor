@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Critère 1 — Services et recettes du Cosmos Hub</title>
   <link rel="stylesheet" href="dashboard.css">
+  <style>
+    .eureka-fee-chart { list-style: none; margin: 0 0 24px; padding: 0; }
+    .eureka-fee-chart li { display: grid; grid-template-columns: 6em minmax(0, 1fr) 8em; align-items: center; gap: 8px; margin: 6px 0; font-size: 12px; }
+    .eureka-fee-track { background: #e7edf7; border-radius: 3px; height: 12px; }
+    .eureka-fee-bar { display: block; height: 100%; background: var(--blue); border-radius: 3px; }
+    .eureka-fee-value { text-align: right; font-variant-numeric: tabular-nums; }
+  </style>
 </head>
 <body>
 <a class="skip" href="#main">Aller au contenu</a>
@@ -44,6 +51,8 @@
     <h2 id="eureka">Historique des frais Eureka</h2>
     <p class="section-copy">Périmètre de l’index du fournisseur. Les frais de relais sont exclus.</p>
     <div class="panel net-panel">
+      <h3 id="eureka-fee-chart-title">Frais réseau Eureka par journée (ATOM)</h3>
+      <ul class="eureka-fee-chart" aria-labelledby="eureka-fee-chart-title"><li><time>2026-11-04</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:58.3859%"></span></span><span class="eureka-fee-value">0,209718 <small>ATOM</small></span></li><li><time>2026-11-05</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:32.9349%"></span></span><span class="eureka-fee-value">0,118300 <small>ATOM</small></span></li><li><time>2026-11-06</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:100.0000%"></span></span><span class="eureka-fee-value">0,359193 <small>ATOM</small></span></li><li><time>2026-11-07</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:76.8114%"></span></span><span class="eureka-fee-value">0,275901 <small>ATOM</small></span></li><li><time>2026-11-08</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:26.0929%"></span></span><span class="eureka-fee-value">0,093724 <small>ATOM</small></span></li><li><time>2026-11-09</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:31.8261%"></span></span><span class="eureka-fee-value">0,114317 <small>ATOM</small></span></li><li><time>2026-11-10</time><span class="eureka-fee-track" aria-hidden="true"><span class="eureka-fee-bar" style="width:31.9118%"></span></span><span class="eureka-fee-value">0,114625 <small>ATOM</small></span></li></ul>
       <div class="lifecycle-scroll">
         <table>
           <thead><tr><th scope="col">Journée UTC</th><th scope="col">Transactions Eureka identifiées</th><th scope="col">Frais réseau des transactions Eureka</th><th scope="col">Part des frais du Hub</th></tr></thead>
