@@ -25,17 +25,10 @@
     <h2 id="services">Services opérationnels et paiements vérifiés</h2>
     <p class="section-copy">Un paiement vérifié doit relier le service, le montant réglé et le bénéficiaire.</p>
     <div class="chart-grid">
-      <article class="panel" id="eureka">
+      <article class="panel">
         <h3>IBC Eureka · Ethereum</h3>
         <p>Service opérationnel. Les frais réseau associés sont compris dans le total du Hub. Paiement de service non vérifié.</p>
-        <dl>
-          <dt>Journée UTC</dt><dd>__DATE__</dd>
-          <dt>Transactions Eureka identifiées</dt><dd>__EUREKA_TXS__</dd>
-          <dt>Frais réseau des transactions Eureka</dt><dd>__EUREKA_FEES__</dd>
-          <dt>Part des frais du Hub</dt><dd>__EUREKA_SHARE__</dd>
-        </dl>
-        <p class="chart-note">Périmètre de l’index du fournisseur. Les frais de relais sont exclus.</p>
-        <a href="hub_criterion1_eureka_daily.csv" download>Frais Eureka · CSV ↓</a><br>
+        <a href="#eureka">Historique des frais Eureka ↓</a><br>
         <a href="https://cosmos.network/blog/interchain-labs-becomes-cosmos-labs">Source du déploiement ↗</a>
       </article>
       <article class="panel">
@@ -44,6 +37,20 @@
         <a href="community-pool.html">Registre des dépôts communautaires ↗</a><br>
         <a href="https://forum.cosmos.network/t/hub-weekly-update-23-november-5-2026/17540">Source de la migration ↗</a>
       </article>
+    </div>
+  </section>
+
+  <section class="criterion" aria-labelledby="eureka">
+    <h2 id="eureka">Historique des frais Eureka</h2>
+    <p class="section-copy">Périmètre de l’index du fournisseur. Les frais de relais sont exclus.</p>
+    <div class="panel net-panel">
+      <div class="lifecycle-scroll">
+        <table>
+          <thead><tr><th scope="col">Journée UTC</th><th scope="col">Transactions Eureka identifiées</th><th scope="col">Frais réseau des transactions Eureka</th><th scope="col">Part des frais du Hub</th></tr></thead>
+          <tbody>__EUREKA_HISTORY__</tbody>
+        </table>
+      </div>
+      <p><a href="hub_criterion1_eureka_daily.csv" download>Frais Eureka · CSV ↓</a></p>
     </div>
   </section>
 

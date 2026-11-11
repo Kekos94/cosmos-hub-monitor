@@ -90,13 +90,8 @@ def payload(root=ROOT):
 
 def build_services_page(root, site, data, catalog):
     """Render the services page using the same published observations."""
-    day = data['criterion1'][-1] if data['criterion1'] else {}
-    date = day.get('date')
-    fees = day.get('collected_fee_atom') if day.get('fee_collection_status') == 'complete' else None
-    eureka = next((row for row in data.get('eureka', []) if row['date'] == date
-                   and row['start_height'] == day.get('start_height')
-                   and row['end_height'] == day.get('end_height')), {})
-    eureka_fees_verified = eureka.get('status') == 'indexed_fee_verified'
+    economy_days = {row['date']: row for row in data['criterion1']}
+    history = sorted(data.get('eureka', []), key=lambda row: row['date'], reverse=True)
     template = (root / 'web/criterion1-services.html').read_text(encoding='utf-8')
 
     for language, page_name in (('fr', 'criterion1-services.html'), ('en', 'criterion1-services-en.html')):
@@ -115,12 +110,21 @@ def build_services_page(root, site, data, catalog):
         for code, suffix, label in (('fr', '', 'Français'), ('en', '-en', 'English')):
             current = ' aria-current="page"' if code == language else ''
             language_links.append(f'<a href="criterion1-services{suffix}.html" lang="{code}" hreflang="{code}"{current}>{label}</a>')
+        history_rows = []
+        for row in history:
+            day = economy_days.get(row['date'], {})
+            same_blocks = all(day.get(key) and day[key] == row.get(key) for key in ('start_height', 'end_height'))
+            fees_verified = same_blocks and row.get('status') == 'indexed_fee_verified'
+            share_verified = fees_verified and day.get('fee_collection_status') == 'complete'
+            history_rows.append(
+                f'<tr><th scope="row">{html.escape(row["date"])}</th>'
+                f'<td>{amount(row.get("indexed_transactions"), 0, "")}</td>'
+                f'<td>{amount(row.get("collected_fee_atom") if fees_verified else None, 6, "ATOM")}</td>'
+                f'<td>{amount(row.get("share_of_hub_fees_pct") if share_verified else None, 4, "%")}</td></tr>'
+            )
         values = {
             '__LANGUAGE_SWITCH__': '<div class="language-switch" aria-label="Language">' + ''.join(language_links) + '</div>',
-            '__DATE__': html.escape(date or unavailable),
-            '__EUREKA_TXS__': amount(eureka.get('indexed_transactions'), 0, ''),
-            '__EUREKA_FEES__': amount(eureka.get('collected_fee_atom') if eureka_fees_verified else None, 6, 'ATOM'),
-            '__EUREKA_SHARE__': amount(eureka.get('share_of_hub_fees_pct') if eureka_fees_verified and fees else None, 4, '%'),
+            '__EUREKA_HISTORY__': ''.join(history_rows) or f'<tr><td colspan="4">{unavailable}</td></tr>',
         }
         for placeholder, value in values.items():
             page = page.replace(placeholder, value)
