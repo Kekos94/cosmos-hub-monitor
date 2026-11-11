@@ -4,7 +4,7 @@
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="description" content="Cosmos Hub observatory: economic coverage, IBC activity and public data quality.">
   <meta name="theme-color" content="#111d36"><title>Cosmos Observatory — Economics &amp; IBC activity</title>
-  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=14ec105465d0"></script>
+  <link rel="stylesheet" href="dashboard.css?v=31d0dd03a385"><script defer src="dashboard.js?v=4d295d2670a5"></script>
 </head>
 <body>
 <a class="skip" href="#main">Skip to content</a>
@@ -43,8 +43,11 @@
     <div class="toolbar direction-toolbar"><label for="flow-direction">Flow direction<select id="flow-direction"><option value="out">Outgoing packets sent</option><option value="in">Incoming packets with confirmed success</option></select></label><span class="data-stamp">Incoming and outgoing flows are measured separately.</span></div>
     <div class="cards" id="c2-cards" aria-live="polite"></div>
     <div class="notice" id="valuation-note">Valuation depends on recognised assets and available historical prices.</div>
-    <div class="chart-grid"><div class="panel"><div class="panel-head"><div><h3 id="flow-title">Outgoing flows by chain</h3><p id="chains-caption">Latest selected common day</p></div><label class="chart-select">Unit<select id="flow-metric"><option value="sent_packets">Packets sent</option><option value="valued_out_usd">Valued subtotal (USD)</option></select></label></div><div id="chains-chart" class="chart" aria-live="polite"></div></div>
-    <div class="panel"><div class="panel-head"><div><h3>Cosmos Hub share</h3><p>Within the four-chain scope</p></div><label class="chart-select">Metric<select id="share-metric"><option value="hub_share_packet_count_pct">Share of packets (%)</option><option value="hub_share_valued_usd_pct">Share of valued USD subset (%)</option></select></label></div><div id="share-chart" class="chart" aria-live="polite"></div></div></div>
+    <div class="toolbar direction-toolbar"><label for="flow-metric">Unit<select id="flow-metric"><option value="sent_packets">Packet count</option><option value="valued_out_usd">Valued subtotal (USD)</option></select></label><span id="chains-caption" class="data-stamp" aria-live="polite">No common day available</span></div>
+    <div class="chart-grid">
+      <div class="panel"><h3>Confirmed incoming flows by chain</h3><div id="chains-in-chart" class="chart" aria-live="polite"></div></div>
+      <div class="panel"><h3>Outgoing flows by chain</h3><div id="chains-out-chart" class="chart" aria-live="polite"></div></div>
+    </div>
     <div class="panel lifecycle" id="chain-flow-history">
       <div class="panel-head">
         <div><h3>Flows by chain over seven days</h3><p>Confirmed inflows above zero · Sent outflows below</p></div>

@@ -103,10 +103,10 @@ function startDashboard() {
     note.textContent=known.length===1 ? t("Une seule journée disponible : aucune tendance ne peut encore être établie.") : t("{count} journées renseignées · Les interruptions d’historique ne sont pas reliées.",{count:known.length});
     el.append(note);
   }
-  function barChart(el, rows, key, incoming=false) {
+  function barChart(el, rows, key, incoming, max) {
     if(!rows.length) return empty(el,t("Aucune journée commune aux quatre chaînes."));
     const W=Math.max(320,el.clientWidth||680),H=260,L=100,R=75,T=20,step=53;
-    const vals=rows.map(r=>Monitor.number(r[key])),max=Math.max(...vals.filter(v=>v!==null),1);
+    const vals=rows.map(r=>Monitor.number(r[key]));
     const svg=svgEl("svg",{viewBox:`0 0 ${W} ${H}`,role:"img","aria-label":key==="sent_packets"?(incoming?t("Paquets reçus confirmés par chaîne"):t("Paquets émis par chaîne")):t("Sous-totaux USD valorisés par chaîne, valorisation potentiellement partielle")});
     rows.forEach((r,i)=>{
       const v=vals[i], py=T+i*step;
@@ -114,7 +114,7 @@ function startDashboard() {
       svg.append(svgEl("rect",{x:L,y:py,width:W-L-R,height:30,fill:"#f0f3f8",rx:4}));
       if(v!==null){
         const label=`${names[r.chain]||r.chain} : ${fmt(v,key==="sent_packets"?0:2)} ${key==="sent_packets"?t("paquets"):t("USD valorisés")}`;
-        const bar=svgEl("rect",{x:L,y:py,width:Math.max(0,v)/max*(W-L-R),height:30,rx:4,fill:colors[r.chain]||"#8796ca",tabindex:0,"aria-label":label});bar.append(svgEl("title",{},label));svg.append(bar);
+        const bar=svgEl("rect",{x:L,y:py,width:Math.max(0,v)/max*(W-L-R),height:30,rx:4,fill:colors[r.chain]||"#8796ca","fill-opacity":incoming?1:0.55,tabindex:0,"aria-label":label});bar.append(svgEl("title",{},label));svg.append(bar);
       }
       svg.append(svgEl("text",{x:W-R+12,y:py+20},v===null?t("ND"):new Intl.NumberFormat(locale,{notation:"compact",maximumFractionDigits:2}).format(v)));
     });
@@ -208,13 +208,12 @@ function startDashboard() {
   function render() {
     const incoming=$("flow-direction").value==='in';
     const normalize=r=>({...r,sent_packets:r.received_packets,valued_out_usd:r.valued_in_usd,hub_share_packet_count_pct:r.hub_share_confirmed_packet_count_pct});
-    const flowData=incoming?(data.incoming||[]).map(normalize):data.criterion2;
-    const chainData=incoming?(data.incoming_chains||[]).map(normalize):data.chains;
-    const c1=Monitor.filter(data.criterion1,$("period").value,last),c2=Monitor.filter(flowData,$("period").value,last);
+    const period = $("period").value;
+    const incomingDays = Monitor.filter((data.incoming || []).map(normalize), period, last);
+    const outgoingDays = Monitor.filter(data.criterion2, period, last);
+    const incomingRows = (data.incoming_chains || []).map(normalize);
+    const c1=Monitor.filter(data.criterion1,period,last),c2=incoming?incomingDays:outgoingDays;
     $("ibc-description").textContent=incoming?t("Les entrées confirmées sont les réceptions ICS20 v1 avec un accusé de succès interprété dans la même transaction. Les erreurs et confirmations manquantes sont affichées séparément. Ce n’est pas une mesure du transit."):t("Comparaison des paquets ICS20 v1 émis par les quatre chaînes, sur une même journée. Les montants sont bruts ; le suivi des confirmations et remboursements est présenté séparément.");
-    $("flow-title").textContent=incoming?t("Entrées confirmées par chaîne"):t("Flux sortants par chaîne");
-    $("flow-metric").options[0].textContent=incoming?t("Paquets reçus confirmés"):t("Paquets émis");
-    $("share-metric").options[0].textContent=incoming?t("Part des entrées confirmées (%)"):t("Part des paquets (%)");
     $("ibc-details").href='criterion2'+(language==='en'?'-en':'')+'.html'+(incoming?'#incoming':'');
     const a=Monitor.latest(c1),b=Monitor.latest(c2);
     $("c1-date").textContent=a ? day(a.date)+" · UTC" : t("Aucune journée dans la période");
@@ -281,17 +280,24 @@ function startDashboard() {
     const coverage=n>0 && p!==null ? p/n*100:null;
     $("c2-cards").innerHTML=card(incoming?t("Part du Hub · entrées confirmées"):t("Part du Hub · paquets"),fmt(b?.hub_share_packet_count_pct,2),"%",t("Dans les quatre chaînes"),true)+card(t("Part du Hub · USD valorisés"),fmt(b?.hub_share_valued_usd_pct,2),"%",t("Part du sous-ensemble valorisé"))+card(incoming?t("Entrées valorisées · quatre chaînes"):t("Flux valorisés · quatre chaînes"),fmt(b?.valued_out_usd,0),"USD",t("Sous-total, pas volume économique net"))+card(t("Paquets avec valorisation"),fmt(coverage,1),"%",b?fmt(b.unpriced_packets,0)+t(" paquets non valorisés"):t("Couverture en nombre, pas en valeur"));
     $("valuation-note").textContent=!b ? t("Aucune comparaison n’est publiée tant que les quatre index n’ont pas été parcourus sur une même journée UTC.") : b.valuation_status!=="complete" ? t("Valorisation partielle : {count} paquets sans valorisation. La part USD totale du Hub est indisponible. La couverture de {coverage} % porte sur le nombre de paquets, pas sur leur valeur.",{count:fmt(b.unpriced_packets,0),coverage:fmt(coverage,1)}) : t("Tous les paquets de cette journée disposent d’une valorisation de référence historique. Les montants restent des flux bruts émis, pas des flux nets réglés.");
-    const chains=b?chainData.filter(r=>r.date===b.date && r.universe_id===b.universe_id).sort((a,b)=>Number(b.sent_packets)-Number(a.sent_packets)):[];
-    $("chains-caption").textContent=b?day(b.date)+t(" UTC · Même journée pour les quatre chaînes"):t("Dernière journée commune sélectionnée");
+    const incomingByDate = new Map(incomingDays.map(row => [row.date, row]));
+    const snapshotOut = Monitor.latest(outgoingDays.filter(row => incomingByDate.has(row.date)));
+    const snapshotIn = incomingByDate.get(snapshotOut?.date);
+    const onSnapshot = (rows, snapshot) => snapshot ? rows.filter(row => row.date === snapshot.date &&
+      row.universe_id === snapshot.universe_id && row.coverage_status === "indexed_complete") : [];
+    const flowsIn = onSnapshot(incomingRows, snapshotIn), flowsOut = onSnapshot(data.chains, snapshotOut);
+    $("chains-caption").textContent=snapshotOut?day(snapshotOut.date)+t(" UTC · Même journée pour les quatre chaînes"):t("Aucune journée commune");
     if(incoming && b) $("valuation-note").textContent=t("Entrées : {observed} réceptions observées, {confirmed} avec succès confirmé, {errors} avec accusé d’erreur et {unknown} sans confirmation interprétable dans la transaction de réception. {unpriced} entrées confirmées sans valorisation. Les parts portent sur le sous-ensemble confirmé ; aucun rapprochement de transit ou de solde net.",{observed:fmt(b.observed_packets,0),confirmed:fmt(b.received_packets,0),errors:fmt(b.error_ack_packets,0),unknown:fmt(b.unconfirmed_packets,0),unpriced:fmt(b.unpriced_packets,0)});
-    barChart($("chains-chart"),chains,$("flow-metric").value,incoming);
+    const flowMetric = $("flow-metric").value;
+    const flowMaximum = Math.max(1, ...[...flowsIn, ...flowsOut].map(row => Monitor.number(row[flowMetric]) ?? 0));
+    barChart($("chains-in-chart"), flowsIn, flowMetric, true, flowMaximum);
+    barChart($("chains-out-chart"), flowsOut, flowMetric, false, flowMaximum);
     chainHistory([
-      {rows: (data.incoming_chains || []).map(normalize), commonDays: Monitor.filter((data.incoming || []).map(normalize), $("period").value, last),
+      {rows: incomingRows, commonDays: incomingDays,
         sign: 1, label: t("Entrées avec succès confirmé")},
-      {rows: data.chains, commonDays: Monitor.filter(data.criterion2, $("period").value, last),
+      {rows: data.chains, commonDays: outgoingDays,
         sign: -1, label: t("Sorties émises")},
     ], $("chain-history-metric").value);
-    lineChart($("share-chart"),c2,$("share-metric").value,"%");
     const life=Monitor.filter((data.lifecycle||[]).filter(r=>r.direction===(incoming?'in':'out')),$("period").value,last);
     const latestLife=Monitor.latest(life),cohort=latestLife?life.filter(r=>r.date===latestLife.date):[];
     $("lifecycle-caption").textContent=latestLife?t("Cohorte du {date} UTC · {direction}",{date:day(latestLife.date),direction:incoming?t("Entrées observées"):t("Sorties émises")}):t("Aucune cohorte complète disponible");
@@ -568,7 +574,7 @@ function startDashboard() {
     }
     $("collection-status").innerHTML=html;
   }
-  ["period","activity-metric","economy-metric","flow-direction","flow-metric","share-metric","chain-history-metric"].forEach(id=>$(id).addEventListener("change",render));
+  ["period","activity-metric","economy-metric","flow-direction","flow-metric","chain-history-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window","net-period","net-chart-range"].forEach(id=>$(id).addEventListener("change",renderNet));

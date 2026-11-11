@@ -44,8 +44,11 @@
     <div class="toolbar direction-toolbar"><label for="flow-direction">Sens des flux <select id="flow-direction"><option value="out">Sorties émises</option><option value="in">Entrées avec succès confirmé</option></select></label><span class="data-stamp">Entrées et sorties sont mesurées séparément.</span></div>
     <div class="cards" id="c2-cards" aria-live="polite"></div>
     <div class="notice" id="valuation-note">La valorisation dépend des actifs reconnus et des prix historiques disponibles.</div>
-    <div class="chart-grid"><div class="panel"><div class="panel-head"><div><h3 id="flow-title">Flux sortants par chaîne</h3><p id="chains-caption">Dernière journée commune sélectionnée</p></div><label class="chart-select">Unité <select id="flow-metric"><option value="sent_packets">Paquets émis</option><option value="valued_out_usd">Sous-total valorisé (USD)</option></select></label></div><div id="chains-chart" class="chart" aria-live="polite"></div></div>
-    <div class="panel"><div class="panel-head"><div><h3>Part du Cosmos Hub</h3><p>Dans le périmètre des quatre chaînes</p></div><label class="chart-select">Mesure <select id="share-metric"><option value="hub_share_packet_count_pct">Part des paquets (%)</option><option value="hub_share_valued_usd_pct">Part du sous-ensemble USD (%)</option></select></label></div><div id="share-chart" class="chart" aria-live="polite"></div></div></div>
+    <div class="toolbar direction-toolbar"><label for="flow-metric">Unité <select id="flow-metric"><option value="sent_packets">Nombre de paquets</option><option value="valued_out_usd">Sous-total valorisé (USD)</option></select></label><span id="chains-caption" class="data-stamp" aria-live="polite">Aucune journée commune</span></div>
+    <div class="chart-grid">
+      <div class="panel"><h3>Entrées confirmées par chaîne</h3><div id="chains-in-chart" class="chart" aria-live="polite"></div></div>
+      <div class="panel"><h3>Flux sortants par chaîne</h3><div id="chains-out-chart" class="chart" aria-live="polite"></div></div>
+    </div>
     <div class="panel lifecycle" id="chain-flow-history">
       <div class="panel-head">
         <div><h3>Flux par chaîne sur sept jours</h3><p>Entrées confirmées au-dessus de zéro · Sorties émises en dessous</p></div>
