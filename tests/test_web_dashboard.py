@@ -97,10 +97,10 @@ class DashboardTests(unittest.TestCase):
 
     def test_translated_detail_pages_keep_data_and_locale_navigation(self):
         catalog=json.loads((dashboard.ROOT/'web/en.json').read_text())
-        source='<html lang="fr"><a href="index.html">Retour au dashboard</a><h1>1B — Centralité des flux IBC</h1><table><tr><th>Paquets non valorisés</th><td>376</td></tr></table></html>'
+        source='<html lang="fr"><a href="index.html">Retour au dashboard</a><h1>1.2 — Centralité des flux IBC</h1><table><tr><th>Paquets non valorisés</th><td>376</td></tr></table></html>'
         result=dashboard.english(source,catalog)
         self.assertIn('href="index-en.html"',result)
-        self.assertIn('1B — IBC flow centrality', result)
+        self.assertIn('1.2 — IBC flow centrality', result)
         self.assertIn('Unvalued packets',result)
         self.assertIn('<td>376</td>',result)
         self.assertIn('6,457,369.77',dashboard.english('<td>6 457 369,77</td>',catalog))

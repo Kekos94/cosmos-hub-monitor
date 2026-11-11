@@ -1,4 +1,4 @@
-"""Publish Criterion 1B independently of the Hub economy calculations."""
+"""Publish Criterion 1.2 independently of the Hub economy calculations."""
 import html
 import shutil
 from datetime import datetime, timezone
@@ -49,9 +49,9 @@ def main():
     files.extend(('ibc_rwa_daily.csv', 'ibc_rwa_balances_daily.csv'))
     for name in files:shutil.copy2(ROOT/name,site/name)
     links=''.join(f'<li><a href="{name}">{name}</a></li>' for name in files)
-    document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Sous-critère 1B</title>
+    document=f'''<!doctype html><html lang="fr"><head><meta charset="utf-8"><title>Cosmos Monitor — Sous-critère 1.2</title>
 <style>body{{font:16px/1.5 Arial,sans-serif;margin:30px}}table{{border-collapse:collapse}}td,th{{border:1px solid #ddd;padding:8px}}.scroll{{overflow:auto}}.notice{{background:#fff3d1;padding:16px}}</style></head><body>
-<p><a href="index.html">Retour au dashboard</a> · <a href="criterion1.html">1A, 1C et 1D — Économie du Hub</a></p><h1>1B — Centralité des flux IBC</h1>
+<p><a href="index.html">Retour au dashboard</a> · <a href="criterion1.html">1.1 et 1.3 — Économie du Hub</a></p><h1>1.2 — Centralité des flux IBC</h1>
 <p>Généré : {datetime.now(timezone.utc).isoformat()}</p>
 <p>Périmètre configuré : {html.escape(', '.join(c['name'] for c in cfg['chains']))}.</p>
 <p class="notice">Ces mesures portent sur les paquets ICS20 v1 émis via le port transfer, selon l'index de transactions du fournisseur.
@@ -104,7 +104,7 @@ ni une part des RWA. Les multi-sauts et transferts de retour peuvent représente
     (site/'criterion2.html').write_text(document,encoding='utf-8')
     from build_web_dashboard import main as build_dashboard
     build_dashboard(ROOT)
-    print('Criterion 1B page generated.')
+    print('Criterion 1.2 page generated.')
 
 
 if __name__=='__main__':main()
