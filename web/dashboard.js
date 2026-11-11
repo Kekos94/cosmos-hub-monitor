@@ -129,25 +129,29 @@ function startDashboard() {
     $("chain-history-caption").textContent = incoming ? t("Entrées avec succès confirmé") : t("Sorties émises");
     if (!latest) return empty(el);
     const days = Monitor.weekDates(latest.date);
-    const comparable = new Map(commonDays.map(row => [row.date, row.universe_id]));
+    const comparable = new Map(commonDays.map(row => [row.date, row]));
     const members = Object.keys(names).filter(chain => data.members.includes(names[chain]) || data.members.includes(chain));
     const grouped = days.map(date => members.map(chain => {
       const row = rows.find(row => row.date === date && row.chain === chain &&
-        row.coverage_status === "indexed_complete" && row.universe_id === comparable.get(date));
+        row.coverage_status === "indexed_complete" && row.universe_id === comparable.get(date)?.universe_id);
       return Monitor.number(row?.[key]);
     }));
     const maximum = Math.max(1, ...grouped.flat().filter(value => value !== null));
-    const width = Math.max(320, el.clientWidth || 680), left = 55, right = 12, base = 155;
+    const width = Math.max(320, el.clientWidth || 680), left = 55, right = 47, base = 155;
     const step = (width - left - right) / days.length;
     const barWidth = Math.min(20, step * 0.78 / Math.max(1, members.length));
     const unit = key === "sent_packets" ? t("paquets") : t("USD valorisés");
+    const shareKey = key === "sent_packets" ? "hub_share_packet_count_pct" : "hub_share_valued_usd_pct";
+    const shareColor = "#a54f12";
+    const shareLabel = t("Part du Cosmos Hub · axe de droite");
     const svg = svgEl("svg", {viewBox: `0 0 ${width} 190`, role: "img",
       "aria-label": t("Flux par chaîne sur sept jours") + " · " + unit});
     const ticks = new Intl.NumberFormat(locale, {notation: "compact", maximumFractionDigits: 2});
     for (const fraction of [0, 0.5, 1]) {
       const y = base - 120 * fraction;
       svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: "#dce2eb"}),
-        svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * fraction)));
+        svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * fraction)),
+        svgEl("text", {x: width - right + 5, y: y + 4, style: `fill:${shareColor}`}, fmt(100 * fraction, 0) + " %"));
     }
     const dateLabel = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
     days.forEach((date, index) => {
@@ -164,9 +168,27 @@ function startDashboard() {
       });
       svg.append(svgEl("text", {x: center, y: 178, "text-anchor": "middle"}, dateLabel.format(new Date(date + "T00:00:00Z"))));
     });
+    let path = "", previous = false;
+    const dots = [];
+    days.forEach((date, index) => {
+      const share = Monitor.number(comparable.get(date)?.[shareKey]);
+      if (share === null) {
+        previous = false;
+        return;
+      }
+      const x = left + (index + 0.5) * step, y = base - 120 * share / 100;
+      path += `${previous ? " L " : " M "}${x} ${y}`;
+      previous = true;
+      const label = `${day(date)} · ${t("Part du Cosmos Hub")} · ${fmt(share, 2)} %`;
+      const dot = svgEl("circle", {cx: x, cy: y, r: 4, fill: shareColor, stroke: "white", tabindex: 0, "aria-label": label});
+      dot.append(svgEl("title", {}, label));
+      dots.push(dot);
+    });
+    svg.append(svgEl("path", {d: path, fill: "none", stroke: shareColor, "stroke-width": 2.5}), ...dots);
     const legend = document.createElement("p");
     legend.className = "chart-note";
     legend.innerHTML = members.map(chain => `<span style="color:${colors[chain]}" aria-hidden="true">■</span> ${esc(names[chain])}`).join(" &nbsp; ");
+    legend.insertAdjacentHTML("beforeend", ` &nbsp; <span style="color:${shareColor}" aria-hidden="true">━</span> ${esc(shareLabel)}`);
     el.replaceChildren(svg, legend);
   }
   const dates=[...data.criterion1,...data.criterion2,...(data.incoming||[]),...(data.net_chains||[])].map(r=>r.date).sort();
