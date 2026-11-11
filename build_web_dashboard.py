@@ -31,7 +31,7 @@ def english(document, catalog):
         return '>'+html.escape(translated,quote=False)+'<'
     document=re.sub(r'>([^<>]*)<',translate,document)
     document=document.replace('<html lang="fr">','<html lang="en">').replace('Navigation principale','Main navigation')
-    for name in ('index','criterion1','criterion2','community-pool'):
+    for name in ('index','criterion1','criterion2','community-pool','ibc-large-movements'):
         document=re.sub(rf'href="{name}\.html(?=["#])', f'href="{name}-en.html', document)
     document=document.replace('href="index-en.html" lang="fr"','href="index.html" lang="fr"')
     document=document.replace('href="index-en.html" lang="en"','href="index-en.html" lang="en" aria-current="page"')
@@ -113,6 +113,8 @@ def main(root=ROOT):
         shutil.copy2(root / 'web' / name, site / name)
     from community_pool_page import build as build_community_pool
     build_community_pool(root)
+    from ibc_large_movements import build as build_large_movements
+    build_large_movements(root, site, data, catalog, english)
     print('Public dashboard generated from saved data; measurements unchanged.')
 
 

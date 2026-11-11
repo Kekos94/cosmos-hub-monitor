@@ -1,0 +1,13 @@
+{
+  "cosmoshub-4/transfer/channel-141/5030155": {
+    "send_hash": "79CDCA84B17759A9C77E331E71D9C4B5B98AE1CBB46C05E67EEA24979F3BD350",
+    "receive_hash": "E596077D14DE2C566EAF63571F7D7AF3461DEF91FC589CE7A8B9E5183F30100C",
+    "source_chain": "Cosmos Hub",
+    "destination_chain": "Osmosis",
+    "sender": "cosmos10uxaa5gkxpeungu2c9qswx035v6t3r24w6v2r6dxd858rq2mzknqj8ru28",
+    "receiver": "osmo1k8c2m5cn322akk5wy8lpt87dd2f4yh9afcd7af",
+    "sender_label": "Compte interchaîne de Stride",
+    "receiver_label": "Coffre multisignature de Stride",
+    "source": "https://github.com/Stride-Labs/stride/releases/tag/v35.0.0"
+  }
+}

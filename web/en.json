@@ -462,5 +462,21 @@
   "Entrées et sorties de l’actif sélectionné": "Inflows and outflows for the selected asset",
   "Aucun flux disponible pour cet actif sur la période.": "No flows are available for this asset in this period.",
   "Solde quotidien sur sept jours": "Daily net flow over seven days",
-  "Sept jours jusqu’à la fin de la période sélectionnée. Bleu au-dessus de zéro pour un solde positif, rouge en dessous pour un solde négatif. Un tiret indique une donnée indisponible.": "Seven days ending on the last day of the selected period. Positive net flows are blue above zero, negative net flows are red below zero. A dash indicates unavailable data."
+  "Sept jours jusqu’à la fin de la période sélectionnée. Bleu au-dessus de zéro pour un solde positif, rouge en dessous pour un solde négatif. Un tiret indique une donnée indisponible.": "Seven days ending on the last day of the selected period. Positive net flows are blue above zero, negative net flows are red below zero. A dash indicates unavailable data.",
+  "Grands mouvements IBC": "Large IBC transfers",
+  "Grands mouvements IBC ↗": "Large IBC transfers ↗",
+  "Retour aux flux nets ↗": "Back to net flows ↗",
+  "1.2 · FLUX IBC": "1.2 · IBC FLOWS",
+  "Transferts individuels confirmés d’au moins 100 000 ATOM natifs, à l’entrée ou à la sortie du Cosmos Hub. À partir de 1 million d’ATOM, le mouvement est signalé comme exceptionnel.": "Confirmed individual transfers of at least 100,000 native ATOM into or out of the Cosmos Hub. Transfers of at least 1 million ATOM are marked exceptional.",
+  "Les dates UTC correspondent à l’émission ou à la réception côté Hub. Les comptes sont affichés lorsqu’une preuve les identifie. Les cumuls de transferts fractionnés restent à vérifier.": "UTC dates refer to the send or receipt on the Hub. Account details are shown when supported by evidence. Split transfers still require verification.",
+  "Sortie du Hub": "Outbound from the Hub",
+  "Entrée sur le Hub": "Inbound to the Hub",
+  "Mouvement exceptionnel": "Exceptional transfer",
+  "Transaction côté Hub ↗": "Hub transaction ↗",
+  "Comptes non identifiés": "Accounts unidentified",
+  "Compte interchaîne de Stride": "Stride interchain account",
+  "Coffre multisignature de Stride": "Stride multisig vault",
+  "Transaction de réception ↗": "Receipt transaction ↗",
+  "Source de l’attribution ↗": "Attribution source ↗",
+  "Aucun grand mouvement confirmé dans les données disponibles.": "No confirmed large transfers in the available data."
 }
