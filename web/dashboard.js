@@ -123,73 +123,77 @@ function startDashboard() {
     note.textContent=key==="sent_packets"?t("Un paquet n’est ni un utilisateur distinct, ni un montant en dollars."):t("Sous-totaux historiques valorisés ; les actifs sans prix sont exclus, jamais comptés à zéro.");
     el.append(note);
   }
-  function chainHistory(rows, commonDays, key, incoming) {
+  function chainHistory(directions, key) {
     const el = $("chain-history-chart");
-    const latest = Monitor.latest(commonDays);
-    $("chain-history-caption").textContent = incoming ? t("Entrées avec succès confirmé") : t("Sorties émises");
+    const latest = Monitor.latest(directions.flatMap(direction => direction.commonDays));
     if (!latest) return empty(el);
     const days = Monitor.weekDates(latest.date);
-    const comparable = new Map(commonDays.map(row => [row.date, row]));
     const members = Object.keys(names).filter(chain => data.members.includes(names[chain]) || data.members.includes(chain));
-    const grouped = days.map(date => members.map(chain => {
-      const row = rows.find(row => row.date === date && row.chain === chain &&
-        row.coverage_status === "indexed_complete" && row.universe_id === comparable.get(date)?.universe_id);
-      return Monitor.number(row?.[key]);
-    }));
-    const maximum = Math.max(1, ...grouped.flat().filter(value => value !== null));
+    const shareKey = key === "sent_packets" ? "hub_share_packet_count_pct" : "hub_share_valued_usd_pct";
+    const series = directions.map(({rows, commonDays, sign, label}) => {
+      const comparable = new Map(commonDays.map(row => [row.date, row]));
+      const values = days.map(date => members.map(chain => {
+        const row = rows.find(row => row.date === date && row.chain === chain &&
+          row.coverage_status === "indexed_complete" && row.universe_id === comparable.get(date)?.universe_id);
+        return Monitor.number(row?.[key]);
+      }));
+      const shares = days.map(date => Monitor.number(comparable.get(date)?.[shareKey]));
+      return {values, shares, sign, label};
+    });
+    const maximum = Math.max(1, ...series.flatMap(side => side.values.flat()).filter(value => value !== null));
     const width = Math.max(320, el.clientWidth || 680), left = 55, right = 47, base = 155;
     const step = (width - left - right) / days.length;
     const barWidth = Math.min(20, step * 0.78 / Math.max(1, members.length));
     const unit = key === "sent_packets" ? t("paquets") : t("USD valorisés");
-    const shareKey = key === "sent_packets" ? "hub_share_packet_count_pct" : "hub_share_valued_usd_pct";
-    const shares = days.map(date => Monitor.number(comparable.get(date)?.[shareKey]));
-    const maxShare = Math.max(0, ...shares.filter(share => share !== null));
+    const maxShare = Math.max(0, ...series.flatMap(side => side.shares).filter(share => share !== null));
     const shareStep = maxShare <= 10 ? 1 : 5;
     const shareCeiling = Math.max(shareStep, Math.ceil(maxShare / shareStep) * shareStep);
     const shareColor = "#a54f12";
     const shareLabel = t("Part du Cosmos Hub · axe de droite");
-    const svg = svgEl("svg", {viewBox: `0 0 ${width} 190`, role: "img",
+    const svg = svgEl("svg", {viewBox: `0 0 ${width} 309`, role: "img",
       "aria-label": t("Flux par chaîne sur sept jours") + " · " + unit});
     const ticks = new Intl.NumberFormat(locale, {notation: "compact", maximumFractionDigits: 2});
-    for (const fraction of [0, 0.5, 1]) {
+    for (const fraction of [-1, -0.5, 0, 0.5, 1]) {
       const y = base - 120 * fraction;
-      svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: "#dce2eb"}),
-        svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * fraction)),
+      svg.append(svgEl("line", {x1: left, x2: width - right, y1: y, y2: y, stroke: fraction === 0 ? "#64748b" : "#dce2eb"}),
+        svgEl("text", {x: left - 6, y: y + 4, "text-anchor": "end"}, ticks.format(maximum * Math.abs(fraction))),
         svgEl("text", {x: width - right + 5, y: y + 4, style: `fill:${shareColor}`},
-          ticks.format(shareCeiling * fraction) + " %"));
+          ticks.format(shareCeiling * Math.abs(fraction)) + " %"));
     }
     const dateLabel = new Intl.DateTimeFormat(locale, {day: "numeric", month: "numeric", timeZone: "UTC"});
     days.forEach((date, index) => {
       const center = left + (index + 0.5) * step;
-      grouped[index].forEach((value, i) => {
+      for (const side of series) side.values[index].forEach((value, i) => {
         const x = center + (i - (members.length - 1) / 2) * barWidth;
         const height = value > 0 ? 120 * value / maximum : 0;
-        const label = `${day(date)} · ${names[members[i]]} · ${value === null ? t("Indisponible") : fmt(value, key === "sent_packets" ? 0 : 2) + " " + unit}`;
+        const label = `${day(date)} · ${side.label} · ${names[members[i]]} · ${value === null ? t("Indisponible") : fmt(value, key === "sent_packets" ? 0 : 2) + " " + unit}`;
         const mark = height > 0
-          ? svgEl("rect", {x: x - barWidth / 2, y: base - height, width: barWidth - 1, height, fill: colors[members[i]], tabindex: 0, "aria-label": label})
-          : svgEl("text", {x, y: base - 4, "text-anchor": "middle", tabindex: 0, "aria-label": label}, value === null ? "–" : "0");
+          ? svgEl("rect", {x: x - barWidth / 2, y: side.sign > 0 ? base - height : base, width: barWidth - 1, height, fill: colors[members[i]], tabindex: 0, "aria-label": label})
+          : svgEl("text", {x, y: base + (side.sign > 0 ? -4 : 12), "text-anchor": "middle", tabindex: 0, "aria-label": label}, value === null ? "–" : "0");
         mark.append(svgEl("title", {}, label));
         svg.append(mark);
       });
-      svg.append(svgEl("text", {x: center, y: 178, "text-anchor": "middle"}, dateLabel.format(new Date(date + "T00:00:00Z"))));
+      svg.append(svgEl("text", {x: center, y: 298, "text-anchor": "middle"}, dateLabel.format(new Date(date + "T00:00:00Z"))));
     });
-    let path = "", previous = false;
-    const dots = [];
-    days.forEach((date, index) => {
-      const share = shares[index];
-      if (share === null) {
-        previous = false;
-        return;
-      }
-      const x = left + (index + 0.5) * step, y = base - 120 * share / shareCeiling;
-      path += `${previous ? " L " : " M "}${x} ${y}`;
-      previous = true;
-      const label = `${day(date)} · ${t("Part du Cosmos Hub")} · ${fmt(share, 2)} %`;
-      const dot = svgEl("circle", {cx: x, cy: y, r: 4, fill: shareColor, stroke: "white", tabindex: 0, "aria-label": label});
-      dot.append(svgEl("title", {}, label));
-      dots.push(dot);
-    });
-    svg.append(svgEl("path", {d: path, fill: "none", stroke: shareColor, "stroke-width": 2.5}), ...dots);
+    for (const side of series) {
+      let path = "", previous = false;
+      const dots = [];
+      days.forEach((date, index) => {
+        const share = side.shares[index];
+        if (share === null) {
+          previous = false;
+          return;
+        }
+        const x = left + (index + 0.5) * step, y = base - side.sign * 120 * share / shareCeiling;
+        path += `${previous ? " L " : " M "}${x} ${y}`;
+        previous = true;
+        const label = `${day(date)} · ${side.label} · ${t("Part du Cosmos Hub")} · ${fmt(share, 2)} %`;
+        const dot = svgEl("circle", {cx: x, cy: y, r: 4, fill: shareColor, stroke: "white", tabindex: 0, "aria-label": label});
+        dot.append(svgEl("title", {}, label));
+        dots.push(dot);
+      });
+      svg.append(svgEl("path", {d: path, fill: "none", stroke: shareColor, "stroke-width": 2.5}), ...dots);
+    }
     const legend = document.createElement("p");
     legend.className = "chart-note";
     legend.innerHTML = members.map(chain => `<span style="color:${colors[chain]}" aria-hidden="true">■</span> ${esc(names[chain])}`).join(" &nbsp; ");
@@ -279,7 +283,12 @@ function startDashboard() {
     $("chains-caption").textContent=b?day(b.date)+t(" UTC · Même journée pour les quatre chaînes"):t("Dernière journée commune sélectionnée");
     if(incoming && b) $("valuation-note").textContent=t("Entrées : {observed} réceptions observées, {confirmed} avec succès confirmé, {errors} avec accusé d’erreur et {unknown} sans confirmation interprétable dans la transaction de réception. {unpriced} entrées confirmées sans valorisation. Les parts portent sur le sous-ensemble confirmé ; aucun rapprochement de transit ou de solde net.",{observed:fmt(b.observed_packets,0),confirmed:fmt(b.received_packets,0),errors:fmt(b.error_ack_packets,0),unknown:fmt(b.unconfirmed_packets,0),unpriced:fmt(b.unpriced_packets,0)});
     barChart($("chains-chart"),chains,$("flow-metric").value,incoming);
-    chainHistory(chainData,c2,$("flow-metric").value,incoming);
+    chainHistory([
+      {rows: (data.incoming_chains || []).map(normalize), commonDays: Monitor.filter((data.incoming || []).map(normalize), $("period").value, last),
+        sign: 1, label: t("Entrées avec succès confirmé")},
+      {rows: data.chains, commonDays: Monitor.filter(data.criterion2, $("period").value, last),
+        sign: -1, label: t("Sorties émises")},
+    ], $("chain-history-metric").value);
     lineChart($("share-chart"),c2,$("share-metric").value,"%");
     const life=Monitor.filter((data.lifecycle||[]).filter(r=>r.direction===(incoming?'in':'out')),$("period").value,last);
     const latestLife=Monitor.latest(life),cohort=latestLife?life.filter(r=>r.date===latestLife.date):[];
@@ -557,7 +566,7 @@ function startDashboard() {
     }
     $("collection-status").innerHTML=html;
   }
-  ["period","activity-metric","economy-metric","flow-direction","flow-metric","share-metric"].forEach(id=>$(id).addEventListener("change",render));
+  ["period","activity-metric","economy-metric","flow-direction","flow-metric","share-metric","chain-history-metric"].forEach(id=>$(id).addEventListener("change",render));
   let resizing;
   window.addEventListener("resize",()=>{clearTimeout(resizing);resizing=setTimeout(()=>{render();renderNet();},120);});
   ["period","net-chain","net-asset","net-window","net-period","net-chart-range"].forEach(id=>$(id).addEventListener("change",renderNet));
