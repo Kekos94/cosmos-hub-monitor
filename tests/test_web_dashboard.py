@@ -119,11 +119,14 @@ class DashboardTests(unittest.TestCase):
             page_path = root / 'criterion1-services-en.html'
             dashboard.build_services_page(root, root, data, catalog)
             self.assertNotIn('1.000000 <small>ATOM</small>', page_path.read_text())
+            self.assertNotIn('class="eureka-fee-bar"', page_path.read_text())
 
             eureka['end_height'] = '10'
             dashboard.build_services_page(root, root, data, catalog)
             page = page_path.read_text()
             self.assertIn('1.000000 <small>ATOM</small>', page)
+            self.assertIn('Daily Eureka network fees (ATOM)', page)
+            self.assertIn('style="width:100.0000%"', page)
             self.assertNotIn('5.000000 <small>ATOM</small>', page)
             self.assertIn('href="index-en.html#coverage-cards"', page)
             self.assertIn('Service revenue / issuance</h2>', page)

@@ -527,6 +527,7 @@
   "Transaction de réception ↗": "Receipt transaction ↗",
   "Source de l’attribution ↗": "Attribution source ↗",
   "Aucun grand mouvement confirmé dans les données disponibles.": "No confirmed large transfers in the available data.",
+  "Frais réseau Eureka par journée (ATOM)": "Daily Eureka network fees (ATOM)",
   "Historique des frais Eureka": "Eureka fee history",
   "Historique des frais Eureka ↓": "Eureka fee history ↓"
 }
