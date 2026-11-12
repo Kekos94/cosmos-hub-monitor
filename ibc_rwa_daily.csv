@@ -5,3 +5,5 @@ date,chain_id,product_id,symbol,verified_in,verified_out,confirmed_in,confirmed_
 2026-11-08,injective-1,ondo_usdy,USDY,0,1,,1,-1,0,0,0,
 2026-11-08,noble-1,ondo_usdy,USDY,1,1,1,1,0,0,0,0,
 2026-11-08,osmosis-1,ondo_usdy,USDY,1,0,1,,1,0,0,0,
+2026-11-11,noble-1,ondo_usdy,USDY,0,1,,26.338226467201918,-26.338226467201918,0,0,0,
+2026-11-11,osmosis-1,ondo_usdy,USDY,1,0,26.338226467201918,,26.338226467201918,0,0,0,
