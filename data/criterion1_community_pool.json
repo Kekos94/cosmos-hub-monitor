@@ -1,8 +1,8 @@
 {
   "source": "https://cosmos-rpc.polkachu.com",
   "from_height": 32785062,
-  "through_height": 33857161,
-  "observed_at": "2026-11-13T09:14:10.057553+00:00",
+  "through_height": 33861176,
+  "observed_at": "2026-11-13T15:34:52.641780+00:00",
   "records": [
     {
       "time_utc": "2026-10-23T06:12:31.931696275Z",
