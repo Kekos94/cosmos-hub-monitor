@@ -7,6 +7,7 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-10,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,546,501,45,2732425.2385795088555979815082,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-11,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,555,518,37,32886.4842675763673178981438,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-12,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,700,652,48,106616.8787884977582552207288,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-13,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,624,550,74,126595.4356202405123195090056,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,injective,injective-1,indexed_complete,ics20_v1_gross_sent,606,557,49,1319658.331579721950025156599584454463032,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,injective,injective-1,indexed_complete,ics20_v1_gross_sent,588,539,49,1683646.732154292121531296034642055349984,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,injective,injective-1,indexed_complete,ics20_v1_gross_sent,528,408,120,246401.49421391047461501670553997365728,,0,historical_daily_reference_not_execution_price
@@ -15,6 +16,7 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-10,injective,injective-1,indexed_complete,ics20_v1_gross_sent,423,397,26,381909.590608111575374580429451200017056,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-11,injective,injective-1,indexed_complete,ics20_v1_gross_sent,369,333,36,85354.261789098052748239152297774831297,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-12,injective,injective-1,indexed_complete,ics20_v1_gross_sent,469,412,57,109004.14111236122096187548365221720250,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-13,injective,injective-1,indexed_complete,ics20_v1_gross_sent,478,404,74,164767.91156555590170536663809168373082,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_gross_sent,1050,1045,5,3279938.2958444022619123049937380033304944,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,ics20_v1_gross_sent,624,621,3,2489480.5525216375392432593266,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,noble,noble-1,indexed_complete,ics20_v1_gross_sent,392,376,16,58873.9042342991572147855300,,0,historical_daily_reference_not_execution_price
@@ -23,11 +25,13 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-10,noble,noble-1,indexed_complete,ics20_v1_gross_sent,334,324,10,104882.9987467436871645632288,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-11,noble,noble-1,indexed_complete,ics20_v1_gross_sent,302,275,27,82088.0071406570443202084346,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-12,noble,noble-1,indexed_complete,ics20_v1_gross_sent,273,269,4,42182.0968238067509111656305,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-13,noble,noble-1,indexed_complete,ics20_v1_gross_sent,380,376,4,51300.0421949094645842507218,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,4418,4202,216,1679576.04266412879923051560698448522984780444,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,3122,2860,262,1400798.049354573116242488690615904427153488,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2817,2285,532,808820.72393208001535572985354032330607716,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-08,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,3242,2642,600,640617.4983666698645522478255851189772608,,0,historical_daily_reference_not_execution_price
-190892289baf1e61,2026-11-09,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2532,1845,687,1396144.76569731219616263214728216393800,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-09,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2532,1873,659,1397266.57876016466323233958407816393800,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-10,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2626,1791,835,547019.977123549407911404270832177484152782,,0,historical_daily_reference_not_execution_price
-190892289baf1e61,2026-11-11,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2242,1486,756,562481.042205003618860125881620436257259970,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-11,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2242,1522,720,570693.882669460840312470962180436257259970,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-12,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2147,1465,682,363530.73497672670620297584851520668094,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-13,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2061,1368,693,294261.37790962267668242537253140288321,,0,historical_daily_reference_not_execution_price
