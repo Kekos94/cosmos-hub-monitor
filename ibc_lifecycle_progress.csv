@@ -158,4 +158,4 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-14,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,92101,92101,3082,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-14,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,92101,92101,21,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-14,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,92101,92101,0,https://osmosis-rpc.polkachu.com
-4824de746173ff1d,2026-11-14,osmosis,osmosis-1,ics20_v1_write_ack,incomplete,84940,92101,2666,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-14,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,92101,92101,2908,https://osmosis-rpc.polkachu.com
