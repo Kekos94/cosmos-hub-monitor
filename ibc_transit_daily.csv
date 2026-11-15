@@ -8,4 +8,4 @@ universe_id,date,model,received_packets,candidate_receipts,candidate_transaction
 62bfaf30df0c4b2c,2026-11-11,pfm_v10_6_same_recv_message_bank_evidence_v1,1547,93,93,93,86,86,0,0,0,0,1454,7,172,172,candidate_proofs_complete,2026-11-15T00:00:00Z,5.559146735617323852617970265
 62bfaf30df0c4b2c,2026-11-12,pfm_v10_6_same_recv_message_bank_evidence_v1,1619,89,88,88,87,85,0,2,0,0,1530,2,170,170,candidate_proofs_complete,2026-11-15T00:00:00Z,5.250154416306361951822112415
 62bfaf30df0c4b2c,2026-11-13,pfm_v10_6_same_recv_message_bank_evidence_v1,1573,77,77,77,70,66,0,3,1,0,1496,7,140,140,candidate_proofs_complete,2026-11-15T00:00:00Z,4.195804195804195804195804196
-62bfaf30df0c4b2c,2026-11-14,pfm_v10_6_same_recv_message_bank_evidence_v1,2109,558,550,550,549,446,0,2,0,101,1551,9,876,1077,incomplete,2026-11-15T00:00:00Z,
+62bfaf30df0c4b2c,2026-11-14,pfm_v10_6_same_recv_message_bank_evidence_v1,2109,558,550,550,549,547,0,2,0,0,1551,9,1077,1077,candidate_proofs_complete,2026-11-15T00:00:00Z,25.93646277856804172593646278
