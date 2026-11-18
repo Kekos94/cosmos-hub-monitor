@@ -11,6 +11,7 @@ a531449b14fe390e,2026-11-13,cosmoshub,cosmoshub-4,indexed_complete,1572,1572,157
 a531449b14fe390e,2026-11-14,cosmoshub,cosmoshub-4,indexed_complete,2100,2100,2109,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-15,cosmoshub,cosmoshub-4,indexed_complete,1732,1732,1734,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-16,cosmoshub,cosmoshub-4,indexed_complete,1776,1776,1783,https://cosmos-rpc.polkachu.com
+a531449b14fe390e,2026-11-17,cosmoshub,cosmoshub-4,indexed_complete,1795,1795,1798,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,injective,injective-1,indexed_complete,739,739,744,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,injective,injective-1,indexed_complete,585,585,590,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-07,injective,injective-1,indexed_complete,619,619,620,https://injective-rpc.polkachu.com
@@ -23,6 +24,7 @@ a531449b14fe390e,2026-11-13,injective,injective-1,indexed_complete,523,523,524,h
 a531449b14fe390e,2026-11-14,injective,injective-1,indexed_complete,643,643,645,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-15,injective,injective-1,indexed_complete,431,431,432,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-16,injective,injective-1,indexed_complete,377,377,377,https://injective-rpc.polkachu.com
+a531449b14fe390e,2026-11-17,injective,injective-1,incomplete,109,,109,https://injective-rpc.highstakes.ch
 a531449b14fe390e,2026-11-05,noble,noble-1,indexed_complete,1177,1177,1182,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,noble,noble-1,indexed_complete,734,734,736,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-07,noble,noble-1,indexed_complete,509,509,509,https://noble-rpc.polkachu.com
@@ -35,6 +37,7 @@ a531449b14fe390e,2026-11-13,noble,noble-1,indexed_complete,486,486,486,https://n
 a531449b14fe390e,2026-11-14,noble,noble-1,indexed_complete,637,637,648,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-15,noble,noble-1,indexed_complete,350,350,352,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-16,noble,noble-1,indexed_complete,291,291,291,https://noble-rpc.polkachu.com
+a531449b14fe390e,2026-11-17,noble,noble-1,indexed_complete,888,888,890,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,osmosis,osmosis-1,indexed_complete,3551,3551,3626,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,osmosis,osmosis-1,indexed_complete,2627,2627,2652,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-07,osmosis,osmosis-1,indexed_complete,2423,2423,2455,https://osmosis-rpc.polkachu.com
@@ -47,3 +50,4 @@ a531449b14fe390e,2026-11-13,osmosis,osmosis-1,indexed_complete,1977,1977,1995,ht
 a531449b14fe390e,2026-11-14,osmosis,osmosis-1,indexed_complete,2844,2844,2908,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-15,osmosis,osmosis-1,indexed_complete,1965,1965,1988,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-16,osmosis,osmosis-1,indexed_complete,1975,1975,1990,https://osmosis-rpc.polkachu.com
+a531449b14fe390e,2026-11-17,osmosis,osmosis-1,indexed_complete,2024,2024,2052,https://osmosis-rpc.polkachu.com

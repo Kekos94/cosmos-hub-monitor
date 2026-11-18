@@ -11,6 +11,7 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-14,cosmoshub,cosmoshub-4,indexed_complete,complete_index_query_not_block_scan,33866504,33881692,15189,1201,1201,1207,https://cosmos-rpc.polkachu.com
 190892289baf1e61,2026-11-15,cosmoshub,cosmoshub-4,indexed_complete,complete_index_query_not_block_scan,33881693,33896898,15206,713,713,713,https://cosmos-rpc.polkachu.com
 190892289baf1e61,2026-11-16,cosmoshub,cosmoshub-4,indexed_complete,complete_index_query_not_block_scan,33896899,33912096,15198,582,582,583,https://cosmos-rpc.polkachu.com
+190892289baf1e61,2026-11-17,cosmoshub,cosmoshub-4,indexed_complete,complete_index_query_not_block_scan,33912097,33927275,15179,705,705,706,https://cosmos-rpc.polkachu.com
 190892289baf1e61,2026-11-05,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,190369588,190512196,142609,605,605,606,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-06,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,190512197,190653349,141153,587,587,588,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-07,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,190653350,190796822,143473,524,524,528,https://injective-rpc.polkachu.com
@@ -23,6 +24,7 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-14,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191622536,191766553,144018,617,617,618,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-15,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191766554,191910782,144229,409,409,409,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-16,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191910783,192054207,143425,374,374,374,https://injective-rpc.polkachu.com
+190892289baf1e61,2026-11-17,injective,injective-1,incomplete,complete_index_query_not_block_scan,192054208,192191570,137363,124,,124,https://injective-rpc.highstakes.ch
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63205667,63282378,76712,1047,1047,1050,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63282379,63359773,77395,622,622,624,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-07,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63359774,63437883,78110,392,392,392,https://noble-rpc.polkachu.com
@@ -35,6 +37,7 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-14,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63902110,63980525,78416,475,475,476,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-15,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63980526,64059695,79170,270,270,273,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-16,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,64059696,64138367,78672,307,307,307,https://noble-rpc.polkachu.com
+190892289baf1e61,2026-11-17,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,64138368,64215797,77430,271,271,272,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,74130725,74235167,104443,4415,4415,4418,https://osmosis-rpc.polkachu.com
 190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,74235168,74339204,104037,3119,3119,3122,https://osmosis-rpc.polkachu.com
 190892289baf1e61,2026-11-07,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,74339205,74443281,104077,2802,2802,2817,https://osmosis-rpc.polkachu.com
@@ -47,3 +50,4 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-14,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,75029606,75121706,92101,3010,3010,3014,https://osmosis-rpc.polkachu.com
 190892289baf1e61,2026-11-15,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,75121707,75215140,93434,2137,2137,2140,https://osmosis-rpc.polkachu.com
 190892289baf1e61,2026-11-16,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,75215141,75309174,94034,2150,2150,2155,https://osmosis-rpc.polkachu.com
+190892289baf1e61,2026-11-17,osmosis,osmosis-1,indexed_complete,complete_index_query_not_block_scan,75309175,75402183,93009,2504,2504,2508,https://osmosis-rpc.polkachu.com
