@@ -218,4 +218,4 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-18,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,92377,92377,1785,https://rpc.osmosis.zone
 4824de746173ff1d,2026-11-18,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,92377,92377,11,https://rpc.osmosis.zone
 4824de746173ff1d,2026-11-18,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,92377,92377,0,https://rpc.osmosis.zone
-4824de746173ff1d,2026-11-18,osmosis,osmosis-1,ics20_v1_write_ack,incomplete,80836,92377,1381,https://rpc.osmosis.zone
+4824de746173ff1d,2026-11-18,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,92377,92377,1605,https://rpc.osmosis.zone
