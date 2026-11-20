@@ -103,6 +103,16 @@ def identity(registry_id, day, chain, denom, plan):
                 source=plan['source'], plan_sha256=digest(plan))
 
 
+def validate_closing_proof(proof, expected):
+    # Provider and collection-plan provenance can change after a collector restart.
+    # The asset, UTC closing height and block time must remain identical.
+    stable = ('registry_id', 'date', 'chain_id', 'denom', 'height', 'block_time_utc')
+    if any(proof.get(key) != expected[key] for key in stable):
+        raise ValueError('RWA balance proof does not match its closing block or asset')
+    if not str(proof.get('source', '')).startswith('https://') or not re.fullmatch(r'[0-9a-f]{64}', str(proof.get('plan_sha256', ''))):
+        raise ValueError('RWA balance proof provenance is missing or invalid')
+
+
 def collect(budget_seconds):
     if budget_seconds <= 0:
         raise ValueError('RWA balance budget must be positive')
@@ -142,9 +152,14 @@ def export():
             row.update(height=expected['height'], block_time_utc=expected['block_time_utc'])
             if path.exists():
                 proof = read(path)
-                if any(proof.get(k) != v for k, v in expected.items()):
-                    raise ValueError('RWA balance proof does not match its closing plan')
-                values = amounts(proof['results'], plan, rep, product, registry)
+                try:
+                    validate_closing_proof(proof, expected)
+                    values = amounts(proof['results'], plan, rep, product, registry)
+                except (ValueError, KeyError, TypeError) as exc:
+                    row.update(status='invalid_historical_proof')
+                    print(f'RWA balances {day} {rep["chain_id"]} proof unavailable: {exc}', flush=True)
+                    rows.append(row)
+                    continue
                 row.update(status='verified', source=proof['source'],
                            observed_at=proof['observed_at'], evidence_sha256=digest(proof))
                 for field, value in zip(('supply', 'escrow', 'local'), values):

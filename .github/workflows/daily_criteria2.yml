@@ -166,11 +166,15 @@ jobs:
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_transit_collect.py
       - name: Verify historical routes for registered RWA
+        id: rwa_routes
+        continue-on-error: true
         if: inputs.publish_only != true
         env:
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_rwa_view.py --collect-routes 60
       - name: Collect registered RWA balances at UTC close
+        id: rwa_balances
+        continue-on-error: true
         if: inputs.publish_only != true
         env:
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
@@ -220,9 +224,6 @@ jobs:
             git commit -m "Update Criterion 1B indexed IBC transfers and historical valuations"
             git push
           fi
-      - name: Report collection errors after preserving checked pages
-        if: steps.collect.outcome == 'failure' || steps.lifecycle.outcome == 'failure' || steps.transit.outcome == 'failure'
-        run: exit 1
       - name: Publish site
         id: deploy_first
         continue-on-error: true
@@ -250,3 +251,6 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./site
+      - name: Report collection errors after preserving checked pages
+        if: steps.collect.outcome == 'failure' || steps.lifecycle.outcome == 'failure' || steps.transit.outcome == 'failure' || steps.rwa_routes.outcome == 'failure' || steps.rwa_balances.outcome == 'failure'
+        run: exit 1
