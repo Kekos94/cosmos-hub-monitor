@@ -304,6 +304,10 @@ def run_collection(cfg,uid,*,budget=1200,start_date=None,root=DATA):
             while time.monotonic()<http.REQUEST_DEADLINE.get():
                 if days and not inspect_day(days[-1])['complete']:
                     directory=days[-1];plan=read(directory/'plan.json');client=Client(chain,plan['source'])
+                    if plan['source'] not in chain['rpc']:
+                        quarantine(directory,'Configured provider retired; retain snapshot and restart incomplete day',root)
+                        days.pop()
+                        continue
                     if plan.get('query_mode','paged')!=chain.get('query_mode','paged'):
                         quarantine(directory,'Upgrade to adaptive ranges after provider pagination inconsistencies',root)
                         days.pop()

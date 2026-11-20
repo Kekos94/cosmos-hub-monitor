@@ -33,8 +33,8 @@
       "name": "injective",
       "chain_id": "injective-1",
       "rpc": [
-        "https://injective-rpc.polkachu.com",
-        "https://injective-rpc.highstakes.ch"
+        "https://rpc-injective.keplr.app",
+        "https://rpc.lavenderfive.com/injective"
       ],
       "query_mode": "height_ranges"
     }

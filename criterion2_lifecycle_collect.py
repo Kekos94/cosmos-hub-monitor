@@ -122,6 +122,12 @@ def run(*,budget=600,start_date=None,root=LIFE_ROOT):
                 if path.exists():
                     d=inspect(read(path))
                     if d['complete']:day=str(date.fromisoformat(day)+timedelta(days=1));continue
+                    if d['plan']['source'] not in chain['rpc']:
+                        archived = Path(root)/'retired'/uid/chain['name']/day/(str(time.time_ns())+'_'+path.name)
+                        archived.parent.mkdir(parents=True,exist_ok=True)
+                        os.replace(path,archived)
+                        print(f'Archived incomplete journal from retired provider: {archived}',flush=True)
+                        continue
                     client=Client(chain,d['plan']['source'])
                 else:
                     failures=[]
