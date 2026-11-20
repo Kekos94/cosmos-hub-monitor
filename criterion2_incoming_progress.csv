@@ -13,6 +13,7 @@ a531449b14fe390e,2026-11-15,cosmoshub,cosmoshub-4,indexed_complete,1732,1732,173
 a531449b14fe390e,2026-11-16,cosmoshub,cosmoshub-4,indexed_complete,1776,1776,1783,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-17,cosmoshub,cosmoshub-4,indexed_complete,1795,1795,1798,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-18,cosmoshub,cosmoshub-4,indexed_complete,1519,1519,1522,https://cosmos-rpc.polkachu.com
+a531449b14fe390e,2026-11-19,cosmoshub,cosmoshub-4,indexed_complete,1568,1568,1568,https://cosmos-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,injective,injective-1,indexed_complete,739,739,744,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,injective,injective-1,indexed_complete,585,585,590,https://injective-rpc.polkachu.com
 a531449b14fe390e,2026-11-07,injective,injective-1,indexed_complete,619,619,620,https://injective-rpc.polkachu.com
@@ -40,6 +41,7 @@ a531449b14fe390e,2026-11-15,noble,noble-1,indexed_complete,350,350,352,https://n
 a531449b14fe390e,2026-11-16,noble,noble-1,indexed_complete,291,291,291,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-17,noble,noble-1,indexed_complete,888,888,890,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-18,noble,noble-1,indexed_complete,1765,1765,1766,https://noble-rpc.polkachu.com
+a531449b14fe390e,2026-11-19,noble,noble-1,indexed_complete,1147,1147,1149,https://noble-rpc.polkachu.com
 a531449b14fe390e,2026-11-05,osmosis,osmosis-1,indexed_complete,3551,3551,3626,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-06,osmosis,osmosis-1,indexed_complete,2627,2627,2652,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-07,osmosis,osmosis-1,indexed_complete,2423,2423,2455,https://osmosis-rpc.polkachu.com
@@ -54,3 +56,4 @@ a531449b14fe390e,2026-11-15,osmosis,osmosis-1,indexed_complete,1965,1965,1988,ht
 a531449b14fe390e,2026-11-16,osmosis,osmosis-1,indexed_complete,1975,1975,1990,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-17,osmosis,osmosis-1,indexed_complete,2024,2024,2052,https://osmosis-rpc.polkachu.com
 a531449b14fe390e,2026-11-18,osmosis,osmosis-1,indexed_complete,1590,1590,1605,https://rpc.osmosis.zone
+a531449b14fe390e,2026-11-19,osmosis,osmosis-1,indexed_complete,1785,1785,1798,https://osmosis-rpc.polkachu.com
