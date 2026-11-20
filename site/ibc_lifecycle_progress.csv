@@ -114,10 +114,11 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-18,injective,injective-1,ics20_v1_source_ack,indexed_complete,144339,144339,1936,https://rpc-injective.keplr.app
 4824de746173ff1d,2026-11-18,injective,injective-1,ics20_v1_timeout,indexed_complete,144339,144339,1,https://rpc-injective.keplr.app
 4824de746173ff1d,2026-11-18,injective,injective-1,ics20_v1_timeout_close,indexed_complete,144339,144339,0,https://rpc-injective.keplr.app
-4824de746173ff1d,2026-11-18,injective,injective-1,ics20_v1_write_ack,incomplete,81137,144339,226,https://rpc-injective.keplr.app
-4824de746173ff1d,2026-11-19,injective,injective-1,ics20_v1_source_ack,incomplete,112433,143627,1103,https://rpc-injective.keplr.app
+4824de746173ff1d,2026-11-18,injective,injective-1,ics20_v1_write_ack,indexed_complete,144339,144339,469,https://rpc-injective.keplr.app
+4824de746173ff1d,2026-11-19,injective,injective-1,ics20_v1_source_ack,indexed_complete,143627,143627,1476,https://rpc-injective.keplr.app
 4824de746173ff1d,2026-11-19,injective,injective-1,ics20_v1_timeout,indexed_complete,143627,143627,0,https://rpc-injective.keplr.app
 4824de746173ff1d,2026-11-19,injective,injective-1,ics20_v1_timeout_close,indexed_complete,143627,143627,0,https://rpc-injective.keplr.app
+4824de746173ff1d,2026-11-19,injective,injective-1,ics20_v1_write_ack,incomplete,133058,143627,563,https://rpc-injective.keplr.app
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_source_ack,indexed_complete,76712,76712,1116,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout,indexed_complete,76712,76712,2,https://noble-rpc.polkachu.com
 4824de746173ff1d,2026-11-05,noble,noble-1,ics20_v1_timeout_close,indexed_complete,76712,76712,0,https://noble-rpc.polkachu.com
