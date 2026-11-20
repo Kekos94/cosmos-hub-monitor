@@ -26,7 +26,8 @@ universe_id,date,chain,chain_id,coverage_status,coverage_method,start_height,end
 190892289baf1e61,2026-11-14,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191622536,191766553,144018,617,617,618,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-15,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191766554,191910782,144229,409,409,409,https://injective-rpc.polkachu.com
 190892289baf1e61,2026-11-16,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,191910783,192054207,143425,374,374,374,https://injective-rpc.polkachu.com
-190892289baf1e61,2026-11-17,injective,injective-1,incomplete,complete_index_query_not_block_scan,192054208,192191570,137363,124,,124,https://injective-rpc.highstakes.ch
+190892289baf1e61,2026-11-17,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,192054208,192191570,137363,1069,1069,1071,https://rpc-injective.keplr.app
+190892289baf1e61,2026-11-18,injective,injective-1,indexed_complete,complete_index_query_not_block_scan,192191571,192335909,144339,1937,1937,1937,https://rpc-injective.keplr.app
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63205667,63282378,76712,1047,1047,1050,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63282379,63359773,77395,622,622,624,https://noble-rpc.polkachu.com
 190892289baf1e61,2026-11-07,noble,noble-1,indexed_complete,complete_index_query_not_block_scan,63359774,63437883,78110,392,392,392,https://noble-rpc.polkachu.com
