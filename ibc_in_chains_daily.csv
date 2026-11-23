@@ -16,6 +16,7 @@ a531449b14fe390e,2026-11-18,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_rece
 a531449b14fe390e,2026-11-19,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1568,1446,0,122,275,1171,59570.5078982614221009922960,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-20,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1621,1507,0,114,358,1149,445574.8286818626547825005541,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-21,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1634,1509,0,125,359,1150,41271.9990501589830754311819,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-22,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_received_ack_observed,1591,1494,0,97,357,1137,42696.2382535124593038094738,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,744,491,3,250,451,40,2400809.020200820416306598143633449678756,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,590,409,4,177,387,22,532978.012830697214894211795766297279558,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-07,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,620,469,2,149,382,87,203157.61582064988125930028289196305736,,receive_transaction_ack_only
@@ -32,6 +33,8 @@ a531449b14fe390e,2026-11-17,injective,injective-1,indexed_complete,ics20_v1_rece
 a531449b14fe390e,2026-11-18,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,469,337,17,115,317,20,120786.926276324905281271889731452065020,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-19,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,613,433,11,169,403,30,370129.45215885644346962724706101581214,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-20,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,725,481,4,240,442,39,1186027.417133314779442612404621948480384,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-21,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,595,431,1,163,405,26,4242610.712096722099742829943122110889745,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-22,injective,injective-1,indexed_complete,ics20_v1_received_ack_observed,370,282,2,86,260,22,274614.616613952839537543721419686882383,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,1182,456,1,725,455,1,1008427.9809264113789817787488,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,736,328,1,407,326,2,2470640.7791493571221381684752,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-07,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,509,253,0,256,249,4,1259067.082423584292920598047,,receive_transaction_ack_only
@@ -49,6 +52,7 @@ a531449b14fe390e,2026-11-18,noble,noble-1,indexed_complete,ics20_v1_received_ack
 a531449b14fe390e,2026-11-19,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,1149,1023,0,126,1022,1,10089767.9755489226316942001536,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-20,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,1199,1063,2,134,1062,1,9837985.6324179500364394802840,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-21,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,872,727,16,129,726,1,6415441.9555168517398819399287,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-22,noble,noble-1,indexed_complete,ics20_v1_received_ack_observed,1126,1034,1,91,1024,10,9912583.8952170432331564099647,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,3626,1840,75,1711,1469,371,1238083.025396857355124063793736337492651966,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2652,1244,29,1379,1144,100,1125919.08698797442896433358249629006650122,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-07,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2455,792,28,1635,623,169,418092.86702546373388879476358698124862795,,receive_transaction_ack_only
@@ -65,3 +69,4 @@ a531449b14fe390e,2026-11-17,osmosis,osmosis-1,indexed_complete,ics20_v1_received
 a531449b14fe390e,2026-11-18,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,1605,582,23,1000,454,128,384759.842613434923502226128347392440428,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-19,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,1798,737,25,1036,576,161,310698.23486115608638025550419202386594,,receive_transaction_ack_only
 a531449b14fe390e,2026-11-20,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2172,1026,34,1112,779,247,448893.285431937176522828274120817137457949,,receive_transaction_ack_only
+a531449b14fe390e,2026-11-21,osmosis,osmosis-1,indexed_complete,ics20_v1_received_ack_observed,2165,860,36,1269,631,229,410845.8529176377765525395395448089944037825,,receive_transaction_ack_only
