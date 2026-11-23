@@ -288,9 +288,10 @@ def run_collection(cfg,uid,*,budget=1200,start_date=None,root=DATA):
     first=start_date or yesterday
     if date.fromisoformat(first)>date.fromisoformat(yesterday):raise ValueError('Start date is not closed')
     deadline=time.monotonic()+budget;errors=[]
-    # Equal time slices: a slow/broken chain cannot consume the entire run.
-    slice_seconds=max(1,budget/len(cfg['chains']))
-    for chain in cfg['chains']:
+    # Share the remaining budget so fast chains release time for later ones.
+    for index,chain in enumerate(cfg['chains']):
+        remaining=max(0,deadline-time.monotonic())
+        slice_seconds=remaining/(len(cfg['chains'])-index)
         token=http.REQUEST_DEADLINE.set(min(deadline,time.monotonic()+slice_seconds))
         try:
             base=Path(root)/uid/chain['name'];existing=sorted(base.glob('*/plan.json'))
