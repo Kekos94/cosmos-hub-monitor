@@ -122,7 +122,7 @@ jobs:
     needs: check_economy
     if: ${{ !cancelled() && ((github.event_name == 'workflow_dispatch' && inputs.publish_only == true) || needs.check_economy.outputs.ready == 'true') }}
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v6
         with:
@@ -154,7 +154,7 @@ jobs:
         if: inputs.publish_only != true
         continue-on-error: true
         env:
-          LIFECYCLE_BUDGET_SECONDS: "1200"
+          LIFECYCLE_BUDGET_SECONDS: "2400"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_lifecycle_collect.py
       - name: Verify same-message Hub PFM transit
