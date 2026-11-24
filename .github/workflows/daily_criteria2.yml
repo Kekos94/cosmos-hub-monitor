@@ -154,7 +154,7 @@ jobs:
         if: inputs.publish_only != true
         continue-on-error: true
         env:
-          LIFECYCLE_BUDGET_SECONDS: "2400"
+          LIFECYCLE_BUDGET_SECONDS: "3600"
           HTTP_MIN_INTERVAL_SECONDS: "1.0"
         run: python criterion2_lifecycle_collect.py
       - name: Verify same-message Hub PFM transit
