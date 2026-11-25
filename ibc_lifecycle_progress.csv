@@ -311,9 +311,11 @@ universe_id,date,chain,chain_id,scope,coverage_status,scanned_heights,expected_h
 4824de746173ff1d,2026-11-22,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,90749,90749,4,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-22,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,90749,90749,0,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-22,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,90749,90749,1519,https://osmosis-rpc.polkachu.com
-4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_source_ack,incomplete,36977,90639,340,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_source_ack,indexed_complete,90639,90639,1686,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,90639,90639,6,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,90639,90639,0,https://osmosis-rpc.polkachu.com
-4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_write_ack,incomplete,37850,90639,334,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-23,osmosis,osmosis-1,ics20_v1_write_ack,indexed_complete,90639,90639,1542,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-24,osmosis,osmosis-1,ics20_v1_source_ack,incomplete,67220,91161,1561,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-24,osmosis,osmosis-1,ics20_v1_timeout,indexed_complete,91161,91161,17,https://osmosis-rpc.polkachu.com
 4824de746173ff1d,2026-11-24,osmosis,osmosis-1,ics20_v1_timeout_close,indexed_complete,91161,91161,0,https://osmosis-rpc.polkachu.com
+4824de746173ff1d,2026-11-24,osmosis,osmosis-1,ics20_v1_write_ack,incomplete,41403,91161,780,https://osmosis-rpc.polkachu.com
