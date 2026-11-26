@@ -19,4 +19,5 @@ date,chain_id,product_id,symbol,verified_in,verified_out,confirmed_in,confirmed_
 2026-11-20,osmosis-1,ondo_usdy,USDY,2,0,6.110143,,6.110143,0,0,0,
 2026-11-22,noble-1,ondo_usdy,USDY,1,1,0.846026,0.846026,0,0,0,0,
 2026-11-22,osmosis-1,ondo_usdy,USDY,1,0,0.846026,,0.846026,0,0,0,
-2026-11-25,noble-1,ondo_usdy,USDY,1,1,0.004127324323050791,0.004127324323050791,,0,0,0,
+2026-11-25,noble-1,ondo_usdy,USDY,1,1,0.004127324323050791,0.004127324323050791,0,0,0,0,
+2026-11-25,osmosis-1,ondo_usdy,USDY,1,0,0.004127324323050791,,0.004127324323050791,0,0,0,
