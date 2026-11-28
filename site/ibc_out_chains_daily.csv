@@ -21,6 +21,7 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-24,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,576,544,32,62226.6370688795560705906283,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-25,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,514,479,35,54365.7185740112779986239700,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-26,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,635,611,24,56868.4971861552630413637294,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-27,cosmoshub,cosmoshub-4,indexed_complete,ics20_v1_gross_sent,513,478,35,48522.1078799640345555514986,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,injective,injective-1,indexed_complete,ics20_v1_gross_sent,606,557,49,1319658.331579721950025156599584454463032,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,injective,injective-1,indexed_complete,ics20_v1_gross_sent,588,539,49,1683646.732154292121531296034642055349984,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,injective,injective-1,indexed_complete,ics20_v1_gross_sent,528,408,120,246401.49421391047461501670553997365728,,0,historical_daily_reference_not_execution_price
@@ -43,6 +44,7 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-24,injective,injective-1,indexed_complete,ics20_v1_gross_sent,683,657,26,1413916.493894133322569238519011079600683,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-25,injective,injective-1,indexed_complete,ics20_v1_gross_sent,723,687,36,4460232.03111978522845460693749176578261,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-26,injective,injective-1,indexed_complete,ics20_v1_gross_sent,461,430,31,555427.566003506625248373866583524020989,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-27,injective,injective-1,indexed_complete,ics20_v1_gross_sent,433,415,18,887449.71927752642622297210722642909084,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,noble,noble-1,indexed_complete,ics20_v1_gross_sent,1050,1045,5,3279938.2958444022619123049937380033304944,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,noble,noble-1,indexed_complete,ics20_v1_gross_sent,624,621,3,2489480.5525216375392432593266,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,noble,noble-1,indexed_complete,ics20_v1_gross_sent,392,376,16,58873.9042342991572147855300,,0,historical_daily_reference_not_execution_price
@@ -65,6 +67,7 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-24,noble,noble-1,indexed_complete,ics20_v1_gross_sent,159,158,1,24479.288582945519699894947,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-25,noble,noble-1,indexed_complete,ics20_v1_gross_sent,244,231,13,286170.0406172230330952420904,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-26,noble,noble-1,indexed_complete,ics20_v1_gross_sent,260,254,6,54179.3426149602269636222175,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-27,noble,noble-1,indexed_complete,ics20_v1_gross_sent,230,226,4,71137.9298160618236012323770,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-05,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,4418,4202,216,1679576.04266412879923051560698448522984780444,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-06,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,3122,2860,262,1400798.049354573116242488690615904427153488,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-07,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,2817,2285,532,808820.72393208001535572985354032330607716,,0,historical_daily_reference_not_execution_price
@@ -86,4 +89,5 @@ universe_id,date,chain,chain_id,coverage_status,scope,sent_packets,priced_packet
 190892289baf1e61,2026-11-23,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1709,1058,651,1401414.125295289882168396101710972950392816,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-24,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1917,1454,463,571373.101301240610167066391503275712408,,0,historical_daily_reference_not_execution_price
 190892289baf1e61,2026-11-25,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1907,1391,516,843070.50862477010341087234269123378954,,0,historical_daily_reference_not_execution_price
-190892289baf1e61,2026-11-26,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1793,991,802,248921.287983751891415391896163064888729,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-26,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1793,1071,722,257504.494511605153625286469252064888729,,0,historical_daily_reference_not_execution_price
+190892289baf1e61,2026-11-27,osmosis,osmosis-1,indexed_complete,ics20_v1_gross_sent,1781,998,783,344888.99595065702996681189177679922284,,0,historical_daily_reference_not_execution_price
